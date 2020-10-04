@@ -5,10 +5,10 @@ The current implementation isn't usable but the majority of the boilerplate code
 Implementation Status:
 - [x] window classes
 - [x] winapi/mousehook
-- [ ] window movement
-- [ ] filter dockpoint with taskbar
-- [ ] multi-monitor support
+- [ ] window movement #1
+- [ ] filter dockpoint with taskbar #2
+- [ ] multi-monitor support #3
 - [ ] \(possible) window filtering based on window class/attributes
-- [ ] proper exception handling, null checks and garbage collection fixes
-- [ ] performance fixes
-- [ ] settings interface/saving
+- [ ] proper exception handling, null checks and garbage collection fixes #5
+- [ ] performance fixes #5
+- [ ] settings interface/saving #4
