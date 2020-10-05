@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -8,70 +9,67 @@ using HWND = System.IntPtr;
 
 namespace WindowShift
 {
-    public class BasicWindow
+    public class WindowObj
     {
         public HWND hWnd;
-        public Process process;
-        public bool stillExists => !process.HasExited && IsWindow(hWnd);
+        public RECT Rect { get; private set; }
+        public DOCKPOINT dockedPoint;
+        public bool Selected = false;
 
-        public const int MAXTITLELENGTH = 256;
-        public POINT Position
-        {
-            get => GetWindowPos();
-            set => MoveWindow(value);
-        }
-
-        public int Width { get; private set; }
-        public int Height { get; private set; }
-        public RECT rect { get; private set; }
-
-        public StringBuilder title = new StringBuilder(MAXTITLELENGTH);
-
-        public BasicWindow(HWND handle)
+        public WindowObj(HWND handle)
         {
             hWnd = handle;
-            GetWindowThreadProcessId(hWnd, out uint pid);
-            process = Process.GetProcessById((int)pid);
-            process.EnableRaisingEvents = true;
-            process.Exited += WindowClosed;
-            GetWindowPos();
-            GetWindowText(hWnd, title, MAXTITLELENGTH);
+            GetWindowRect(hWnd, out RECT r);
+            Rect = r;
         }
 
-        public void MoveWindow(POINT p)
+/*        private void MoveWindow(POINT p)
         {
             SetWindowPos(hWnd, HWND.Zero, p.X, p.Y, 0, 0, SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_NOREDRAW | SetWindowPosFlags.SWP_NOSIZE);
         }
-
-        public void MoveWindow(int X, int Y)
+*/
+        private void MoveWindow(int X, int Y, int Speed)
         {
             SetWindowPos(hWnd, HWND.Zero, X, Y, 0, 0, SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_NOREDRAW | SetWindowPosFlags.SWP_NOSIZE);
         }
 
-        public POINT GetWindowPos()
+        /*public POINT GetWindowPos()
         {
             GetWindowRect(hWnd, out RECT r);
-            rect = r;
-            Width = rect.Right - rect.Left;
-            Height = rect.Bottom - rect.Top;
-            return Position = new POINT(rect.Left, rect.Top);
-        }
+            Rect = r;
+            Width = Rect.Right - Rect.Left;
+            Height = Rect.Bottom - Rect.Top;
+            return Position = new POINT(Rect.Left, Rect.Top);
+        }*/
 
-        private void WindowClosed(object sender, System.EventArgs e)
+        public void SlideOut()
         {
             throw new NotImplementedException();
         }
 
-        [DllImport("user32")]
-        private static extern IntPtr GetWindowText(HWND hWnd, StringBuilder lptrString, int nMaxCount);
+        public void SlideIn()
+        {
+            throw new NotImplementedException();
+        }
 
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern DWORD GetWindowThreadProcessId(HWND hWnd, out DWORD lpdwProcessId);
+        public bool MouseOver()
+        {
+            GetCursorPos(out POINT p);
+            return MouseOver(p);
+        }
 
-        [DllImport("user32.dll")]
-        private static extern bool IsWindow(IntPtr hWnd);
+        public bool MouseOver(POINT p)
+        {
+            bool Between(int min, int max, int v) {
+                return min < v && v < max;
+            }
+
+            return Between(this.Rect.Left, p.X, this.Rect.Right) && Between(this.Rect.Top, this.Rect.Bottom, p.Y);
+        }
 
         //Window Position/Size API
+        [DllImport("user32.dll")]
+        private static extern HWND WindowFromPoint(POINT p);
         [Flags]
         private enum SetWindowPosFlags : uint
         {
@@ -95,36 +93,10 @@ namespace WindowShift
         private static extern bool SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool GetWindowRect(HWND hwnd, out RECT lpRect);
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetCursorPos(out POINT lpPoint);
     }
-
-    public class DockedWindow : BasicWindow
-    {
-        public DOCKPOINT dockedPoint;
-
-        public DockedWindow(HWND handle, DOCKPOINT dockPosition) : base(handle)
-        {
-            dockedPoint = dockPosition;
-            MoveWindowToDock();
-        }
-
-        public void ShiftWindow(bool slideout)
-        {
-            if (slideout) {
-                // slide the docked window out gracefully
-            } else {
-                // slide the undocked window in gracefully
-            }
-            throw new NotImplementedException();
-        }
-
-        private void MoveWindowToDock()
-        {
-            // move the window to the docked position (quickly?)
-            throw new NotImplementedException();
-        }
-    }
-
-
 
     public struct DOCKPOINT
     {
@@ -151,9 +123,7 @@ namespace WindowShift
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
-#pragma warning disable CS0162 // Unreachable code detected
                     break;
-#pragma warning restore CS0162 // Unreachable code detected
             }
         }
 
@@ -186,9 +156,7 @@ namespace WindowShift
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
-#pragma warning disable CS0162 // Unreachable code detected
                     break;
-#pragma warning restore CS0162 // Unreachable code detected
             }
         }
 

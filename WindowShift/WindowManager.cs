@@ -1,8 +1,12 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using DWORD = System.Int32;
 using HWND = System.IntPtr;
 
@@ -10,53 +14,43 @@ namespace WindowShift
 {
     internal class WindowManager
     {
+        private POINT mmUpLast;
+        public POINT mouseLastPoint;
+        public HWND windowSelected;
+        private HWND lastHwnd = HWND.Zero;
+        private EventType lastEvent = 0;
 
-        private HWND mousehookHandle;
-        private HWND selectedhWnd;
-        private POINT mousePosStart;
-        private POINT mousePosEnd;
+        private HWND rWINEVENTHOOK;
+        private HWND rMOUSELLHOOK;
 
-        private readonly List<BasicWindow> AvailableWindows = new List<BasicWindow>();
-        private readonly List<DockedWindow> DockedWindows = new List<DockedWindow>();
+        private readonly List<WindowObj> Windows = new List<WindowObj>();
 
-        public WindowManager()
+        #region pinvoke
+        delegate void WinEventDelegate(IntPtr hWinEventHook, EventType eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
+        private delegate bool WNDENUMPROC(IntPtr hWnd, uint lParam);
+        private delegate IntPtr HookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr SetWinEventHook(EventType eventMin, EventType eventMax, IntPtr
+                                             hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess,
+                                             uint idThread, uint dwFlags);
+        private enum EventType : uint
         {
-            UpdateAvailableWindows();
-            StartHook();
+            EVENT_OBJECT_SHOW = 0x8002,
+            EVENT_OBJECT_HIDE = 0x8003,
+            EVENT_OBJECT_CREATE = 0x8000,
+            EVENT_OBJECT_DESTROY = 0x8001,
+            EVENT_OBJECT_FOCUS = 0x8005
         }
 
-        public void StartHook()
-        {
-            mousehookHandle = SetMouseHook(MouseHookProc);
-        }
+        private const int MMOUSEWHEEL = 0x020A;
+        private const int WH_MOUSE_LL = 14;
 
-        public void EndHook()
-        {
-            UnhookMouseHook(mousehookHandle);
-        }
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern IntPtr SetWindowsHookEx(int hookType, HookProc lpfn, IntPtr hMod, uint dwThreadId);
 
-        private HWND MouseHookProc(DWORD code, WM wParam, MSLLHOOKSTRUCT lParam)
-        {
-            if (!wParam.HasFlag(WM.MOUSEWHEEL)) {
-                if (wParam.HasFlag(WM.MBUTTONDOWN)) {
-                    mousePosStart = lParam.pt;
-                    if ((selectedhWnd = WindowFromPoint(mousePosStart)) == HWND.Zero) {
-                        selectedhWnd = HWND.Zero;
-                    }
-                    return (IntPtr)(-1);
-                } else if (wParam.HasFlag(WM.MBUTTONUP)) {
-                    mousePosEnd = lParam.pt;
-                    if (selectedhWnd != HWND.Zero) {
-                        BasicWindow foundWindow = AvailableWindows.FirstOrDefault(w => w.hWnd == selectedhWnd);
-                        if (foundWindow != null && mousePosStart != mousePosEnd) {
-                            DockedWindows.Add(new DockedWindow(foundWindow.hWnd, new DOCKPOINT(mousePosStart, mousePosEnd)));
-                        }
-                    }
-                    return (IntPtr)(-1);
-                }
-            }
-            return (IntPtr)(0);
-        }
+        [DllImport("user32.dll")]
+        private static extern HWND CallNextHookEx(IntPtr hhk, int nCode, WM_MOUSE wParam, [In] MSLLHOOKSTRUCT lParam);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct MSLLHOOKSTRUCT
@@ -68,320 +62,24 @@ namespace WindowShift
             public UIntPtr dwExtraInfo;
         }
 
-        private static bool IsWindowValid(IntPtr hwnd)
+        public enum WM_MOUSE : uint
         {
-            if (!IsWindowEnabled(hwnd))
-                return false;
-            if (!IsWindowVisible(hwnd))
-                return false;
-            return true;
+            WM_LBUTTONDOWN = 0x0201,
+            WM_LBUTTONUP = 0x0202,
+            WM_MOUSEMOVE = 0x0200,
+            WM_MOUSEWHEEL = 0x020A,
+            WM_MOUSEHWHEEL = 0x020E,
+            WM_RBUTTONDOWN = 0x0204,
+            WM_RBUTTONUP = 0x0205,
+            WM_MBUTTONDOWN = 0x0207,
+            WM_MBUTTONUP = 0x0208
         }
-
-        private void UpdateAvailableWindows()
-        {
-            AvailableWindows.Clear();
-            var stringContainer = new StringBuilder(512);
-
-            bool OnWindowEnum(IntPtr hwnd, uint lparam)
-            {
-                if (!IsWindowVisible(hwnd))
-                    return true;
-
-                GetWindowText(hwnd, stringContainer, 256);
-                if (stringContainer.Length == 0) {
-                    return true;
-                }
-                stringContainer.Clear();
-
-                GetWindowModuleFileName(hwnd, stringContainer, (uint)stringContainer.Capacity);
-                if (stringContainer.ToString().EndsWith("shell32.dll", StringComparison.OrdinalIgnoreCase)) {
-                    return true;
-                }
-                stringContainer.Clear();
-
-                AvailableWindows.Add(new BasicWindow(hwnd));
-                return true;
-            }
-
-            EnumWindows(OnWindowEnum, 0);
-        }
-
-        private HWND SetMouseHook(HookProc hP)
-        {
-            return SetWindowsHookEx(WH_MOUSE_LL, hP, IntPtr.Zero, 0);
-        }
-
-        private bool UnhookMouseHook(IntPtr hP)
-        {
-            return UnhookWindowsHookEx(hP);
-        }
-
-        public const int MMOUSEWHEEL = 0x020A;
-        private const int WH_MOUSE_LL = 14;
-
-        private delegate bool WNDENUMPROC(IntPtr hWnd, uint lParam);
-        private delegate IntPtr HookProc(int code, WM wParam, MSLLHOOKSTRUCT lParam);
-        public enum WM : uint
-        {
-            NULL = 0x0000,
-            CREATE = 0x0001,
-            DESTROY = 0x0002,
-            MOVE = 0x0003,
-            SIZE = 0x0005,
-            ACTIVATE = 0x0006,
-            SETFOCUS = 0x0007,
-            KILLFOCUS = 0x0008,
-            ENABLE = 0x000A,
-            SETREDRAW = 0x000B,
-            SETTEXT = 0x000C,
-            GETTEXT = 0x000D,
-            GETTEXTLENGTH = 0x000E,
-            PAINT = 0x000F,
-            CLOSE = 0x0010,
-            QUERYENDSESSION = 0x0011,
-            QUERYOPEN = 0x0013,
-            ENDSESSION = 0x0016,
-            QUIT = 0x0012,
-            ERASEBKGND = 0x0014,
-            SYSCOLORCHANGE = 0x0015,
-            SHOWWINDOW = 0x0018,
-            WININICHANGE = 0x001A,
-            SETTINGCHANGE = WININICHANGE,
-            DEVMODECHANGE = 0x001B,
-            ACTIVATEAPP = 0x001C,
-            FONTCHANGE = 0x001D,
-            TIMECHANGE = 0x001E,
-            CANCELMODE = 0x001F,
-            SETCURSOR = 0x0020,
-            MOUSEACTIVATE = 0x0021,
-            CHILDACTIVATE = 0x0022,
-            QUEUESYNC = 0x0023,
-            GETMINMAXINFO = 0x0024,
-            PAINTICON = 0x0026,
-            ICONERASEBKGND = 0x0027,
-            NEXTDLGCTL = 0x0028,
-            SPOOLERSTATUS = 0x002A,
-            DRAWITEM = 0x002B,
-            MEASUREITEM = 0x002C,
-            DELETEITEM = 0x002D,
-            VKEYTOITEM = 0x002E,
-            CHARTOITEM = 0x002F,
-            SETFONT = 0x0030,
-            GETFONT = 0x0031,
-            SETHOTKEY = 0x0032,
-            GETHOTKEY = 0x0033,
-            QUERYDRAGICON = 0x0037,
-            COMPAREITEM = 0x0039,
-            GETOBJECT = 0x003D,
-            COMPACTING = 0x0041,
-            [Obsolete]
-            COMMNOTIFY = 0x0044,
-            WINDOWPOSCHANGING = 0x0046,
-            WINDOWPOSCHANGED = 0x0047,
-            [Obsolete]
-            POWER = 0x0048,
-            COPYDATA = 0x004A,
-            CANCELJOURNAL = 0x004B,
-            NOTIFY = 0x004E,
-            INPUTLANGCHANGEREQUEST = 0x0050,
-            INPUTLANGCHANGE = 0x0051,
-            TCARD = 0x0052,
-            HELP = 0x0053,
-            USERCHANGED = 0x0054,
-            NOTIFYFORMAT = 0x0055,
-            CONTEXTMENU = 0x007B,
-            STYLECHANGING = 0x007C,
-            STYLECHANGED = 0x007D,
-            DISPLAYCHANGE = 0x007E,
-            GETICON = 0x007F,
-            SETICON = 0x0080,
-            NCCREATE = 0x0081,
-            NCDESTROY = 0x0082,
-            NCCALCSIZE = 0x0083,
-            NCHITTEST = 0x0084,
-            NCPAINT = 0x0085,
-            NCACTIVATE = 0x0086,
-            GETDLGCODE = 0x0087,
-            SYNCPAINT = 0x0088,
-            NCMOUSEMOVE = 0x00A0,
-            NCLBUTTONDOWN = 0x00A1,
-            NCLBUTTONUP = 0x00A2,
-            NCLBUTTONDBLCLK = 0x00A3,
-            NCRBUTTONDOWN = 0x00A4,
-            NCRBUTTONUP = 0x00A5,
-            NCRBUTTONDBLCLK = 0x00A6,
-            NCMBUTTONDOWN = 0x00A7,
-            NCMBUTTONUP = 0x00A8,
-            NCMBUTTONDBLCLK = 0x00A9,
-            NCXBUTTONDOWN = 0x00AB,
-            NCXBUTTONUP = 0x00AC,
-            NCXBUTTONDBLCLK = 0x00AD,
-            INPUT_DEVICE_CHANGE = 0x00FE,
-            INPUT = 0x00FF,
-            KEYFIRST = 0x0100,
-            KEYDOWN = 0x0100,
-            KEYUP = 0x0101,
-            CHAR = 0x0102,
-            DEADCHAR = 0x0103,
-            SYSKEYDOWN = 0x0104,
-            SYSKEYUP = 0x0105,
-            SYSCHAR = 0x0106,
-            SYSDEADCHAR = 0x0107,
-            UNICHAR = 0x0109,
-            KEYLAST = 0x0108,
-            IME_STARTCOMPOSITION = 0x010D,
-            IME_ENDCOMPOSITION = 0x010E,
-            IME_COMPOSITION = 0x010F,
-            IME_KEYLAST = 0x010F,
-            INITDIALOG = 0x0110,
-            COMMAND = 0x0111,
-            SYSCOMMAND = 0x0112,
-            TIMER = 0x0113,
-            HSCROLL = 0x0114,
-            VSCROLL = 0x0115,
-            INITMENU = 0x0116,
-            INITMENUPOPUP = 0x0117,
-            MENUSELECT = 0x011F,
-            MENUCHAR = 0x0120,
-            ENTERIDLE = 0x0121,
-            MENURBUTTONUP = 0x0122,
-            MENUDRAG = 0x0123,
-            MENUGETOBJECT = 0x0124,
-            UNINITMENUPOPUP = 0x0125,
-            MENUCOMMAND = 0x0126,
-            CHANGEUISTATE = 0x0127,
-            UPDATEUISTATE = 0x0128,
-            QUERYUISTATE = 0x0129,
-            CTLCOLORMSGBOX = 0x0132,
-            CTLCOLOREDIT = 0x0133,
-            CTLCOLORLISTBOX = 0x0134,
-            CTLCOLORBTN = 0x0135,
-            CTLCOLORDLG = 0x0136,
-            CTLCOLORSCROLLBAR = 0x0137,
-            CTLCOLORSTATIC = 0x0138,
-            MOUSEFIRST = 0x0200,
-            MOUSEMOVE = 0x0200,
-            LBUTTONDOWN = 0x0201,
-            LBUTTONUP = 0x0202,
-            LBUTTONDBLCLK = 0x0203,
-            RBUTTONDOWN = 0x0204,
-            RBUTTONUP = 0x0205,
-            RBUTTONDBLCLK = 0x0206,
-            MBUTTONDOWN = 0x0207,
-            MBUTTONUP = 0x0208,
-            MBUTTONDBLCLK = 0x0209,
-            MOUSEWHEEL = 0x020A,
-            XBUTTONDOWN = 0x020B,
-            XBUTTONUP = 0x020C,
-            XBUTTONDBLCLK = 0x020D,
-            MOUSEHWHEEL = 0x020E,
-            MOUSELAST = 0x020E,
-            PARENTNOTIFY = 0x0210,
-            ENTERMENULOOP = 0x0211,
-            EXITMENULOOP = 0x0212,
-            NEXTMENU = 0x0213,
-            SIZING = 0x0214,
-            CAPTURECHANGED = 0x0215,
-            MOVING = 0x0216,
-            POWERBROADCAST = 0x0218,
-            DEVICECHANGE = 0x0219,
-            MDICREATE = 0x0220,
-            MDIDESTROY = 0x0221,
-            MDIACTIVATE = 0x0222,
-            MDIRESTORE = 0x0223,
-            MDINEXT = 0x0224,
-            MDIMAXIMIZE = 0x0225,
-            MDITILE = 0x0226,
-            MDICASCADE = 0x0227,
-            MDIICONARRANGE = 0x0228,
-            MDIGETACTIVE = 0x0229,
-            MDISETMENU = 0x0230,
-            ENTERSIZEMOVE = 0x0231,
-            EXITSIZEMOVE = 0x0232,
-            DROPFILES = 0x0233,
-            MDIREFRESHMENU = 0x0234,
-            IME_SETCONTEXT = 0x0281,
-            IME_NOTIFY = 0x0282,
-            IME_CONTROL = 0x0283,
-            IME_COMPOSITIONFULL = 0x0284,
-            IME_SELECT = 0x0285,
-            IME_CHAR = 0x0286,
-            IME_REQUEST = 0x0288,
-            IME_KEYDOWN = 0x0290,
-            IME_KEYUP = 0x0291,
-            MOUSEHOVER = 0x02A1,
-            MOUSELEAVE = 0x02A3,
-            NCMOUSEHOVER = 0x02A0,
-            NCMOUSELEAVE = 0x02A2,
-            WTSSESSION_CHANGE = 0x02B1,
-            TABLET_FIRST = 0x02c0,
-            TABLET_LAST = 0x02df,
-            CUT = 0x0300,
-            COPY = 0x0301,
-            PASTE = 0x0302,
-            CLEAR = 0x0303,
-            UNDO = 0x0304,
-            RENDERFORMAT = 0x0305,
-            RENDERALLFORMATS = 0x0306,
-            DESTROYCLIPBOARD = 0x0307,
-            DRAWCLIPBOARD = 0x0308,
-            PAINTCLIPBOARD = 0x0309,
-            VSCROLLCLIPBOARD = 0x030A,
-            SIZECLIPBOARD = 0x030B,
-            ASKCBFORMATNAME = 0x030C,
-            CHANGECBCHAIN = 0x030D,
-            HSCROLLCLIPBOARD = 0x030E,
-            QUERYNEWPALETTE = 0x030F,
-            PALETTEISCHANGING = 0x0310,
-            PALETTECHANGED = 0x0311,
-            HOTKEY = 0x0312,
-            PRINT = 0x0317,
-            PRINTCLIENT = 0x0318,
-            APPCOMMAND = 0x0319,
-            THEMECHANGED = 0x031A,
-            CLIPBOARDUPDATE = 0x031D,
-            DWMCOMPOSITIONCHANGED = 0x031E,
-            DWMNCRENDERINGCHANGED = 0x031F,
-            DWMCOLORIZATIONCOLORCHANGED = 0x0320,
-            DWMWINDOWMAXIMIZEDCHANGE = 0x0321,
-            GETTITLEBARINFOEX = 0x033F,
-            HANDHELDFIRST = 0x0358,
-            HANDHELDLAST = 0x035F,
-            AFXFIRST = 0x0360,
-            AFXLAST = 0x037F,
-            PENWINFIRST = 0x0380,
-            PENWINLAST = 0x038F,
-            APP = 0x8000,
-            USER = 0x0400,
-
-            CPL_LAUNCH = USER + 0x1000,
-            CPL_LAUNCHED = USER + 0x1001,
-            SYSTIMER = 0x118,
-
-            HSHELL_ACCESSIBILITYSTATE = 11,
-            HSHELL_ACTIVATESHELLWINDOW = 3,
-            HSHELL_APPCOMMAND = 12,
-            HSHELL_GETMINRECT = 5,
-            HSHELL_LANGUAGE = 8,
-            HSHELL_REDRAW = 6,
-            HSHELL_TASKMAN = 7,
-            HSHELL_WINDOWCREATED = 1,
-            HSHELL_WINDOWDESTROYED = 2,
-            HSHELL_WINDOWACTIVATED = 4,
-            HSHELL_WINDOWREPLACED = 13
-        }
-
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern IntPtr SetWindowsHookEx(int hookType, HookProc lpfn, IntPtr hMod, uint dwThreadId);
 
         [DllImport("user32")]
         private static extern IntPtr GetWindowText(IntPtr hwnd, StringBuilder lptrString, int nMaxCount);
 
         [DllImport("user32.dll")]
-        private static extern IntPtr GetClassName(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, out IntPtr lpdwProcessId);
+        static extern HWND WindowFromPoint(POINT p);
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         private static extern IntPtr GetWindowModuleFileName(IntPtr hwnd,
@@ -398,14 +96,109 @@ namespace WindowShift
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool IsWindowEnabled(IntPtr hWnd);
 
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool EnableWindow(IntPtr hWnd, bool bEnable);
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool UnhookWindowsHookEx(IntPtr hhk); 
+        #endregion
+
+        public WindowManager()
+        {
+            bool OnWindowEnum(IntPtr hwnd, uint lparam)
+            {
+                if (IsWindowValid(hwnd)) {
+                    Windows.Add(new WindowObj(hwnd));
+                }
+
+                return true;
+            }
+
+            EnumWindows(OnWindowEnum, 0);
+
+            rWINEVENTHOOK = SetWinEventHook(EventType.EVENT_OBJECT_DESTROY, EventType.EVENT_OBJECT_SHOW, IntPtr.Zero, WinEventProc, 0, 0, 0x0000 | 0x0002);
+            rMOUSELLHOOK = SetWindowsHookEx(WH_MOUSE_LL, MouseHookProc, HWND.Zero, 0);
+            Debug.WriteLine($"{0} {1}", rWINEVENTHOOK, rMOUSELLHOOK);
+        }
+
+        private void WinEventProc(IntPtr hWinEventHook, EventType e, HWND hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
+        {
+            //skip duplicate events
+            if(lastEvent == e && lastHwnd == hwnd) {
+                return;
+            } else {
+                lastHwnd = hwnd;
+                lastEvent = e;
+            }
+            
+            if (IsWindowValid(hwnd)) {
+                switch(e) {
+                    case EventType.EVENT_OBJECT_SHOW:
+                        Windows.Add(new WindowObj(hwnd));
+                        break;
+                    case EventType.EVENT_OBJECT_DESTROY:
+                        Windows.Remove(Windows.FirstOrDefault(w => w.hWnd == hwnd));
+                        break;
+                    case EventType.EVENT_OBJECT_FOCUS:
+                        Windows.Find(w => w.MouseOver(this.mouseLastPoint)).SlideOut();
+                        break;
+                }
+
+                var stringContainer = new StringBuilder(512);
+                GetWindowText(hwnd, stringContainer, 256);
+                Debug.WriteLine(Enum.GetName(typeof(EventType), e) + " - " + stringContainer.ToString());
+            }
+        }
+
+        private HWND MouseHookProc(DWORD code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam)
+        {
+            if (!wParam.HasFlag(WM_MOUSE.WM_MOUSEWHEEL)) {
+                if (wParam.HasFlag(WM_MOUSE.WM_MOUSEMOVE)) {
+                    this.mouseLastPoint = lParam.pt;
+                } else if (wParam.HasFlag(WM_MOUSE.WM_MBUTTONDOWN)) {
+                    Windows.FirstOrDefault(w => w.MouseOver(lParam.pt)).Selected = true;
+                } else if (wParam.HasFlag(WM_MOUSE.WM_MBUTTONUP)) {
+                    Windows.FirstOrDefault(w => w.Selected).dockedPoint = new DOCKPOINT(this.mmUpLast, lParam.pt);
+                }
+            }
+
+            //always proceed as though we werent here
+            return CallNextHookEx(HWND.Zero, code, wParam, lParam);
+        }
+
+        private static bool IsWindowValid(HWND hwnd)
+        {
+            if (!IsWindowEnabled(hwnd))
+                return false;
+            if (!IsWindowVisible(hwnd))
+                return false;
+
+            var stringContainer = new StringBuilder(512);
+            GetWindowText(hwnd, stringContainer, 256);
+            if (stringContainer.Length == 0) {
+                return false;
+            }
+            stringContainer.Clear();
+
+            GetWindowModuleFileName(hwnd, stringContainer, (uint)stringContainer.Capacity);
+            if (stringContainer.ToString().EndsWith("shell32.dll", StringComparison.OrdinalIgnoreCase)) {
+                return false;
+            }
+            stringContainer.Clear();
+
+            return true;
+        }
+
+        private bool UnhookMouseHook(IntPtr hP)
+        {
+            return UnhookWindowsHookEx(hP);
+        }
+
+        /*[DllImport("user32.dll")]
+        private static extern IntPtr GetClassName(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
         [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
-
+        private static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, out IntPtr lpdwProcessId);
+        
         [DllImport("user32.dll")]
-        static extern HWND WindowFromPoint(POINT p);
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool EnableWindow(IntPtr hWnd, bool bEnable);*/
     }
 }

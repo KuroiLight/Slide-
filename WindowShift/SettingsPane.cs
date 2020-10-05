@@ -11,18 +11,17 @@ namespace WindowShift
             InitializeComponent();
         }
 
-        private static readonly WindowManager windowManager = new WindowManager();
+        private WindowManager windowManager;// = new WindowManager();
 
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            Hide();
-            windowManager.StartHook();
+            windowManager = new WindowManager();
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            windowManager.EndHook();
+            
         }
     }
 }
