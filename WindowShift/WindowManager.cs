@@ -16,7 +16,7 @@ namespace WindowShift
     {
         private POINT mmUpLast;
         public POINT mouseLastPoint;
-        public WindowObj windowSelected;
+        private WindowObj? windowSelected = null;
         private HWND lastHwnd = HWND.Zero;
         private EventType lastEvent = 0;
 
@@ -99,6 +99,9 @@ namespace WindowShift
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool UnhookWindowsHookEx(IntPtr hhk);
 
+        [DllImport("user32.dll")]
+        static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+
         [DllImport("kernel32.dll")]
         static extern uint GetLastError();
         #endregion
@@ -117,10 +120,14 @@ namespace WindowShift
             EnumWindows(OnWindowEnum, 0);
 
             rWINEVENTHOOK = SetWinEventHook(EventType.EVENT_OBJECT_DESTROY, EventType.EVENT_OBJECT_SHOW, IntPtr.Zero, WinEventProc, 0, 0, 0x0000 | 0x0002);
-            Debug.WriteLine(GetLastError());
             rMOUSELLHOOK = SetWindowsHookEx(WH_MOUSE_LL, MouseHookProc, HWND.Zero, 0);
-            Debug.WriteLine(GetLastError());
-            Debug.WriteLine($"{0} {1}", rWINEVENTHOOK, rMOUSELLHOOK);
+        }
+
+        ~WindowManager()
+        {
+            this.Windows.Clear();
+            UnhookWindowsHookEx(rMOUSELLHOOK);
+            UnhookWinEvent(rWINEVENTHOOK);
         }
 
         private void WinEventProc(IntPtr hWinEventHook, EventType e, HWND hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)

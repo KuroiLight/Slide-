@@ -13,7 +13,7 @@ namespace WindowShift
     {
         public HWND hWnd;
         public RECT Rect { get; private set; }
-        public DOCKPOINT dockedPoint;
+        public DOCKPOINT? dockedPoint;
         public bool Selected = false;
 
         public WindowObj(HWND handle)
@@ -23,6 +23,11 @@ namespace WindowShift
             Rect = r;
         }
 
+        ~WindowObj()
+        {
+            this.SlideOut();
+            this.dockedPoint = null;
+        }
 /*        private void MoveWindow(POINT p)
         {
             SetWindowPos(hWnd, HWND.Zero, p.X, p.Y, 0, 0, SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_NOREDRAW | SetWindowPosFlags.SWP_NOSIZE);
@@ -123,7 +128,6 @@ namespace WindowShift
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
-                    break;
             }
         }
 
@@ -156,7 +160,6 @@ namespace WindowShift
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
-                    break;
             }
         }
 
