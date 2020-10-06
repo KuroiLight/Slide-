@@ -1,10 +1,6 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
-using DWORD = System.UInt32;
 using HWND = System.IntPtr;
 
 namespace WindowShift
@@ -12,15 +8,19 @@ namespace WindowShift
     public class WindowObj
     {
         public HWND hWnd;
-        public RECT Rect { get; private set; }
+        public RECT Rect
+        {
+            get {
+                GetWindowRect(hWnd, out RECT r);
+                return r;
+            }
+        }
         public DOCKPOINT? dockedPoint;
         public bool Selected = false;
 
         public WindowObj(HWND handle)
         {
             hWnd = handle;
-            GetWindowRect(hWnd, out RECT r);
-            Rect = r;
         }
 
         ~WindowObj()
@@ -28,11 +28,11 @@ namespace WindowShift
             this.SlideOut();
             this.dockedPoint = null;
         }
-/*        private void MoveWindow(POINT p)
-        {
-            SetWindowPos(hWnd, HWND.Zero, p.X, p.Y, 0, 0, SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_NOREDRAW | SetWindowPosFlags.SWP_NOSIZE);
-        }
-*/
+        /*        private void MoveWindow(POINT p)
+                {
+                    SetWindowPos(hWnd, HWND.Zero, p.X, p.Y, 0, 0, SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_NOREDRAW | SetWindowPosFlags.SWP_NOSIZE);
+                }
+        */
         private void MoveWindow(int X, int Y, int Speed)
         {
             SetWindowPos(hWnd, HWND.Zero, X, Y, 0, 0, SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_NOREDRAW | SetWindowPosFlags.SWP_NOSIZE);
@@ -57,7 +57,7 @@ namespace WindowShift
             throw new NotImplementedException();
         }
 
-        public bool MouseOver()
+/*        public bool MouseOver()
         {
             GetCursorPos(out POINT p);
             return MouseOver(p);
@@ -65,12 +65,13 @@ namespace WindowShift
 
         public bool MouseOver(POINT p)
         {
-            bool Between(int min, int max, int v) {
+            bool Between(int min, int max, int v)
+            {
                 return min < v && v < max;
             }
 
             return Between(this.Rect.Left, p.X, this.Rect.Right) && Between(this.Rect.Top, this.Rect.Bottom, p.Y);
-        }
+        }*/
 
         //Window Position/Size API
         [DllImport("user32.dll")]

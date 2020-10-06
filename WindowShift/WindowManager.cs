@@ -151,7 +151,7 @@ namespace WindowShift
                         Windows.Remove(Windows.Find(w => w.hWnd == hwnd));
                         break;
                     case EventType.EVENT_OBJECT_FOCUS:
-                        Windows.Find(w => w.MouseOver(this.mouseLastPoint) && w.dockedPoint != null).SlideOut();
+                        Windows.Find(w => w.hWnd == WindowFromPoint(this.mouseLastPoint) && w.dockedPoint != null).SlideOut();
                         break;
                 }
 
@@ -168,8 +168,8 @@ namespace WindowShift
                 if (wParam.HasFlag(WM_MOUSE.WM_MOUSEMOVE)) {
                     this.mouseLastPoint = lParam.pt;
                 } else if (wParam.HasFlag(WM_MOUSE.WM_MBUTTONDOWN)) {
+                    windowSelected = Windows.Find(w => w.hWnd == WindowFromPoint(lParam.pt));
                     this.mmUpLast = lParam.pt;
-                    windowSelected = Windows.FirstOrDefault(w => w.MouseOver(lParam.pt));
                 } else if (wParam.HasFlag(WM_MOUSE.WM_MBUTTONUP)) {
                     if(windowSelected != null) {
                         windowSelected.dockedPoint = new DOCKPOINT(this.mmUpLast, lParam.pt);
