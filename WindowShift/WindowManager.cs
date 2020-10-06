@@ -16,7 +16,7 @@ namespace WindowShift
     {
         private POINT mmUpLast;
         public POINT mouseLastPoint;
-        public HWND windowSelected;
+        public WindowObj windowSelected;
         private HWND lastHwnd = HWND.Zero;
         private EventType lastEvent = 0;
 
@@ -97,7 +97,10 @@ namespace WindowShift
         private static extern bool IsWindowEnabled(IntPtr hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool UnhookWindowsHookEx(IntPtr hhk); 
+        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+        [DllImport("kernel32.dll")]
+        static extern uint GetLastError();
         #endregion
 
         public WindowManager()
@@ -114,7 +117,9 @@ namespace WindowShift
             EnumWindows(OnWindowEnum, 0);
 
             rWINEVENTHOOK = SetWinEventHook(EventType.EVENT_OBJECT_DESTROY, EventType.EVENT_OBJECT_SHOW, IntPtr.Zero, WinEventProc, 0, 0, 0x0000 | 0x0002);
+            Debug.WriteLine(GetLastError());
             rMOUSELLHOOK = SetWindowsHookEx(WH_MOUSE_LL, MouseHookProc, HWND.Zero, 0);
+            Debug.WriteLine(GetLastError());
             Debug.WriteLine($"{0} {1}", rWINEVENTHOOK, rMOUSELLHOOK);
         }
 
@@ -131,31 +136,38 @@ namespace WindowShift
             if (IsWindowValid(hwnd)) {
                 switch(e) {
                     case EventType.EVENT_OBJECT_SHOW:
-                        Windows.Add(new WindowObj(hwnd));
+                        if(Windows.Find(w => w.hWnd == hwnd) != null) {
+                            Windows.Add(new WindowObj(hwnd));
+                        }
                         break;
                     case EventType.EVENT_OBJECT_DESTROY:
-                        Windows.Remove(Windows.FirstOrDefault(w => w.hWnd == hwnd));
+                        Windows.Remove(Windows.Find(w => w.hWnd == hwnd));
                         break;
                     case EventType.EVENT_OBJECT_FOCUS:
-                        Windows.Find(w => w.MouseOver(this.mouseLastPoint)).SlideOut();
+                        Windows.Find(w => w.MouseOver(this.mouseLastPoint) && w.dockedPoint != null).SlideOut();
                         break;
                 }
 
-                var stringContainer = new StringBuilder(512);
+                /*var stringContainer = new StringBuilder(512);
                 GetWindowText(hwnd, stringContainer, 256);
-                Debug.WriteLine(Enum.GetName(typeof(EventType), e) + " - " + stringContainer.ToString());
+                Debug.WriteLine(Enum.GetName(typeof(EventType), e) + " - " + stringContainer.ToString());*/
             }
         }
 
         private HWND MouseHookProc(DWORD code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam)
         {
+            //Debug.WriteLine(Enum.GetName(typeof(WM_MOUSE), wParam));
             if (!wParam.HasFlag(WM_MOUSE.WM_MOUSEWHEEL)) {
                 if (wParam.HasFlag(WM_MOUSE.WM_MOUSEMOVE)) {
                     this.mouseLastPoint = lParam.pt;
                 } else if (wParam.HasFlag(WM_MOUSE.WM_MBUTTONDOWN)) {
-                    Windows.FirstOrDefault(w => w.MouseOver(lParam.pt)).Selected = true;
+                    this.mmUpLast = lParam.pt;
+                    windowSelected = Windows.FirstOrDefault(w => w.MouseOver(lParam.pt));
                 } else if (wParam.HasFlag(WM_MOUSE.WM_MBUTTONUP)) {
-                    Windows.FirstOrDefault(w => w.Selected).dockedPoint = new DOCKPOINT(this.mmUpLast, lParam.pt);
+                    if(windowSelected != null) {
+                        windowSelected.dockedPoint = new DOCKPOINT(this.mmUpLast, lParam.pt);
+                        windowSelected = null;
+                    }
                 }
             }
 
