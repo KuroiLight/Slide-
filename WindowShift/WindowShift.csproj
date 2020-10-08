@@ -4,11 +4,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
+    <StartupObject>WindowShift.Program</StartupObject>
     <LangVersion>9.0</LangVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Api.cs" />
-  </ItemGroup>
-
 </Project>
