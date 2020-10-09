@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-
-using HWND = System.IntPtr;
-using DWORD = System.UInt32;
 using System.Text;
+using HWND = System.IntPtr;
 
 namespace WindowShift
 {
@@ -120,7 +118,7 @@ namespace WindowShift
             SWP_NOZORDER = 0x0004,
             SWP_SHOWWINDOW = 0x0040
         }
-       
+
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
 
@@ -200,16 +198,16 @@ namespace WindowShift
 
         public bool Contains(POINT pt)
         {
-            if(this.Left > pt.X) {
+            if (this.Left > pt.X) {
                 return false;
             }
-            if(this.Right < pt.X) {
+            if (this.Right < pt.X) {
                 return false;
             }
-            if(this.Bottom < pt.Y) {
+            if (this.Bottom < pt.Y) {
                 return false;
             }
-            if(this.Top > pt.Y) {
+            if (this.Top > pt.Y) {
                 return false;
             }
 

@@ -21,7 +21,7 @@ namespace WindowShift
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            
+
         }
     }
 }

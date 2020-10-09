@@ -1,11 +1,6 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -38,9 +33,9 @@ namespace WindowShift
             Api.GetWindowRect(TrayhWnd, out RECT trayRect);
 
             foreach (var S in Screen.AllScreens.AsParallel()) {
-                foreach(var D in Enumerable.Range(1, 4)) {
+                foreach (var D in Enumerable.Range(1, 4)) {
                     var Anchor = new AnchorPoint((DragDirection)D, S);
-                    if(!trayRect.Contains(Anchor.AnchorPt)) {
+                    if (!trayRect.Contains(Anchor.AnchorPt)) {
                         Anchors.Add(new AnchorPoint((DragDirection)D, S));
                     }
                 }
@@ -88,7 +83,7 @@ namespace WindowShift
 
         private HWND MouseHookProc(DWORD code, Api.WM_MOUSE wParam, Api.MSLLHOOKSTRUCT lParam)
         {
-            if(wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEMOVE)) {
+            if (wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEMOVE)) {
                 Task.Run(() => { //temporary solution, so CallNextHookEx doesn't fail
                     var Anchor = Anchors.FirstOrDefault(A => A.WindowHandle == WindowFrom(lParam.pt));
                     if (Anchor != null) {
