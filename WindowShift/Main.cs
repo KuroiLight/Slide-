@@ -96,18 +96,14 @@ namespace WindowShift
                 MButtonStartPoint = lParam.pt;
                 MButtonWindow = WindowFrom(lParam.pt);
             } else if (!wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEWHEEL) && wParam.HasFlag(Api.WM_MOUSE.WM_MBUTTONUP)) {
-                var dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
-                if (dir != DragDirection.None) {
-                    var Anchor = Anchors.FirstOrDefault(A => A.Direction == dir && A.MonitorArea.Contains(lParam.pt));
-                    if (Anchor != null) {
-                        var prevAnchor = Anchors.FirstOrDefault(A => A.WindowHandle == MButtonWindow);
-                        if (prevAnchor != null) {
-                            prevAnchor.WindowHandle = HWND.Zero;
-                        }
-                        Anchor.WindowHandle = MButtonWindow;
-                    }
-                }
 
+                var dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
+                var toAnchor = Anchors.FirstOrDefault(A => A.Direction == dir && A.MonitorArea.Contains(lParam.pt));
+                var fromAnchor = Anchors.FirstOrDefault(A => A.WindowHandle == MButtonWindow);
+                if (toAnchor != null) {
+                    fromAnchor.WindowHandle = HWND.Zero;
+                    toAnchor.WindowHandle = MButtonWindow;
+                }
                 MButtonWindow = HWND.Zero;
             }
 

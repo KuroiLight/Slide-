@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using HWND = System.IntPtr;
 
@@ -15,7 +14,6 @@ namespace WindowShift
         public DragDirection Direction;
         public RECT MonitorArea;
         public bool InTransit = false;
-        public Task TransitTask;
         public bool Hidden = false;
 
         public AnchorPoint(DragDirection direction, Screen monitor)
@@ -50,17 +48,9 @@ namespace WindowShift
 
         public void TransitionWindow(bool Hide, int speed = 5)
         {
-            if (this.windowHandle != HWND.Zero) {
-                if (this.TransitTask != null && this.TransitTask.Status == TaskStatus.Running) {
-                    TransitTask.Wait();
-                }
-                TransitTask = new Task(() => {
-                    var newPosition = this.GetNewPosition(Hide);
-
-                    //animate transition heere
-                    Api.SetWindowPos(this.windowHandle, HWND.Zero, newPosition.X, newPosition.Y, 0, 0, Api.SetWindowPosFlags.SWP_NOSIZE | Api.SetWindowPosFlags.SWP_NOZORDER);
-                });
-                TransitTask.Start();
+            if (this.windowHandle != HWND.Zero && Api.IsWindow(this.windowHandle)) {
+                var newPosition = GetNewPosition(Hide);
+                Api.SetWindowPos(this.windowHandle, HWND.Zero, newPosition.X, newPosition.Y, 0, 0, Api.SetWindowPosFlags.SWP_NOSIZE | Api.SetWindowPosFlags.SWP_NOZORDER);
             }
         }
 

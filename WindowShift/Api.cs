@@ -13,6 +13,10 @@ namespace WindowShift
         [DllImport("user32.dll", SetLastError = true)]
         public static extern HWND FindWindow(string lpClassName, string lpWindowName);
 
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsWindow(IntPtr hWnd);
+
 
         public delegate void WinEventDelegate(HWND hWinEventHook, EventType eventType, HWND hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
         public delegate bool WNDENUMPROC(HWND hWnd, uint lParam);
