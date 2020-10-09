@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using DWORD = System.Int32;
@@ -20,10 +19,8 @@ namespace WindowShift
             FindAllAnchorPoints();
         }
 
-        ~Main()
-        {
-            Api.UnhookWinEvent(hMouseLLHook);
-        }
+        ~Main() => Api.UnhookWinEvent(hMouseLLHook);
+
 
         private HWND TrayhWnd = Api.FindWindow("Shell_TrayWnd", null);
         private HWND DesktophWnd = Api.GetDesktopWindow();
@@ -84,38 +81,34 @@ namespace WindowShift
         private HWND MouseHookProc(DWORD code, Api.WM_MOUSE wParam, Api.MSLLHOOKSTRUCT lParam)
         {
             if (wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEMOVE)) {
-                Task.Run(() => { //temporary solution, so CallNextHookEx doesn't fail
-                    var Anchor = Anchors.FirstOrDefault(A => A.WindowHandle == WindowFrom(lParam.pt));
-                    if (Anchor != null) {
-                        Anchor.TransitionWindow(false);
-                    } else {
-                        foreach (var A in Anchors) {
-                            if (!A.Hidden) {
-                                A.TransitionWindow(true);
-                            }
+                var Anchor = Anchors.FirstOrDefault(A => A.WindowHandle == WindowFrom(lParam.pt));
+                if (Anchor != null) {
+                    Anchor.TransitionWindow(false);
+                } else {
+                    foreach (var A in Anchors) {
+                        if (!A.Hidden) {
+                            A.TransitionWindow(true);
                         }
                     }
-                });
+                }
             }
             if (!wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEWHEEL) && wParam.HasFlag(Api.WM_MOUSE.WM_MBUTTONDOWN)) {
                 MButtonStartPoint = lParam.pt;
                 MButtonWindow = WindowFrom(lParam.pt);
             } else if (!wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEWHEEL) && wParam.HasFlag(Api.WM_MOUSE.WM_MBUTTONUP)) {
-                Task.Run(() => { //temporary solution, so CallNextHookEx doesn't fail
-                    var dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
-                    if (dir != DragDirection.None) {
-                        var Anchor = Anchors.FirstOrDefault(A => A.Direction == dir && A.MonitorArea.Contains(lParam.pt));
-                        if (Anchor != null) {
-                            var prevAnchor = Anchors.FirstOrDefault(A => A.WindowHandle == MButtonWindow);
-                            if (prevAnchor != null) {
-                                prevAnchor.WindowHandle = HWND.Zero;
-                            }
-                            Anchor.WindowHandle = MButtonWindow;
+                var dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
+                if (dir != DragDirection.None) {
+                    var Anchor = Anchors.FirstOrDefault(A => A.Direction == dir && A.MonitorArea.Contains(lParam.pt));
+                    if (Anchor != null) {
+                        var prevAnchor = Anchors.FirstOrDefault(A => A.WindowHandle == MButtonWindow);
+                        if (prevAnchor != null) {
+                            prevAnchor.WindowHandle = HWND.Zero;
                         }
+                        Anchor.WindowHandle = MButtonWindow;
                     }
+                }
 
-                    MButtonWindow = HWND.Zero;
-                });
+                MButtonWindow = HWND.Zero;
             }
 
 

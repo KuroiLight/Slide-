@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using HWND = System.IntPtr;
 
@@ -14,6 +15,7 @@ namespace WindowShift
         public DragDirection Direction;
         public RECT MonitorArea;
         public bool InTransit = false;
+        public Task TransitTask;
         public bool Hidden = false;
 
         public AnchorPoint(DragDirection direction, Screen monitor)
@@ -49,17 +51,23 @@ namespace WindowShift
         public void TransitionWindow(bool Hide, int speed = 5)
         {
             if (this.windowHandle != HWND.Zero) {
-                POINT newPosition = this.GetNewPosition(Hide);
+                if (this.TransitTask != null && this.TransitTask.Status == TaskStatus.Running) {
+                    TransitTask.Wait();
+                }
+                TransitTask = new Task(() => {
+                    var newPosition = this.GetNewPosition(Hide);
 
-                //animate transition heere
-                Api.SetWindowPos(this.windowHandle, HWND.Zero, newPosition.X, newPosition.Y, 0, 0, Api.SetWindowPosFlags.SWP_NOSIZE | Api.SetWindowPosFlags.SWP_NOZORDER);
+                    //animate transition heere
+                    Api.SetWindowPos(this.windowHandle, HWND.Zero, newPosition.X, newPosition.Y, 0, 0, Api.SetWindowPosFlags.SWP_NOSIZE | Api.SetWindowPosFlags.SWP_NOZORDER);
+                });
+                TransitTask.Start();
             }
         }
 
         private POINT GetNewPosition(bool Hide, int OffSet = 30)
         {
             Api.GetWindowRect(this.windowHandle, out RECT R);
-            POINT newPosition = new POINT((this.MonitorArea.Right - this.MonitorArea.Left) / 2 - ((R.Right - R.Left) / 2), (this.MonitorArea.Bottom - this.MonitorArea.Top) / 2 - ((R.Bottom - R.Top) / 2)); //default center screen
+            var newPosition = new POINT((this.MonitorArea.Right - this.MonitorArea.Left) / 2 - ((R.Right - R.Left) / 2), (this.MonitorArea.Bottom - this.MonitorArea.Top) / 2 - ((R.Bottom - R.Top) / 2)); //default center screen
 
             if (Hide) {
                 switch (this.Direction) {
