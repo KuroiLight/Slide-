@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace WindowShift
@@ -14,7 +15,11 @@ namespace WindowShift
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new SettingsPane());
+            try {
+                Application.Run(new SettingsPane());
+            } catch (Exception) {
+                return;
+            }
         }
     }
 }

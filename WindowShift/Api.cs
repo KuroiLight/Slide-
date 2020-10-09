@@ -13,15 +13,15 @@ namespace WindowShift
         public static extern bool GetWindowRect(HWND hwnd, out RECT lpRect);
 
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+        public static extern HWND FindWindow(string lpClassName, string lpWindowName);
 
 
-        public delegate void WinEventDelegate(IntPtr hWinEventHook, EventType eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
-        public delegate bool WNDENUMPROC(IntPtr hWnd, uint lParam);
-        public delegate IntPtr HookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam);
+        public delegate void WinEventDelegate(HWND hWinEventHook, EventType eventType, HWND hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
+        public delegate bool WNDENUMPROC(HWND hWnd, uint lParam);
+        public delegate HWND HookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam);
 
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr SetWinEventHook(EventType eventMin, EventType eventMax, IntPtr
+        public static extern HWND SetWinEventHook(EventType eventMin, EventType eventMax, HWND
                                              hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess,
                                              uint idThread, uint dwFlags);
         public enum EventType : uint
@@ -37,10 +37,10 @@ namespace WindowShift
         public const int WH_MOUSE_LL = 14;
 
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr SetWindowsHookEx(int hookType, HookProc lpfn, IntPtr hMod, uint dwThreadId);
+        public static extern HWND SetWindowsHookEx(int hookType, HookProc lpfn, HWND hMod, uint dwThreadId);
 
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern HWND CallNextHookEx(IntPtr hhk, int nCode, WM_MOUSE wParam, [In] MSLLHOOKSTRUCT lParam);
+        public static extern HWND CallNextHookEx(HWND hhk, int nCode, WM_MOUSE wParam, [In] MSLLHOOKSTRUCT lParam);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct MSLLHOOKSTRUCT
@@ -66,37 +66,40 @@ namespace WindowShift
         }
 
         [DllImport("user32", SetLastError = true)]
-        public static extern IntPtr GetWindowText(IntPtr hwnd, StringBuilder lptrString, int nMaxCount);
+        public static extern HWND GetWindowText(HWND hwnd, StringBuilder lptrString, int nMaxCount);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern HWND WindowFromPoint(POINT p);
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        public static extern IntPtr GetWindowModuleFileName(IntPtr hwnd,
+        public static extern HWND GetWindowModuleFileName(HWND hwnd,
                                                    StringBuilder lpszFileName, uint cchFileNameMax);
 
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr EnumWindows(WNDENUMPROC lpEnumFunc, uint lParam);
+        public static extern HWND EnumWindows(WNDENUMPROC lpEnumFunc, uint lParam);
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool IsWindowVisible(IntPtr hWnd);
+        public static extern bool IsWindowVisible(HWND hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool IsWindowEnabled(IntPtr hWnd);
+        public static extern bool IsWindowEnabled(HWND hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool UnhookWindowsHookEx(IntPtr hhk);
+        public static extern bool UnhookWindowsHookEx(HWND hhk);
 
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+        public static extern bool UnhookWinEvent(HWND hWinEventHook);
+
+        [DllImport("user32.dll", ExactSpelling = true, CharSet = CharSet.Auto)]
+        public static extern HWND GetParent(HWND hWnd);
 
         [DllImport("kernel32.dll")]
         public static extern uint GetLastError();
 
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, out IntPtr lpdwProcessId);
+        public static extern HWND GetWindowThreadProcessId(HWND hWnd, out HWND lpdwProcessId);
 
         [Flags]
         public enum SetWindowPosFlags : uint
@@ -126,10 +129,13 @@ namespace WindowShift
         public static extern bool GetCursorPos(out POINT lpPoint);
 
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+        public static extern uint GetWindowThreadProcessId(HWND hWnd, out uint lpdwProcessId);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern HWND ChildWindowFromPointEx(HWND hWndParent, POINT pt, uint uFlags);
+
+        [DllImport("user32.dll", SetLastError = false)]
+        public static extern IntPtr GetDesktopWindow();
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -185,6 +191,29 @@ namespace WindowShift
             Top = top;
             Right = right;
             Bottom = bottom;
+        }
+
+        public static RECT FromRectangle(System.Drawing.Rectangle R)
+        {
+            return (new RECT(R.Left, R.Top, R.Right, R.Bottom));
+        }
+
+        public bool Contains(POINT pt)
+        {
+            if(this.Left > pt.X) {
+                return false;
+            }
+            if(this.Right < pt.X) {
+                return false;
+            }
+            if(this.Bottom < pt.Y) {
+                return false;
+            }
+            if(this.Top > pt.Y) {
+                return false;
+            }
+
+            return true;
         }
 
         public static bool operator ==(RECT r1, RECT r2)

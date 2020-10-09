@@ -22,6 +22,7 @@ namespace WindowShift
         public Main()
         {
             hMouseLLHook = Api.SetWindowsHookEx(Api.WH_MOUSE_LL, MouseHookProc, HWND.Zero, 0);
+            FindAllAnchorPoints();
         }
 
         ~Main()
@@ -29,9 +30,21 @@ namespace WindowShift
             Api.UnhookWinEvent(hMouseLLHook);
         }
 
+        private HWND TrayhWnd = Api.FindWindow("Shell_TrayWnd", null);
+        private HWND DesktophWnd = Api.GetDesktopWindow();
+
         private void FindAllAnchorPoints()
         {
-            //Screen.AllScreens.
+            Api.GetWindowRect(TrayhWnd, out RECT trayRect);
+
+            foreach (var S in Screen.AllScreens.AsParallel()) {
+                foreach(var D in Enumerable.Range(1, 4)) {
+                    var Anchor = new AnchorPoint((DragDirection)D, S);
+                    if(!trayRect.Contains(Anchor.AnchorPt)) {
+                        Anchors.Add(new AnchorPoint((DragDirection)D, S));
+                    }
+                }
+            }
         }
 
         private void TransitionWindow(HWND window, POINT pt)
@@ -39,10 +52,21 @@ namespace WindowShift
             //SetWindowPos?
         }
 
-        private HWND WindowFromCursor()
+        private static HWND WindowFromCursor()
         {
-            Api.GetCursorPos(out POINT cPos);
-            return Api.WindowFromPoint(cPos); //childwindowfrompointex
+            Api.GetCursorPos(out POINT p);
+            return WindowFrom(p);
+        }
+
+        private static HWND WindowFrom(POINT pt)
+        {
+            HWND CurrentWindow = Api.WindowFromPoint(pt);
+
+            while (Api.GetParent(CurrentWindow) != IntPtr.Zero) {
+                CurrentWindow = Api.GetParent(CurrentWindow);
+            }
+
+            return CurrentWindow;
         }
 
         private DragDirection DirectionFromPts(POINT start, POINT end, int deadzone = 0)
@@ -59,26 +83,39 @@ namespace WindowShift
             };
         }
 
-
-        private POINT mmUpLast;
-        public POINT mouseLastPoint;
-        private HWND lastHwnd = HWND.Zero;
-
-
-        private HWND MButtonWindow = HWND.Zero;
+        private HWND MButtonWindow;
         private POINT MButtonStartPoint;
 
         private HWND MouseHookProc(DWORD code, Api.WM_MOUSE wParam, Api.MSLLHOOKSTRUCT lParam)
         {
-            if (!wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEWHEEL)) {
-                if (wParam.HasFlag(Api.WM_MOUSE.WM_MBUTTONDOWN)) {
-                    MButtonStartPoint = lParam.pt;
-
-                    MessageBox.Show(Api.ChildWindowFromPointEx(HWND.Zero, lParam.pt, 0).ToString());
-                } else if (wParam.HasFlag(Api.WM_MOUSE.WM_MBUTTONUP)) {
-                    //MessageBox.Show(Enum.GetName(typeof(DragDirection), DirectionFromPts(MButtonStartPoint, lParam.pt)));
+            if(wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEMOVE)) {
+                var Anchor = Anchors.FirstOrDefault(A => A.ContainedWindow == WindowFrom(lParam.pt));
+                if(Anchor != null) {
+                    Anchor.TransitionWindow(false);
+                } else {
+                    foreach (var A in Anchors) {
+                        if(!A.Hidden) {
+                            A.TransitionWindow(true);
+                        }
+                    }
                 }
             }
+            if (!wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEWHEEL) && wParam.HasFlag(Api.WM_MOUSE.WM_MBUTTONDOWN)) {
+                MButtonStartPoint = lParam.pt;
+                MButtonWindow = WindowFrom(lParam.pt);
+            } else if (!wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEWHEEL) && wParam.HasFlag(Api.WM_MOUSE.WM_MBUTTONUP)) {
+                var dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
+                if(dir != DragDirection.None) {
+                    var Anchor = Anchors.FirstOrDefault(A => A.Direction == dir && A.MonitorArea.Contains(lParam.pt));
+                    if(Anchor != null) {
+                        Anchor.ContainedWindow = MButtonWindow;
+                        Anchor.TransitionWindow(true);
+                    }
+                }
+                
+                MButtonWindow = HWND.Zero;
+            }
+
 
             //always proceed as though we werent here
             return Api.CallNextHookEx(HWND.Zero, code, wParam, lParam);
