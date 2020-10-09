@@ -12,7 +12,9 @@ namespace WindowShift
 
     public class AnchorPoint
     {
-        public HWND ContainedWindow;
+        private HWND windowHandle;
+        public HWND WindowHandle { get => windowHandle; set { this.TransitionWindow(false); windowHandle = value; this.TransitionWindow(true); } }
+
         public POINT AnchorPt;
         public DragDirection Direction;
         public RECT MonitorArea;
@@ -45,23 +47,23 @@ namespace WindowShift
 
         ~AnchorPoint()
         {
-            ContainedWindow = HWND.Zero;
+            windowHandle = HWND.Zero;
             this.Direction = 0;
         }
 
         public void TransitionWindow(bool Hide, int speed = 5)
         {
-            if (this.ContainedWindow != HWND.Zero) {
+            if (this.windowHandle != HWND.Zero) {
                 POINT newPosition = this.GetNewPosition(Hide);
 
                 //animate transition heere
-                Api.SetWindowPos(this.ContainedWindow, HWND.Zero, newPosition.X, newPosition.Y, 0, 0, Api.SetWindowPosFlags.SWP_NOSIZE | Api.SetWindowPosFlags.SWP_NOZORDER);
+                Api.SetWindowPos(this.windowHandle, HWND.Zero, newPosition.X, newPosition.Y, 0, 0, Api.SetWindowPosFlags.SWP_NOSIZE | Api.SetWindowPosFlags.SWP_NOZORDER);
             }
         }
 
-        private POINT GetNewPosition(bool Hide, int OffSet = 10)
+        private POINT GetNewPosition(bool Hide, int OffSet = 30)
         {
-            Api.GetWindowRect(this.ContainedWindow, out RECT R);
+            Api.GetWindowRect(this.windowHandle, out RECT R);
             POINT newPosition = new POINT((this.MonitorArea.Right - this.MonitorArea.Left) / 2 - ((R.Right - R.Left) / 2), (this.MonitorArea.Bottom - this.MonitorArea.Top) / 2 - ((R.Bottom - R.Top) / 2)); //default center screen
 
             if (Hide) {
@@ -88,16 +90,16 @@ namespace WindowShift
                     case DragDirection.None:
                         break;
                     case DragDirection.Left:
-                        newPosition.X = this.AnchorPt.X + OffSet / 2;
+                        newPosition.X = this.AnchorPt.X;
                         break;
                     case DragDirection.Right:
-                        newPosition.X = (this.AnchorPt.X - (R.Right - R.Left)) - OffSet / 2;
+                        newPosition.X = (this.AnchorPt.X - (R.Right - R.Left));
                         break;
                     case DragDirection.Up:
-                        newPosition.Y = this.AnchorPt.Y + OffSet / 2;
+                        newPosition.Y = this.AnchorPt.Y;
                         break;
                     case DragDirection.Down:
-                        newPosition.Y = (this.AnchorPt.Y - (R.Bottom - R.Top)) - OffSet / 2;
+                        newPosition.Y = (this.AnchorPt.Y - (R.Bottom - R.Top));
                         break;
                     default:
                         break;

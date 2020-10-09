@@ -89,31 +89,38 @@ namespace WindowShift
         private HWND MouseHookProc(DWORD code, Api.WM_MOUSE wParam, Api.MSLLHOOKSTRUCT lParam)
         {
             if(wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEMOVE)) {
-                var Anchor = Anchors.FirstOrDefault(A => A.ContainedWindow == WindowFrom(lParam.pt));
-                if(Anchor != null) {
-                    Anchor.TransitionWindow(false);
-                } else {
-                    foreach (var A in Anchors) {
-                        if(!A.Hidden) {
-                            A.TransitionWindow(true);
+                Task.Run(() => { //temporary solution, so CallNextHookEx doesn't fail
+                    var Anchor = Anchors.FirstOrDefault(A => A.WindowHandle == WindowFrom(lParam.pt));
+                    if (Anchor != null) {
+                        Anchor.TransitionWindow(false);
+                    } else {
+                        foreach (var A in Anchors) {
+                            if (!A.Hidden) {
+                                A.TransitionWindow(true);
+                            }
                         }
                     }
-                }
+                });
             }
             if (!wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEWHEEL) && wParam.HasFlag(Api.WM_MOUSE.WM_MBUTTONDOWN)) {
                 MButtonStartPoint = lParam.pt;
                 MButtonWindow = WindowFrom(lParam.pt);
             } else if (!wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEWHEEL) && wParam.HasFlag(Api.WM_MOUSE.WM_MBUTTONUP)) {
-                var dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
-                if(dir != DragDirection.None) {
-                    var Anchor = Anchors.FirstOrDefault(A => A.Direction == dir && A.MonitorArea.Contains(lParam.pt));
-                    if(Anchor != null) {
-                        Anchor.ContainedWindow = MButtonWindow;
-                        Anchor.TransitionWindow(true);
+                Task.Run(() => { //temporary solution, so CallNextHookEx doesn't fail
+                    var dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
+                    if (dir != DragDirection.None) {
+                        var Anchor = Anchors.FirstOrDefault(A => A.Direction == dir && A.MonitorArea.Contains(lParam.pt));
+                        if (Anchor != null) {
+                            var prevAnchor = Anchors.FirstOrDefault(A => A.WindowHandle == MButtonWindow);
+                            if (prevAnchor != null) {
+                                prevAnchor.WindowHandle = HWND.Zero;
+                            }
+                            Anchor.WindowHandle = MButtonWindow;
+                        }
                     }
-                }
-                
-                MButtonWindow = HWND.Zero;
+
+                    MButtonWindow = HWND.Zero;
+                });
             }
 
 
