@@ -80,7 +80,7 @@ namespace WindowShift
 
         private HWND MouseHookProc(DWORD code, Api.WM_MOUSE wParam, Api.MSLLHOOKSTRUCT lParam)
         {
-            if (wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEMOVE)) {
+            if (wParam == Api.WM_MOUSE.WM_MOUSEMOVE) {
                 var Anchor = Anchors.FirstOrDefault(A => A.WindowHandle == WindowFrom(lParam.pt));
                 if (Anchor != null) {
                     Anchor.TransitionWindow(false);
@@ -91,17 +91,17 @@ namespace WindowShift
                         }
                     }
                 }
-            }
-            if (!wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEWHEEL) && wParam.HasFlag(Api.WM_MOUSE.WM_MBUTTONDOWN)) {
+            } else if (wParam == Api.WM_MOUSE.WM_MBUTTONDOWN) {
                 MButtonStartPoint = lParam.pt;
                 MButtonWindow = WindowFrom(lParam.pt);
-            } else if (!wParam.HasFlag(Api.WM_MOUSE.WM_MOUSEWHEEL) && wParam.HasFlag(Api.WM_MOUSE.WM_MBUTTONUP)) {
-
+            } else if (wParam == Api.WM_MOUSE.WM_MBUTTONUP) {
                 var dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
                 var toAnchor = Anchors.FirstOrDefault(A => A.Direction == dir && A.MonitorArea.Contains(lParam.pt));
-                var fromAnchor = Anchors.FirstOrDefault(A => A.WindowHandle == MButtonWindow);
                 if (toAnchor != null) {
-                    fromAnchor.WindowHandle = HWND.Zero;
+                    var fromAnchor = Anchors.FirstOrDefault(A => A.WindowHandle == MButtonWindow);
+                    if (fromAnchor != null) {
+                        fromAnchor.WindowHandle = HWND.Zero;
+                    }
                     toAnchor.WindowHandle = MButtonWindow;
                 }
                 MButtonWindow = HWND.Zero;
