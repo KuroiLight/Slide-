@@ -14,11 +14,8 @@ namespace WindowShift
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            try {
-                Application.Run(new SettingsPane());
-            } catch (Exception) {
-                return;
-            }
+
+            Application.Run(new SettingsPane());
         }
     }
 }
