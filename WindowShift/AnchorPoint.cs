@@ -45,13 +45,14 @@ namespace WindowShift
 
         public void AttachWindow(HWND newWindow)
         {
-            ChangeState(AnchorStatus.CenterScreen);
+            RemoveWindow();
             WindowHandle = newWindow;
             ChangeState(AnchorStatus.Offscreen);
         }
 
         public void RemoveWindow()
         {
+            ChangeState(AnchorStatus.CenterScreen);
             WindowHandle = HWND.Zero;
             State = AnchorStatus.Empty;
         }
