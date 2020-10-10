@@ -1,6 +1,6 @@
 # WindowShift
 WindowShift is re-write of my old AutoHotkey script [AHKDocker](https://www.autohotkey.com/boards/viewtopic.php?f=6&t=7095) in C#.
-The current implementation isn't usable but the majority of the boilerplate code is present and functional.
+The current implementation is functional but still very rough.
 
 Implementation Status:
 - [x] window classes
