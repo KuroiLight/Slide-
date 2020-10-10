@@ -41,13 +41,13 @@ namespace WindowShift
             this.listBox1.Size = new System.Drawing.Size(499, 244);
             this.listBox1.TabIndex = 0;
             // 
-            // Form1
+            // SettingsPane
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.listBox1);
-            this.Name = "Form1";
+            this.Name = "SettingsPane";
             this.Text = "Form1";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
