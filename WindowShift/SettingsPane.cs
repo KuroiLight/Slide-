@@ -6,6 +6,8 @@ namespace WindowShift
 
     public partial class SettingsPane : Form
     {
+        private readonly Main M = new Main();
+
         public SettingsPane()
         {
             InitializeComponent();
@@ -18,7 +20,7 @@ namespace WindowShift
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-
+            M.Dispose();
         }
     }
 }
