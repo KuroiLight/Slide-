@@ -15,11 +15,11 @@ namespace WindowShift
 
         public Main()
         {
-            hMouseLLHook = Api.SetWindowsHookEx(Api.WH_MOUSE_LL, MouseHookProc, HWND.Zero, 0);
+            hMouseLLHook = Api.Wrapd_SetWindowsHookEx(MouseHookProc);
             FindAllAnchorPoints();
         }
 
-        ~Main() => Api.UnhookWinEvent(hMouseLLHook);
+        ~Main() => Api.Wrapd_UnhookWindowsHookEx(hMouseLLHook);
 
 
 
@@ -27,15 +27,15 @@ namespace WindowShift
 
         private void FindAllAnchorPoints()
         {
-            HWND TrayhWnd = Api.FindWindow("Shell_TrayWnd", null);
-            RECT TrayRect = Api.GetWindowRect(TrayhWnd);
+            HWND TrayhWnd = Api.Wrapd_FindWindow("Shell_TrayWnd", null);
+            RECT TrayRect = Api.Wrapd_GetWindowRect(TrayhWnd);
 
             var AllScreens = Screen.AllScreens.ToList();
             AllScreens.ForEach((Screen S) => {
                 Enumerable.Range((int)DragDirection.Left, (int)DragDirection.Down).ToList().ForEach((int dir) => {
                     var D = (DragDirection)dir;
                     var AP = new AnchorPoint(D, S);
-                    bool shouldAdd = D switch
+                    var shouldAdd = D switch
                     {
                         DragDirection.Left => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X - 100, AP.AnchorPt.Y))),
                         DragDirection.Right => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X + 100, AP.AnchorPt.Y))),
@@ -56,8 +56,8 @@ namespace WindowShift
         {
             HWND CurrentWindow = Api.WindowFromPoint(pt);
 
-            while (Api.GetParent(CurrentWindow) != IntPtr.Zero) {
-                CurrentWindow = Api.GetParent(CurrentWindow);
+            while (Api.Wrapd_GetParent(CurrentWindow) != IntPtr.Zero) {
+                CurrentWindow = Api.Wrapd_GetParent(CurrentWindow);
             }
 
             return CurrentWindow;
@@ -97,7 +97,7 @@ namespace WindowShift
                 MButtonWindow = WindowFrom(lParam.pt);
             } else if (wParam == Api.WM_MOUSE.WM_MBUTTONUP) {
                 DragDirection dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
-                AnchorPoint? toAnchor = Anchors.Find(Anchor => Anchor.Direction == dir && Anchor.MonitorArea.Contains(lParam.pt));
+                AnchorPoint toAnchor = Anchors.Find(Anchor => Anchor.Direction == dir && Anchor.MonitorArea.Contains(lParam.pt));
                 if (toAnchor != null) {
                     Anchors.ForEach(delegate (AnchorPoint Anchor) {
                         if (Anchor.WindowHandle == MButtonWindow) {

@@ -61,7 +61,7 @@ namespace WindowShift
         {
             if (WindowHandle != HWND.Zero && Api.IsWindow(WindowHandle) && State != toState) {
                 POINT newPoint = GetNewPosition(toState);
-                Api.SetWindowPos(WindowHandle, newPoint);
+                Api.Wrapd_SetWindowPos(WindowHandle, newPoint);
                 State = toState;
             }
         }
@@ -69,7 +69,7 @@ namespace WindowShift
         private POINT GetNewPosition(AnchorStatus toState)
         {
             var OffSet = 30; // => user-defined setting
-            RECT R = Api.GetWindowRect(WindowHandle);
+            RECT R = Api.Wrapd_GetWindowRect(WindowHandle);
 
             var newPosition = new POINT((MonitorArea.Right - MonitorArea.Left) / 2 - ((R.Right - R.Left) / 2), (MonitorArea.Bottom - MonitorArea.Top) / 2 - ((R.Bottom - R.Top) / 2)); //default center screen
 
