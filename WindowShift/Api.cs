@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Text;
 using HWND = System.IntPtr;
 
 namespace WindowShift
@@ -17,7 +16,7 @@ namespace WindowShift
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool GetWindowRect(HWND hwnd, out RECT lpRect);
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
+        [DllImport("user32.dll", SetLastError = true)]
         private static extern HWND FindWindow(string lpClassName, string lpWindowName);
         [DllImport("user32.dll", SetLastError = true)]
         private static extern HWND SetWindowsHookEx(int hookType, HookProc lpfn, HWND hMod, uint dwThreadId);
@@ -42,7 +41,7 @@ namespace WindowShift
         //############################################################################# wrappers
         public static HWND Wrapd_GetParent(HWND hWnd)
         {
-            if(hWnd == HWND.Zero) {
+            if (hWnd == HWND.Zero) {
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
@@ -64,14 +63,14 @@ namespace WindowShift
 
         public static HWND Wrapd_SetWindowsHookEx(HookProc lpfn)
         {
-            if(lpfn == null) {
+            if (lpfn == null) {
                 throw new ArgumentNullException(nameof(lpfn));
             }
 
             var WH_MOUSE_LL = 14;
             HWND returnValue = SetWindowsHookEx(WH_MOUSE_LL, lpfn, HWND.Zero, 0);
 
-            if(returnValue == HWND.Zero) {
+            if (returnValue == HWND.Zero) {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 
@@ -80,13 +79,13 @@ namespace WindowShift
 
         public static bool Wrapd_UnhookWindowsHookEx(HWND hhk)
         {
-            if(hhk == HWND.Zero) {
+            if (hhk == HWND.Zero) {
                 throw new ArgumentNullException(nameof(hhk));
             }
 
             var returnValue = UnhookWindowsHookEx(hhk);
 
-            if(returnValue == false) {
+            if (returnValue == false) {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 
