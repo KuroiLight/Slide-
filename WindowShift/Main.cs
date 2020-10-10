@@ -35,22 +35,15 @@ namespace WindowShift
                 Enumerable.Range((int)DragDirection.Left, (int)DragDirection.Down).ToList().ForEach((int dir) => {
                     var D = (DragDirection)dir;
                     var AP = new AnchorPoint(D, S);
-                    var shouldAdd = false;
-
-                    switch (D) {
-                        case DragDirection.Left:
-                            shouldAdd = !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X - 100, AP.AnchorPt.Y)));
-                            break;
-                        case DragDirection.Right:
-                            shouldAdd = !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X + 100, AP.AnchorPt.Y)));
-                            break;
-                        case DragDirection.Up:
-                            shouldAdd = !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X, AP.AnchorPt.Y - 100)));
-                            break;
-                        case DragDirection.Down:
-                            shouldAdd = !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X, AP.AnchorPt.Y + 100)));
-                            break;
-                    }
+                    bool shouldAdd = D switch
+                    {
+                        DragDirection.Left => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X - 100, AP.AnchorPt.Y))),
+                        DragDirection.Right => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X + 100, AP.AnchorPt.Y))),
+                        DragDirection.Up => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X, AP.AnchorPt.Y - 100))),
+                        DragDirection.Down => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X, AP.AnchorPt.Y + 100))),
+                        DragDirection.None => throw new IndexOutOfRangeException(nameof(D)),
+                        _ => throw new IndexOutOfRangeException(nameof(D)),
+                    };
 
                     if (shouldAdd && !TrayRect.Contains(AP.AnchorPt)) {
                         Anchors.Add(AP);
@@ -104,7 +97,7 @@ namespace WindowShift
                 MButtonWindow = WindowFrom(lParam.pt);
             } else if (wParam == Api.WM_MOUSE.WM_MBUTTONUP) {
                 DragDirection dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
-                AnchorPoint toAnchor = Anchors.Find(Anchor => Anchor.Direction == dir && Anchor.MonitorArea.Contains(lParam.pt));
+                AnchorPoint toAnchor? = Anchors.Find(Anchor => Anchor.Direction == dir && Anchor.MonitorArea.Contains(lParam.pt));
                 if (toAnchor != null) {
                     Anchors.ForEach(delegate (AnchorPoint Anchor) {
                         if (Anchor.WindowHandle == MButtonWindow) {

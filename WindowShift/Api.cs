@@ -18,7 +18,7 @@ namespace WindowShift
         public static void SetWindowPos(HWND hWnd, POINT pt)
         {
             if (hWnd == HWND.Zero) {
-                throw new ArgumentNullException("hWnd");
+                throw new ArgumentNullException(nameof(hWnd));
             }
 
             var returnValue = SetWindowPos(hWnd, HWND.Zero, pt.X, pt.Y, 0, 0, SetWindowPosFlags.SWP_NOZORDER | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_FRAMECHANGED);
@@ -31,7 +31,7 @@ namespace WindowShift
         public static RECT GetWindowRect(HWND hWnd)
         {
             if (hWnd == HWND.Zero) {
-                throw new ArgumentNullException("hWnd");
+                throw new ArgumentNullException(nameof(hWnd));
             }
 
 #pragma warning disable IDE0018 // Inline variable declaration
