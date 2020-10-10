@@ -97,7 +97,7 @@ namespace WindowShift
                 MButtonWindow = WindowFrom(lParam.pt);
             } else if (wParam == Api.WM_MOUSE.WM_MBUTTONUP) {
                 DragDirection dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
-                AnchorPoint toAnchor? = Anchors.Find(Anchor => Anchor.Direction == dir && Anchor.MonitorArea.Contains(lParam.pt));
+                AnchorPoint? toAnchor = Anchors.Find(Anchor => Anchor.Direction == dir && Anchor.MonitorArea.Contains(lParam.pt));
                 if (toAnchor != null) {
                     Anchors.ForEach(delegate (AnchorPoint Anchor) {
                         if (Anchor.WindowHandle == MButtonWindow) {
