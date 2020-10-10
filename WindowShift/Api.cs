@@ -17,27 +17,29 @@ namespace WindowShift
         //#############################################################################
         public static void SetWindowPos(HWND hWnd, POINT pt)
         {
-            if(hWnd == HWND.Zero) {
+            if (hWnd == HWND.Zero) {
                 throw new ArgumentNullException("hWnd");
             }
 
             var returnValue = SetWindowPos(hWnd, HWND.Zero, pt.X, pt.Y, 0, 0, SetWindowPosFlags.SWP_NOZORDER | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_FRAMECHANGED);
 
-            if(returnValue != true) {
+            if (returnValue != true) {
                 ThrowWin32Error();
             }
         }
 
         public static RECT GetWindowRect(HWND hWnd)
         {
-            if(hWnd == HWND.Zero) {
+            if (hWnd == HWND.Zero) {
                 throw new ArgumentNullException("hWnd");
             }
 
-            RECT Rect;
+#pragma warning disable IDE0018 // Inline variable declaration
+            RECT Rect; //do not inline
+#pragma warning restore IDE0018 // Inline variable declaration
             var returnValue = GetWindowRect(hWnd, out Rect);
 
-            if(returnValue != true) {
+            if (returnValue != true) {
                 ThrowWin32Error();
             }
 
@@ -206,18 +208,19 @@ namespace WindowShift
             return p.X == X && p.Y == Y;
         }
 
-        public override bool Equals(object obj)
-        {
-            if (obj is POINT) {
-                return Equals(((POINT)obj));
-            } else {
-                return false;
-            }
-        }
-
         public override int GetHashCode()
         {
             return X + (19 * Y);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public override string ToString()
+        {
+            return base.ToString();
         }
     }
 
@@ -241,16 +244,16 @@ namespace WindowShift
 
         public bool Contains(POINT pt)
         {
-            if (this.Left > pt.X) {
+            if (Left > pt.X) {
                 return false;
             }
-            if (this.Right < pt.X) {
+            if (Right < pt.X) {
                 return false;
             }
-            if (this.Bottom < pt.Y) {
+            if (Bottom < pt.Y) {
                 return false;
             }
-            if (this.Top > pt.Y) {
+            if (Top > pt.Y) {
                 return false;
             }
 
@@ -272,18 +275,19 @@ namespace WindowShift
             return r.Left == Left && r.Top == Top && r.Right == Right && r.Bottom == Bottom;
         }
 
-        public override bool Equals(object obj)
-        {
-            if (obj is RECT) {
-                return Equals(((RECT)obj));
-            } else {
-                return false;
-            }
-        }
-
         public override int GetHashCode()
         {
             return Left + (15 * Top) + (17 * Right) + (21 * Bottom);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public override string ToString()
+        {
+            return base.ToString();
         }
     }
 }

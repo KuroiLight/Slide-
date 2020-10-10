@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using HWND = System.IntPtr;
 
@@ -14,7 +15,7 @@ namespace WindowShift
 
     public class AnchorPoint
     {
-        public HWND hWindow { get; private set; }
+        public HWND WindowHandle { get; private set; }
         public POINT AnchorPt { get; private set; }
         private AnchorStatus State;
 
@@ -23,98 +24,89 @@ namespace WindowShift
 
         public AnchorPoint(DragDirection direction, Screen monitor)
         {
-            this.Direction = direction;
+            Direction = direction;
             MonitorArea = RECT.FromRectangle(monitor.WorkingArea);
 
-            switch (direction) {
-                case DragDirection.Left:
-                    AnchorPt = new POINT(MonitorArea.Left, (MonitorArea.Bottom - MonitorArea.Top) / 2);
-                    break;
-                case DragDirection.Right:
-                    AnchorPt = new POINT(MonitorArea.Right, (MonitorArea.Bottom - MonitorArea.Top) / 2);
-                    break;
-                case DragDirection.Up:
-                    AnchorPt = new POINT((MonitorArea.Right - MonitorArea.Left) / 2, MonitorArea.Top);
-                    break;
-                case DragDirection.Down:
-                    AnchorPt = new POINT((MonitorArea.Right - MonitorArea.Left) / 2, MonitorArea.Bottom);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
+            AnchorPt = direction switch
+            {
+                DragDirection.Left => new POINT(MonitorArea.Left, (MonitorArea.Bottom - MonitorArea.Top) / 2),
+                DragDirection.Right => new POINT(MonitorArea.Right, (MonitorArea.Bottom - MonitorArea.Top) / 2),
+                DragDirection.Up => new POINT((MonitorArea.Right - MonitorArea.Left) / 2, MonitorArea.Top),
+                DragDirection.Down => new POINT((MonitorArea.Right - MonitorArea.Left) / 2, MonitorArea.Bottom),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
 
         ~AnchorPoint()
         {
-            hWindow = HWND.Zero;
-            this.Direction = 0;
+            WindowHandle = HWND.Zero;
+            Direction = 0;
         }
 
         public void AttachWindow(HWND newWindow)
         {
-            this.ChangeState(AnchorStatus.CenterScreen);
-            this.hWindow = newWindow;
-            this.ChangeState(AnchorStatus.Offscreen);
+            ChangeState(AnchorStatus.CenterScreen);
+            WindowHandle = newWindow;
+            ChangeState(AnchorStatus.Offscreen);
         }
 
         public void RemoveWindow()
         {
-            this.hWindow = HWND.Zero;
-            this.State = AnchorStatus.Empty;
+            WindowHandle = HWND.Zero;
+            State = AnchorStatus.Empty;
         }
 
 
         public void ChangeState(AnchorStatus toState)
         {
-            if (this.hWindow != HWND.Zero && Api.IsWindow(this.hWindow) && this.State != toState) {
-                var newPoint = GetNewPosition(toState);
-                Api.SetWindowPos(this.hWindow, newPoint);
-                this.State = toState;
+            if (WindowHandle != HWND.Zero && Api.IsWindow(WindowHandle) && State != toState) {
+                POINT newPoint = GetNewPosition(toState);
+                Api.SetWindowPos(WindowHandle, newPoint);
+                State = toState;
             }
         }
 
         private POINT GetNewPosition(AnchorStatus toState)
         {
-            int OffSet = 30; // => user-defined setting
-            RECT R = Api.GetWindowRect(this.hWindow);
+            var OffSet = 30; // => user-defined setting
+            RECT R = Api.GetWindowRect(WindowHandle);
 
-            var newPosition = new POINT((this.MonitorArea.Right - this.MonitorArea.Left) / 2 - ((R.Right - R.Left) / 2), (this.MonitorArea.Bottom - this.MonitorArea.Top) / 2 - ((R.Bottom - R.Top) / 2)); //default center screen
+            var newPosition = new POINT((MonitorArea.Right - MonitorArea.Left) / 2 - ((R.Right - R.Left) / 2), (MonitorArea.Bottom - MonitorArea.Top) / 2 - ((R.Bottom - R.Top) / 2)); //default center screen
 
             if (toState == AnchorStatus.Offscreen) {
-                switch (this.Direction) {
+                switch (Direction) {
                     case DragDirection.None:
                         break;
                     case DragDirection.Left:
-                        newPosition.X = (this.AnchorPt.X - (R.Right - R.Left)) + OffSet;
+                        newPosition.X = (AnchorPt.X - (R.Right - R.Left)) + OffSet;
                         break;
                     case DragDirection.Right:
-                        newPosition.X = this.AnchorPt.X - OffSet;
+                        newPosition.X = AnchorPt.X - OffSet;
                         break;
                     case DragDirection.Up:
-                        newPosition.Y = (this.AnchorPt.Y - (R.Bottom - R.Top)) + OffSet;
+                        newPosition.Y = (AnchorPt.Y - (R.Bottom - R.Top)) + OffSet;
                         break;
                     case DragDirection.Down:
-                        newPosition.Y = this.AnchorPt.Y - OffSet;
+                        newPosition.Y = AnchorPt.Y - OffSet;
                         break;
                     default:
                         break;
                 }
-            } else if(toState == AnchorStatus.OnScreen) {
-                switch (this.Direction) {
+            } else if (toState == AnchorStatus.OnScreen) {
+                switch (Direction) {
                     case DragDirection.None:
                         break;
                     case DragDirection.Left:
-                        newPosition.X = this.AnchorPt.X;
+                        newPosition.X = AnchorPt.X;
                         break;
                     case DragDirection.Right:
-                        newPosition.X = (this.AnchorPt.X - (R.Right - R.Left));
+                        newPosition.X = (AnchorPt.X - (R.Right - R.Left));
                         break;
                     case DragDirection.Up:
-                        newPosition.Y = this.AnchorPt.Y;
+                        newPosition.Y = AnchorPt.Y;
                         break;
                     case DragDirection.Down:
-                        newPosition.Y = (this.AnchorPt.Y - (R.Bottom - R.Top));
+                        newPosition.Y = (AnchorPt.Y - (R.Bottom - R.Top));
                         break;
                     default:
                         break;
@@ -122,6 +114,29 @@ namespace WindowShift
             }
 
             return newPosition;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is AnchorPoint point &&
+                   EqualityComparer<POINT>.Default.Equals(AnchorPt, point.AnchorPt) &&
+                   Direction == point.Direction &&
+                   EqualityComparer<RECT>.Default.Equals(MonitorArea, point.MonitorArea);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(AnchorPt, Direction, MonitorArea);
+        }
+
+        public static bool operator ==(AnchorPoint left, AnchorPoint right)
+        {
+            return EqualityComparer<AnchorPoint>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(AnchorPoint left, AnchorPoint right)
+        {
+            return !(left == right);
         }
     }
 

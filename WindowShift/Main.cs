@@ -10,8 +10,8 @@ namespace WindowShift
 {
     internal class Main
     {
-        private List<AnchorPoint> Anchors = new List<AnchorPoint>();
-        private HWND hMouseLLHook = HWND.Zero;
+        private readonly List<AnchorPoint> Anchors = new List<AnchorPoint>();
+        private readonly HWND hMouseLLHook = HWND.Zero;
 
         public Main()
         {
@@ -23,19 +23,19 @@ namespace WindowShift
 
 
 
-        private HWND DesktophWnd = Api.GetDesktopWindow();
+        //private HWND DesktophWnd = Api.GetDesktopWindow();
 
         private void FindAllAnchorPoints()
         {
             HWND TrayhWnd = Api.FindWindow("Shell_TrayWnd", null);
             RECT TrayRect = Api.GetWindowRect(TrayhWnd);
 
-            List<Screen> AllScreens = Screen.AllScreens.ToList();
+            var AllScreens = Screen.AllScreens.ToList();
             AllScreens.ForEach((Screen S) => {
                 Enumerable.Range((int)DragDirection.Left, (int)DragDirection.Down).ToList().ForEach((int dir) => {
-                    DragDirection D = (DragDirection)dir;
+                    var D = (DragDirection)dir;
                     var AP = new AnchorPoint(D, S);
-                    bool shouldAdd = false;
+                    var shouldAdd = false;
 
                     switch (D) {
                         case DragDirection.Left:
@@ -59,12 +59,6 @@ namespace WindowShift
             });
         }
 
-        private static HWND WindowFromCursor()
-        {
-            Api.GetCursorPos(out POINT p);
-            return WindowFrom(p);
-        }
-
         private static HWND WindowFrom(POINT pt)
         {
             HWND CurrentWindow = Api.WindowFromPoint(pt);
@@ -76,10 +70,11 @@ namespace WindowShift
             return CurrentWindow;
         }
 
-        private DragDirection DirectionFromPts(POINT start, POINT end, int deadzone = 0)
+        private DragDirection DirectionFromPts(POINT start, POINT end)
         {
-            (int xDif, int yDif) = (start.X - end.X, start.Y - end.Y);
-            (int axDif, int ayDif) = (Math.Abs(xDif), Math.Abs(yDif));
+            //int deadzone = 0 // => user-defined setting
+            (var xDif, var yDif) = (start.X - end.X, start.Y - end.Y);
+            (var axDif, var ayDif) = (Math.Abs(xDif), Math.Abs(yDif));
             return (xDif > 0, yDif > 0) switch
             {
                 (_, false) when (axDif < ayDif) => DragDirection.Down,
@@ -96,9 +91,9 @@ namespace WindowShift
         private HWND MouseHookProc(DWORD code, Api.WM_MOUSE wParam, Api.MSLLHOOKSTRUCT lParam)
         {
             if (wParam == Api.WM_MOUSE.WM_MOUSEMOVE) {
-                var WindowUnderCursor = WindowFrom(lParam.pt);
-                Anchors.ForEach(delegate(AnchorPoint Anchor) {
-                    if (Anchor.hWindow == WindowUnderCursor) {
+                HWND WindowUnderCursor = WindowFrom(lParam.pt);
+                Anchors.ForEach(delegate (AnchorPoint Anchor) {
+                    if (Anchor.WindowHandle == WindowUnderCursor) {
                         Anchor.ChangeState(AnchorStatus.OnScreen);
                     } else {
                         Anchor.ChangeState(AnchorStatus.Offscreen);
@@ -108,11 +103,11 @@ namespace WindowShift
                 MButtonStartPoint = lParam.pt;
                 MButtonWindow = WindowFrom(lParam.pt);
             } else if (wParam == Api.WM_MOUSE.WM_MBUTTONUP) {
-                var dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
-                var toAnchor = Anchors.Find(Anchor => Anchor.Direction == dir && Anchor.MonitorArea.Contains(lParam.pt));
-                if(toAnchor != null) {
+                DragDirection dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
+                AnchorPoint toAnchor = Anchors.Find(Anchor => Anchor.Direction == dir && Anchor.MonitorArea.Contains(lParam.pt));
+                if (toAnchor != null) {
                     Anchors.ForEach(delegate (AnchorPoint Anchor) {
-                        if(Anchor.hWindow == MButtonWindow) {
+                        if (Anchor.WindowHandle == MButtonWindow) {
                             Anchor.RemoveWindow();
                         }
                     });
