@@ -19,11 +19,11 @@ namespace WindowShift
             FindAllAnchorPoints();
         }
 
-        ~Main() => Api.Wrapd_UnhookWindowsHookEx(hMouseLLHook);
-
-
-
-        //private HWND DesktophWnd = Api.GetDesktopWindow();
+        public void Dispose()
+        {
+            Api.Wrapd_UnhookWindowsHookEx(hMouseLLHook);
+            Anchors.ForEach(Anchor => Anchor.RemoveWindow());
+        }
 
         private void FindAllAnchorPoints()
         {
@@ -55,11 +55,14 @@ namespace WindowShift
         private static HWND WindowFrom(POINT pt)
         {
             HWND CurrentWindow = Api.WindowFromPoint(pt);
+            if (CurrentWindow != HWND.Zero) {
+                HWND ParentWindow = Api.Wrapd_GetParent(CurrentWindow);
 
-            while (Api.Wrapd_GetParent(CurrentWindow) != IntPtr.Zero) {
-                CurrentWindow = Api.Wrapd_GetParent(CurrentWindow);
+                while (ParentWindow != HWND.Zero) {
+                    CurrentWindow = ParentWindow;
+                    ParentWindow = Api.Wrapd_GetParent(CurrentWindow);
+                }
             }
-
             return CurrentWindow;
         }
 
