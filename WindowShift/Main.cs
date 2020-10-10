@@ -22,26 +22,41 @@ namespace WindowShift
         ~Main() => Api.UnhookWinEvent(hMouseLLHook);
 
 
-        private HWND TrayhWnd = Api.FindWindow("Shell_TrayWnd", null);
+
         private HWND DesktophWnd = Api.GetDesktopWindow();
 
         private void FindAllAnchorPoints()
         {
-            Api.GetWindowRect(TrayhWnd, out RECT trayRect);
+            HWND TrayhWnd = Api.FindWindow("Shell_TrayWnd", null);
+            RECT TrayRect = Api.GetWindowRect(TrayhWnd);
 
-            foreach (var S in Screen.AllScreens.AsParallel()) {
-                foreach (var D in Enumerable.Range(1, 4)) {
-                    var Anchor = new AnchorPoint((DragDirection)D, S);
-                    if (!trayRect.Contains(Anchor.AnchorPt)) {
-                        Anchors.Add(new AnchorPoint((DragDirection)D, S));
+            List<Screen> AllScreens = Screen.AllScreens.ToList();
+            AllScreens.ForEach((Screen S) => {
+                Enumerable.Range((int)DragDirection.Left, (int)DragDirection.Down).ToList().ForEach((int dir) => {
+                    DragDirection D = (DragDirection)dir;
+                    var AP = new AnchorPoint(D, S);
+                    bool shouldAdd = false;
+
+                    switch (D) {
+                        case DragDirection.Left:
+                            shouldAdd = !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X - 100, AP.AnchorPt.Y)));
+                            break;
+                        case DragDirection.Right:
+                            shouldAdd = !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X + 100, AP.AnchorPt.Y)));
+                            break;
+                        case DragDirection.Up:
+                            shouldAdd = !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X, AP.AnchorPt.Y - 100)));
+                            break;
+                        case DragDirection.Down:
+                            shouldAdd = !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X, AP.AnchorPt.Y + 100)));
+                            break;
                     }
-                }
-            }
-        }
 
-        private void TransitionWindow(HWND window, POINT pt)
-        {
-            //SetWindowPos?
+                    if (shouldAdd && !TrayRect.Contains(AP.AnchorPt)) {
+                        Anchors.Add(AP);
+                    }
+                });
+            });
         }
 
         private static HWND WindowFromCursor()
@@ -81,32 +96,30 @@ namespace WindowShift
         private HWND MouseHookProc(DWORD code, Api.WM_MOUSE wParam, Api.MSLLHOOKSTRUCT lParam)
         {
             if (wParam == Api.WM_MOUSE.WM_MOUSEMOVE) {
-                var Anchor = Anchors.FirstOrDefault(A => A.WindowHandle == WindowFrom(lParam.pt));
-                if (Anchor != null) {
-                    Anchor.TransitionWindow(false);
-                } else {
-                    foreach (var A in Anchors) {
-                        if (!A.Hidden) {
-                            A.TransitionWindow(true);
-                        }
+                var WindowUnderCursor = WindowFrom(lParam.pt);
+                Anchors.ForEach(delegate(AnchorPoint Anchor) {
+                    if (Anchor.hWindow == WindowUnderCursor) {
+                        Anchor.ChangeState(AnchorStatus.OnScreen);
+                    } else {
+                        Anchor.ChangeState(AnchorStatus.Offscreen);
                     }
-                }
+                });
             } else if (wParam == Api.WM_MOUSE.WM_MBUTTONDOWN) {
                 MButtonStartPoint = lParam.pt;
                 MButtonWindow = WindowFrom(lParam.pt);
             } else if (wParam == Api.WM_MOUSE.WM_MBUTTONUP) {
                 var dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
-                var toAnchor = Anchors.FirstOrDefault(A => A.Direction == dir && A.MonitorArea.Contains(lParam.pt));
-                if (toAnchor != null) {
-                    var fromAnchor = Anchors.FirstOrDefault(A => A.WindowHandle == MButtonWindow);
-                    if (fromAnchor != null) {
-                        fromAnchor.WindowHandle = HWND.Zero;
-                    }
-                    toAnchor.WindowHandle = MButtonWindow;
+                var toAnchor = Anchors.Find(Anchor => Anchor.Direction == dir && Anchor.MonitorArea.Contains(lParam.pt));
+                if(toAnchor != null) {
+                    Anchors.ForEach(delegate (AnchorPoint Anchor) {
+                        if(Anchor.hWindow == MButtonWindow) {
+                            Anchor.RemoveWindow();
+                        }
+                    });
+                    toAnchor.AttachWindow(MButtonWindow);
                 }
                 MButtonWindow = HWND.Zero;
             }
-
 
             //always proceed as though we werent here
             return Api.CallNextHookEx(HWND.Zero, code, wParam, lParam);

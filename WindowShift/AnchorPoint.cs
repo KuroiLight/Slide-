@@ -4,17 +4,22 @@ using HWND = System.IntPtr;
 
 namespace WindowShift
 {
+    public enum AnchorStatus
+    {
+        Offscreen = 1,
+        OnScreen = 2,
+        CenterScreen = 3,
+        Empty = 4
+    }
 
     public class AnchorPoint
     {
-        private HWND windowHandle;
-        public HWND WindowHandle { get => windowHandle; set { this.TransitionWindow(false); windowHandle = value; this.TransitionWindow(true); } }
+        public HWND hWindow { get; private set; }
+        public POINT AnchorPt { get; private set; }
+        private AnchorStatus State;
 
-        public POINT AnchorPt;
         public DragDirection Direction;
         public RECT MonitorArea;
-        public bool InTransit = false;
-        public bool Hidden = false;
 
         public AnchorPoint(DragDirection direction, Screen monitor)
         {
@@ -42,24 +47,41 @@ namespace WindowShift
 
         ~AnchorPoint()
         {
-            windowHandle = HWND.Zero;
+            hWindow = HWND.Zero;
             this.Direction = 0;
         }
 
-        public void TransitionWindow(bool Hide, int speed = 5)
+        public void AttachWindow(HWND newWindow)
         {
-            if (this.windowHandle != HWND.Zero && Api.IsWindow(this.windowHandle)) {
-                var newPosition = GetNewPosition(Hide);
-                Api.SetWindowPos(this.windowHandle, HWND.Zero, newPosition.X, newPosition.Y, 0, 0, Api.SetWindowPosFlags.SWP_NOSIZE | Api.SetWindowPosFlags.SWP_NOZORDER);
+            this.ChangeState(AnchorStatus.CenterScreen);
+            this.hWindow = newWindow;
+            this.ChangeState(AnchorStatus.Offscreen);
+        }
+
+        public void RemoveWindow()
+        {
+            this.hWindow = HWND.Zero;
+            this.State = AnchorStatus.Empty;
+        }
+
+
+        public void ChangeState(AnchorStatus toState)
+        {
+            if (this.hWindow != HWND.Zero && Api.IsWindow(this.hWindow) && this.State != toState) {
+                var newPoint = GetNewPosition(toState);
+                Api.SetWindowPos(this.hWindow, newPoint);
+                this.State = toState;
             }
         }
 
-        private POINT GetNewPosition(bool Hide, int OffSet = 30)
+        private POINT GetNewPosition(AnchorStatus toState)
         {
-            Api.GetWindowRect(this.windowHandle, out RECT R);
+            int OffSet = 30; // => user-defined setting
+            RECT R = Api.GetWindowRect(this.hWindow);
+
             var newPosition = new POINT((this.MonitorArea.Right - this.MonitorArea.Left) / 2 - ((R.Right - R.Left) / 2), (this.MonitorArea.Bottom - this.MonitorArea.Top) / 2 - ((R.Bottom - R.Top) / 2)); //default center screen
 
-            if (Hide) {
+            if (toState == AnchorStatus.Offscreen) {
                 switch (this.Direction) {
                     case DragDirection.None:
                         break;
@@ -78,7 +100,7 @@ namespace WindowShift
                     default:
                         break;
                 }
-            } else {
+            } else if(toState == AnchorStatus.OnScreen) {
                 switch (this.Direction) {
                     case DragDirection.None:
                         break;

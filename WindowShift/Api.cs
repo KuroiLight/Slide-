@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
 using HWND = System.IntPtr;
@@ -8,7 +9,51 @@ namespace WindowShift
     public static class Api
     {
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool GetWindowRect(HWND hwnd, out RECT lpRect);
+        private static extern bool SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
+        [DllImport("kernel32.dll")]
+        private static extern uint GetLastError();
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool GetWindowRect(HWND hwnd, out RECT lpRect);
+        //#############################################################################
+        public static void SetWindowPos(HWND hWnd, POINT pt)
+        {
+            if(hWnd == HWND.Zero) {
+                throw new ArgumentNullException("hWnd");
+            }
+
+            var returnValue = SetWindowPos(hWnd, HWND.Zero, pt.X, pt.Y, 0, 0, SetWindowPosFlags.SWP_NOZORDER | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_FRAMECHANGED);
+
+            if(returnValue != true) {
+                ThrowWin32Error();
+            }
+        }
+
+        public static RECT GetWindowRect(HWND hWnd)
+        {
+            if(hWnd == HWND.Zero) {
+                throw new ArgumentNullException("hWnd");
+            }
+
+            RECT Rect;
+            var returnValue = GetWindowRect(hWnd, out Rect);
+
+            if(returnValue != true) {
+                ThrowWin32Error();
+            }
+
+            return Rect;
+        }
+
+
+
+
+        private static void ThrowWin32Error()
+        {
+            var lastError = GetLastError();
+
+            throw new Win32Exception((int)lastError);
+        }
+        //#############################################################################
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern HWND FindWindow(string lpClassName, string lpWindowName);
@@ -97,9 +142,6 @@ namespace WindowShift
         [DllImport("user32.dll", ExactSpelling = true, CharSet = CharSet.Auto)]
         public static extern HWND GetParent(HWND hWnd);
 
-        [DllImport("kernel32.dll")]
-        public static extern uint GetLastError();
-
         [DllImport("user32.dll", SetLastError = true)]
         public static extern HWND GetWindowThreadProcessId(HWND hWnd, out HWND lpdwProcessId);
 
@@ -122,9 +164,6 @@ namespace WindowShift
             SWP_NOZORDER = 0x0004,
             SWP_SHOWWINDOW = 0x0040
         }
-
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
 
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
