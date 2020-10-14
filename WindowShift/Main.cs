@@ -10,29 +10,39 @@ namespace WindowShift
 {
     internal class Main
     {
-        private readonly List<AnchorPoint> Anchors = new List<AnchorPoint>();
-        private readonly HWND hMouseLLHook = HWND.Zero;
+        private List<AnchorPoint> Anchors;
+        private HWND hMouseLLHook = HWND.Zero;
+        public readonly Timer TaskScheduler = new Timer();
+        private HWND MButtonWindow = HWND.Zero;
+        private POINT MButtonStartPoint = new POINT();
 
         public Main()
         {
             hMouseLLHook = Api.Wrapd_SetWindowsHookEx(MouseHookProc);
-            FindAllAnchorPoints();
+            Anchors = FindAllAnchorPoints();
+            TaskScheduler.Tick += UpdateTick;
+            Anchors.ForEach(Anchor => TaskScheduler.Tick += Anchor.UpdateTick);
+            TaskScheduler.Interval = 16;
+            TaskScheduler.Start();
         }
 
         public void Dispose()
         {
             Api.Wrapd_UnhookWindowsHookEx(hMouseLLHook);
-            Anchors.ForEach(Anchor => Anchor.RemoveWindow());
+            Anchors.ForEach(Anchor => Anchor.WindowHandle = HWND.Zero);
+            TaskScheduler.Stop();
         }
 
-        private void FindAllAnchorPoints()
+        private List<AnchorPoint> FindAllAnchorPoints()
         {
             HWND TrayhWnd = Api.Wrapd_FindWindow("Shell_TrayWnd", null);
             RECT TrayRect = Api.Wrapd_GetWindowRect(TrayhWnd);
 
+            var allAnchors = new List<AnchorPoint>();
             var AllScreens = Screen.AllScreens.ToList();
+
             AllScreens.ForEach((Screen S) => {
-                Enumerable.Range((int)DragDirection.Left, (int)DragDirection.Down).ToList().ForEach((int dir) => {
+                Enumerable.Range((int)DragDirection.None, (int)DragDirection.Down).ToList().ForEach((int dir) => {
                     var D = (DragDirection)dir;
                     var AP = new AnchorPoint(D, S);
                     var shouldAdd = D switch
@@ -41,15 +51,17 @@ namespace WindowShift
                         DragDirection.Right => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X + 100, AP.AnchorPt.Y))),
                         DragDirection.Up => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X, AP.AnchorPt.Y - 100))),
                         DragDirection.Down => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X, AP.AnchorPt.Y + 100))),
-                        DragDirection.None => throw new IndexOutOfRangeException(nameof(D)),
+                        DragDirection.None => true,
                         _ => throw new IndexOutOfRangeException(nameof(D)),
                     };
 
                     if (shouldAdd && !TrayRect.Contains(AP.AnchorPt)) {
-                        Anchors.Add(AP);
+                        allAnchors.Add(AP);
                     }
                 });
             });
+
+            return allAnchors;
         }
 
         private static HWND WindowFrom(POINT pt)
@@ -68,48 +80,64 @@ namespace WindowShift
 
         private DragDirection DirectionFromPts(POINT start, POINT end)
         {
-            //int deadzone = 0 // => user-defined setting
+            int deadzone = 25; // => user-defined setting
             (var xDif, var yDif) = (start.X - end.X, start.Y - end.Y);
             (var axDif, var ayDif) = (Math.Abs(xDif), Math.Abs(yDif));
-            return (xDif > 0, yDif > 0) switch
+            return (axDif < deadzone && ayDif < deadzone) ? DragDirection.None : (xDif > 0, yDif > 0) switch
             {
                 (_, false) when (axDif < ayDif) => DragDirection.Down,
                 (_, true) when (axDif < ayDif) => DragDirection.Up,
                 (false, _) when (axDif > ayDif) => DragDirection.Right,
                 (true, _) when (axDif > ayDif) => DragDirection.Left,
-                _ => 0
+                _ => throw new ArgumentOutOfRangeException()
             };
         }
 
-        private HWND MButtonWindow;
-        private POINT MButtonStartPoint;
+        private void UpdateTick(object sender, EventArgs e)
+        {
+            HWND WindowUnderCursor = WindowFrom(Api.Wrapd_GetCursorPos());
+            Anchors.ForEach(delegate (AnchorPoint Anchor) {
+                if (Anchor.WindowHandle == WindowUnderCursor) {
+                    Anchor.State = AnchorStatus.OnScreen;
+                } else {
+                    Anchor.State = AnchorStatus.Offscreen;
+                }
+            });
+        }
 
         private HWND MouseHookProc(DWORD code, Api.WM_MOUSE wParam, Api.MSLLHOOKSTRUCT lParam)
         {
-            if (wParam == Api.WM_MOUSE.WM_MOUSEMOVE) {
-                HWND WindowUnderCursor = WindowFrom(lParam.pt);
-                Anchors.ForEach(delegate (AnchorPoint Anchor) {
-                    if (Anchor.WindowHandle == WindowUnderCursor) {
-                        Anchor.ChangeState(AnchorStatus.OnScreen);
-                    } else {
-                        Anchor.ChangeState(AnchorStatus.Offscreen);
-                    }
-                });
-            } else if (wParam == Api.WM_MOUSE.WM_MBUTTONDOWN) {
+            if (wParam == Api.WM_MOUSE.WM_MBUTTONDOWN) {
                 MButtonStartPoint = lParam.pt;
                 MButtonWindow = WindowFrom(lParam.pt);
             } else if (wParam == Api.WM_MOUSE.WM_MBUTTONUP) {
                 DragDirection dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
-                AnchorPoint toAnchor = Anchors.Find(Anchor => Anchor.Direction == dir && Anchor.MonitorArea.Contains(lParam.pt));
-                if (toAnchor != null) {
-                    Anchors.ForEach(delegate (AnchorPoint Anchor) {
-                        if (Anchor.WindowHandle == MButtonWindow) {
-                            Anchor.RemoveWindow();
+                AnchorPoint centerAnchor = null;
+                AnchorPoint toAnchor = null;
+                AnchorPoint fromAnchor = null;
+
+                Anchors.ForEach((Anchor) => {
+                    if(Anchor.SameScreen(lParam.pt)) {
+                        if (Anchor.Direction == DragDirection.None) {
+                            centerAnchor = Anchor;
+                        } else if(Anchor.Direction == dir) {
+                            toAnchor = Anchor;
                         }
-                    });
-                    toAnchor.AttachWindow(MButtonWindow);
+                    }
+                    if(Anchor.WindowHandle == MButtonWindow) {
+                        fromAnchor = Anchor;
+                    }
+                });
+
+                if(toAnchor != null) {
+                    if(fromAnchor != null) {
+                        fromAnchor.WindowHandle = HWND.Zero;
+                    }
+                    if(centerAnchor != null && toAnchor.WindowHandle != HWND.Zero) {
+                        centerAnchor.WindowHandle = toAnchor.WindowHandle;
+                    }
+                    toAnchor.WindowHandle = MButtonWindow;
                 }
-                MButtonWindow = HWND.Zero;
             }
 
             //always proceed as though we werent here

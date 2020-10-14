@@ -16,15 +16,35 @@ namespace WindowShift
 
     public class AnchorPoint
     {
-        public HWND WindowHandle { get; private set; }
+        private HWND _WindowHandle;
+        public HWND WindowHandle
+        {
+            get => _WindowHandle != HWND.Zero && !Api.IsWindow(_WindowHandle) ? HWND.Zero : _WindowHandle;
+            set {
+                _WindowHandle = value;
+                if (_WindowHandle == HWND.Zero) {
+                    State = AnchorStatus.Empty;
+                } else if (State != AnchorStatus.CenterScreen) {
+                    State = AnchorStatus.Offscreen;
+                }
+            }
+        }
+
+        private AnchorStatus _State;
+        public AnchorStatus State
+        {
+            get => WindowHandle == HWND.Zero ? AnchorStatus.Empty : _State;
+            set {
+                _State = value;
+                UpdatePosition();
+            }
+        }
+
         public POINT AnchorPt { get; private set; }
-        private AnchorStatus State;
-
-        public DragDirection Direction;
-        public RECT MonitorArea;
-
-        private Timer MovementTimer;
+        private RECT MonitorArea;
         private POINT targetPosition;
+
+        public DragDirection Direction { get; private set; }
 
         public AnchorPoint(DragDirection direction, Screen monitor)
         {
@@ -33,10 +53,11 @@ namespace WindowShift
 
             AnchorPt = direction switch
             {
-                DragDirection.Left => new POINT(MonitorArea.Left, (MonitorArea.Bottom - MonitorArea.Top) / 2),
-                DragDirection.Right => new POINT(MonitorArea.Right, (MonitorArea.Bottom - MonitorArea.Top) / 2),
-                DragDirection.Up => new POINT((MonitorArea.Right - MonitorArea.Left) / 2, MonitorArea.Top),
-                DragDirection.Down => new POINT((MonitorArea.Right - MonitorArea.Left) / 2, MonitorArea.Bottom),
+                DragDirection.Left => new POINT(MonitorArea.Left, MonitorArea.Height / 2),
+                DragDirection.Right => new POINT(MonitorArea.Right, MonitorArea.Height / 2),
+                DragDirection.Up => new POINT(MonitorArea.Width / 2, MonitorArea.Top),
+                DragDirection.Down => new POINT(MonitorArea.Width / 2, MonitorArea.Bottom),
+                DragDirection.None => new POINT(MonitorArea.Width / 2, MonitorArea.Height / 2),
                 _ => throw new ArgumentOutOfRangeException(),
             };
         }
@@ -44,141 +65,101 @@ namespace WindowShift
         ~AnchorPoint()
         {
             WindowHandle = HWND.Zero;
-            Direction = 0;
         }
 
-        public void AttachWindow(HWND newWindow)
+        public void UpdateTick(object sender, EventArgs e)
         {
-            RemoveWindow();
-            WindowHandle = newWindow;
-            ChangeState(AnchorStatus.Offscreen);
-        }
-
-        public void RemoveWindow()
-        {
-            ChangeState(AnchorStatus.CenterScreen);
-            WindowHandle = HWND.Zero;
-            State = AnchorStatus.Empty;
-        }
-
-
-        public void ChangeState(AnchorStatus toState)
-        {
-            if (WindowHandle != HWND.Zero && State != toState && Api.IsWindow(WindowHandle)) {
-                targetPosition = GetNewPosition(toState);
-                State = toState;
-                SendToNewPosition();
-            }
-        }
-
-        private void SendToNewPosition()
-        {
-            if(MovementTimer != null && MovementTimer.Enabled) {
+            if (State == AnchorStatus.Empty) {
                 return;
             }
 
-            var Speed = 5; // => user-defined setting
-            MovementTimer = new Timer();
-            MovementTimer.Interval = Speed;
-            MovementTimer.Tick += MovementTimer_Tick;
-            MovementTimer.Start();
-        }
+            RECT winRect = Api.Wrapd_GetWindowRect(WindowHandle);
 
-        private void MovementTimer_Tick(object sender, EventArgs e)
-        {
-            if(!Api.IsWindow(WindowHandle)) {
-                RemoveWindow();
-                MovementTimer.Stop();
-                return;
-            }
-
-            RECT R = Api.Wrapd_GetWindowRect(WindowHandle);
-
-            var StepSizeX = (MonitorArea.Right / 100) * 5;
-            var StepSizeY = (MonitorArea.Bottom / 100) * 5;
+            var StepSizeX = (int)Math.CopySign((MonitorArea.Right / 100) * 5, -1*(winRect.Left - targetPosition.X)); //sign is wrong
+            var StepSizeY = (int)Math.CopySign((MonitorArea.Bottom / 100) * 5, -1*(winRect.Top - targetPosition.Y));
             
-            if(R.Left + StepSizeX >= targetPosition.X && R.Left - StepSizeX <= targetPosition.X && R.Top + StepSizeY >= targetPosition.Y && R.Top - StepSizeY <= targetPosition.Y ) {
-                MovementTimer.Stop();
+            bool inRange(int x, int min, int max) => ((x - max)*(x - min) <= 0);
+
+            if(inRange(targetPosition.X, winRect.Left, winRect.Left + StepSizeX)) {
+                StepSizeX = 0;
+            }
+
+            if (inRange(targetPosition.Y, winRect.Top, winRect.Top + StepSizeY)) {
+                StepSizeY = 0;
+            }
+
+            //if we're already there, bump us to the right spot and return
+            if (StepSizeX == 0 && StepSizeY == 0) {
                 Api.Wrapd_SetWindowPos(WindowHandle, targetPosition);
+                return;
             }
 
-            var nextPoint = new POINT();
+            //Debug.Write(winRect.Left + ":" + winRect.Top + " => ");
 
-            if (Math.Abs(R.Left - targetPosition.X) < StepSizeX+1) {
-                StepSizeX = 1;
-            }
-            if (Math.Abs(R.Top - targetPosition.Y) < StepSizeY+1) {
-                StepSizeY = 1;
-            }
+            winRect.Left += (int)StepSizeX;
+            winRect.Top += (int)StepSizeY;
 
-            if (R.Left > targetPosition.X) {
-                nextPoint.X = R.Left - StepSizeX;
-            } else if(R.Left < targetPosition.X) {
-                nextPoint.X = R.Left + StepSizeX;
-            } else {
-                nextPoint.X = R.Left;
-            }
-            if (R.Top > targetPosition.Y) {
-                nextPoint.Y = R.Top - StepSizeY;
-            } else if (R.Top < targetPosition.Y) {
-                nextPoint.Y = R.Top + StepSizeY;
-            } else {
-                nextPoint.Y = R.Top;
-            }
+            //Debug.Write(winRect.Left + ":" + winRect.Top + "\n");
 
-            Debug.WriteLine(R.Left + " " + R.Top + " => " + nextPoint.X + " " + nextPoint.Y);
-
-            Api.Wrapd_SetWindowPos(WindowHandle, nextPoint);
+            Api.Wrapd_SetWindowPos(WindowHandle, winRect.ToPoint());
         }
 
-        private POINT GetNewPosition(AnchorStatus toState)
+        private void UpdatePosition()
         {
-            var OffSet = 30; // => user-defined setting
-            RECT R = Api.Wrapd_GetWindowRect(WindowHandle);
+            if(State == AnchorStatus.Empty) {
+                return;
+            }
 
-            var newPosition = new POINT((MonitorArea.Right - MonitorArea.Left) / 2 - ((R.Right - R.Left) / 2), (MonitorArea.Bottom - MonitorArea.Top) / 2 - ((R.Bottom - R.Top) / 2)); //default center screen
+            var OffSet = 30; // => user-defined setting;
+            RECT curWinRct = Api.Wrapd_GetWindowRect(WindowHandle);
 
-            if (toState == AnchorStatus.Offscreen) {
+            targetPosition = new POINT(MonitorArea.Width / 2 - (curWinRct.Width / 2), MonitorArea.Height / 2 - (curWinRct.Height / 2)); //default center screen
+
+            if (State == AnchorStatus.Offscreen) {
                 switch (Direction) {
-                    case DragDirection.None:
-                        break;
                     case DragDirection.Left:
-                        newPosition.X = (AnchorPt.X - (R.Right - R.Left)) + OffSet;
+                        targetPosition.X = (AnchorPt.X - curWinRct.Width) + OffSet;
                         break;
                     case DragDirection.Right:
-                        newPosition.X = AnchorPt.X - OffSet;
+                        targetPosition.X = AnchorPt.X - OffSet;
                         break;
                     case DragDirection.Up:
-                        newPosition.Y = (AnchorPt.Y - (R.Bottom - R.Top)) + OffSet;
+                        targetPosition.Y = (AnchorPt.Y - curWinRct.Height) + OffSet;
                         break;
                     case DragDirection.Down:
-                        newPosition.Y = AnchorPt.Y - OffSet;
+                        targetPosition.Y = AnchorPt.Y - OffSet;
                         break;
                     default:
                         break;
                 }
-            } else if (toState == AnchorStatus.OnScreen) {
+            } else if (State == AnchorStatus.OnScreen) {
                 switch (Direction) {
-                    case DragDirection.None:
-                        break;
                     case DragDirection.Left:
-                        newPosition.X = AnchorPt.X;
+                        targetPosition.X = AnchorPt.X;
                         break;
                     case DragDirection.Right:
-                        newPosition.X = (AnchorPt.X - (R.Right - R.Left));
+                        targetPosition.X = (AnchorPt.X - curWinRct.Width);
                         break;
                     case DragDirection.Up:
-                        newPosition.Y = AnchorPt.Y;
+                        targetPosition.Y = AnchorPt.Y;
                         break;
                     case DragDirection.Down:
-                        newPosition.Y = (AnchorPt.Y - (R.Bottom - R.Top));
+                        targetPosition.Y = (AnchorPt.Y - curWinRct.Height);
                         break;
                     default:
                         break;
                 }
             }
+        }
 
-            return newPosition;
+        public bool SameScreen(POINT pt)
+        {
+            return MonitorArea.Contains(pt);
+        }
+
+        public bool ContainedIn(RECT area)
+        {
+            return area.Contains(AnchorPt);
         }
 
         public override bool Equals(object obj)

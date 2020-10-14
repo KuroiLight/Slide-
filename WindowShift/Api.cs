@@ -38,7 +38,23 @@ namespace WindowShift
         public static extern bool IsWindowVisible(HWND hWnd);
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         public static extern HWND CallNextHookEx(HWND hhk, int nCode, WM_MOUSE wParam, [In] MSLLHOOKSTRUCT lParam);
+        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetCursorPos(out POINT lpPoint);
         //############################################################################# wrappers
+        public static POINT Wrapd_GetCursorPos()
+        {
+#pragma warning disable IDE0018 // Inline variable declaration
+            POINT pt; //do not inline
+#pragma warning restore IDE0018 // Inline variable declaration
+            var returnValue = GetCursorPos(out pt);
+
+            if (returnValue != true) {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            return pt;
+        }
         public static HWND Wrapd_GetParent(HWND hWnd)
         {
             if (hWnd == HWND.Zero) {
@@ -223,6 +239,9 @@ namespace WindowShift
     public struct RECT
     {
         public int Left, Top, Right, Bottom;
+        public int Width => Right - Left;
+        public int Height => Bottom - Top;
+        public POINT Center => new POINT(Left + (Width / 2), Top + (Height / 2));
 
         public RECT(int left, int top, int right, int bottom)
         {
@@ -237,22 +256,18 @@ namespace WindowShift
             return (new RECT(R.Left, R.Top, R.Right, R.Bottom));
         }
 
+        public POINT ToPoint()
+        {
+            return new POINT(Left, Top);
+        }
+
         public bool Contains(POINT pt)
         {
-            if (Left > pt.X) {
+            if (Left > pt.X || Right < pt.X || Top > pt.Y || Bottom < pt.Y) {
                 return false;
+            } else {
+                return true;
             }
-            if (Right < pt.X) {
-                return false;
-            }
-            if (Bottom < pt.Y) {
-                return false;
-            }
-            if (Top > pt.Y) {
-                return false;
-            }
-
-            return true;
         }
 
         public static bool operator ==(RECT r1, RECT r2)
