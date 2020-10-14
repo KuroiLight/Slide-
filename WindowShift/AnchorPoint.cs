@@ -90,16 +90,12 @@ namespace WindowShift
 
             //if we're already there, bump us to the right spot and return
             if (StepSizeX == 0 && StepSizeY == 0) {
-                Api.Wrapd_SetWindowPos(WindowHandle, targetPosition);
-                return;
+                winRect.Left = targetPosition.X;
+                winRect.Top = targetPosition.Y;
+            } else {
+                winRect.Left += (int)StepSizeX;
+                winRect.Top += (int)StepSizeY;
             }
-
-            //Debug.Write(winRect.Left + ":" + winRect.Top + " => ");
-
-            winRect.Left += (int)StepSizeX;
-            winRect.Top += (int)StepSizeY;
-
-            //Debug.Write(winRect.Left + ":" + winRect.Top + "\n");
 
             Api.Wrapd_SetWindowPos(WindowHandle, winRect.ToPoint());
         }
