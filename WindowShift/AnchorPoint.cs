@@ -35,8 +35,10 @@ namespace WindowShift
         {
             get => WindowHandle == HWND.Zero ? AnchorStatus.Empty : _State;
             set {
-                _State = value;
-                UpdatePosition();
+                if (_State != value) {
+                    _State = value;
+                    UpdatePosition();
+                }
             }
         }
 
@@ -71,8 +73,6 @@ namespace WindowShift
             WindowHandle = HWND.Zero;
         }
 
-        
-
         public void UpdateTick(object sender, EventArgs e)
         {
             if (State == AnchorStatus.Empty) {
@@ -82,6 +82,7 @@ namespace WindowShift
             RECT winRect = Api.Wrapd_GetWindowRect(WindowHandle);
             winRect.Left += Math.Clamp(NextPosition.X - winRect.Left, -1 * MonitorMaxStepX, MonitorMaxStepX);
             winRect.Top += Math.Clamp(NextPosition.Y - winRect.Top, -1 * MonitorMaxStepY, MonitorMaxStepY);
+
             Api.Wrapd_SetWindowPos(WindowHandle, winRect.ToPoint());
         }
 
@@ -94,8 +95,8 @@ namespace WindowShift
             var OffSet = 30; // => user-defined setting;
             RECT curWinRct = Api.Wrapd_GetWindowRect(WindowHandle);
             var _nextPosition = new POINT(MonitorArea.Center.X - curWinRct.Center.X, MonitorArea.Center.Y - curWinRct.Center.Y);
-
-            switch(State, Direction) {
+            
+            switch (State, Direction) {
                 case (AnchorStatus.Offscreen, DragDirection.Left):
                     _nextPosition.X = (AnchorPt.X - curWinRct.Width) + OffSet;
                     break;
@@ -106,7 +107,7 @@ namespace WindowShift
                     _nextPosition.Y = (AnchorPt.Y - curWinRct.Height) + OffSet;
                     break;
                 case (AnchorStatus.Offscreen, DragDirection.Down):
-                    _nextPosition.Y = (AnchorPt.Y - curWinRct.Height) - OffSet;
+                    _nextPosition.Y = AnchorPt.Y - OffSet;
                     break;
                 case (AnchorStatus.OnScreen, DragDirection.Left):
                     _nextPosition.X = AnchorPt.X;
@@ -115,7 +116,7 @@ namespace WindowShift
                     _nextPosition.X = AnchorPt.X - curWinRct.Width;
                     break;
                 case (AnchorStatus.OnScreen, DragDirection.Up):
-                    _nextPosition.Y = AnchorPt.Y - curWinRct.Height;
+                    _nextPosition.Y = AnchorPt.Y;
                     break;
                 case (AnchorStatus.OnScreen, DragDirection.Down):
                     _nextPosition.Y = AnchorPt.Y - curWinRct.Height;
