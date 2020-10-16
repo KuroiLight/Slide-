@@ -1,5 +1,5 @@
 # SlideSharp
-SlideSharp is re-write of my old AutoHotkey script [AHKDocker](https://www.autohotkey.com/boards/viewtopic.php?f=6&t=7095) in C#.
+SlideSharp is re-write of my old AutoHotkey script [AHKDocker](https://www.autohotkey.com/boards/viewtopic.php?f=6&t=7095)(based on Preme for Windows) in C#.
 The current implementation is functional but still very rough.
 
 Implementation Status:
