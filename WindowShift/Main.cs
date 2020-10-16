@@ -5,15 +5,17 @@ using System.Windows.Forms;
 using DWORD = System.Int32;
 using HWND = System.IntPtr;
 
+
 namespace WindowShift
 {
-    internal class Main
+    public class Main
     {
         private List<AnchorPoint> Anchors;
-        private HWND hMouseLLHook = HWND.Zero;
-        public readonly Timer TaskScheduler = new Timer();
-        private HWND MButtonWindow = HWND.Zero;
-        private POINT MButtonStartPoint = new POINT();
+        private HWND hMouseLLHook;
+        private readonly Timer TaskScheduler = new Timer();
+        private HWND WindowFromDragStart = HWND.Zero;
+        private POINT FromDragStartPoint = new POINT();
+        private Settings Config = Settings.SettingsInstance;
 
         public Main()
         {
@@ -21,7 +23,7 @@ namespace WindowShift
             Anchors = FindAllAnchorPoints();
             TaskScheduler.Tick += UpdateTick;
             Anchors.ForEach(Anchor => TaskScheduler.Tick += Anchor.UpdateTick);
-            TaskScheduler.Interval = 16;
+            TaskScheduler.Interval = Config.Update_Interval;
             TaskScheduler.Start();
         }
 
@@ -79,10 +81,10 @@ namespace WindowShift
 
         private DragDirection DirectionFromPts(POINT start, POINT end)
         {
-            int deadzone = 25; // => user-defined setting
+            var deadzone = Config.Middle_Button_DeadZone;
 
             //get absolute direction
-            POINT vector = new POINT(start.X - end.X, start.Y - end.Y);
+            var vector = new POINT(start.X - end.X, start.Y - end.Y);
             if (Math.Abs(vector.X) > Math.Abs(vector.Y)) { //horizontal movement
                 if (vector.X > deadzone) {
                     return DragDirection.Left;
@@ -114,10 +116,10 @@ namespace WindowShift
         private HWND MouseHookProc(DWORD code, Api.WM_MOUSE wParam, Api.MSLLHOOKSTRUCT lParam)
         {
             if (wParam == Api.WM_MOUSE.WM_MBUTTONDOWN) {
-                MButtonStartPoint = lParam.pt;
-                MButtonWindow = WindowFrom(lParam.pt);
+                FromDragStartPoint = lParam.pt;
+                WindowFromDragStart = WindowFrom(lParam.pt);
             } else if (wParam == Api.WM_MOUSE.WM_MBUTTONUP) {
-                DragDirection dir = DirectionFromPts(MButtonStartPoint, lParam.pt);
+                DragDirection dir = DirectionFromPts(FromDragStartPoint, lParam.pt);
                 AnchorPoint centerAnchor = null;
                 AnchorPoint toAnchor = null;
                 AnchorPoint fromAnchor = null;
@@ -130,7 +132,7 @@ namespace WindowShift
                             toAnchor = Anchor;
                         }
                     }
-                    if (Anchor.WindowHandle == MButtonWindow) {
+                    if (Anchor.WindowHandle == WindowFromDragStart) {
                         fromAnchor = Anchor;
                     }
                 });
@@ -142,7 +144,7 @@ namespace WindowShift
                     if (centerAnchor != null && toAnchor.WindowHandle != HWND.Zero) {
                         centerAnchor.WindowHandle = toAnchor.WindowHandle;
                     }
-                    toAnchor.WindowHandle = MButtonWindow;
+                    toAnchor.WindowHandle = WindowFromDragStart;
                 }
             }
 

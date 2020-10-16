@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Windows.Forms;
 using HWND = System.IntPtr;
 
@@ -43,11 +42,12 @@ namespace WindowShift
         }
 
         public POINT AnchorPt { get; private set; }
+        public DragDirection Direction { get; private set; }
+
         private RECT MonitorArea;
         private POINT NextPosition;
         private int MonitorMaxStepX = 10, MonitorMaxStepY = 10;
-
-        public DragDirection Direction { get; private set; }
+        private Settings Config = Settings.SettingsInstance;
 
         public AnchorPoint(DragDirection direction, Screen monitor)
         {
@@ -63,9 +63,6 @@ namespace WindowShift
                 DragDirection.None => new POINT(MonitorArea.Width / 2, MonitorArea.Height / 2),
                 _ => throw new ArgumentOutOfRangeException(),
             };
-
-            MonitorMaxStepX = (MonitorArea.Right / 100) * 4;
-            MonitorMaxStepY = (MonitorArea.Bottom / 100) * 4;
         }
 
         ~AnchorPoint()
@@ -92,10 +89,13 @@ namespace WindowShift
                 return;
             }
 
-            var OffSet = 30; // => user-defined setting;
+            MonitorMaxStepX = (MonitorArea.Right / 100) * Config.Window_Movement_Rate;
+            MonitorMaxStepY = (MonitorArea.Bottom / 100) * Config.Window_Movement_Rate;
+
+            var OffSet = Config.Window_Offscreen_Offset; // => user-defined setting;
             RECT curWinRct = Api.Wrapd_GetWindowRect(WindowHandle);
             var _nextPosition = new POINT(MonitorArea.Center.X - curWinRct.Center.X, MonitorArea.Center.Y - curWinRct.Center.Y);
-            
+
             switch (State, Direction) {
                 case (AnchorStatus.Offscreen, DragDirection.Left):
                     _nextPosition.X = (AnchorPt.X - curWinRct.Width) + OffSet;
