@@ -42,7 +42,8 @@ namespace WindowShift
 
         public POINT AnchorPt { get; private set; }
         private RECT MonitorArea;
-        private POINT targetPosition;
+        private POINT NextPosition;
+        private int MonitorMaxStepX = 10, MonitorMaxStepY = 10;
 
         public DragDirection Direction { get; private set; }
 
@@ -60,12 +61,17 @@ namespace WindowShift
                 DragDirection.None => new POINT(MonitorArea.Width / 2, MonitorArea.Height / 2),
                 _ => throw new ArgumentOutOfRangeException(),
             };
+
+            MonitorMaxStepX = (MonitorArea.Right / 100) * 4;
+            MonitorMaxStepY = (MonitorArea.Bottom / 100) * 4;
         }
 
         ~AnchorPoint()
         {
             WindowHandle = HWND.Zero;
         }
+
+        
 
         public void UpdateTick(object sender, EventArgs e)
         {
@@ -74,56 +80,38 @@ namespace WindowShift
             }
 
             RECT winRect = Api.Wrapd_GetWindowRect(WindowHandle);
-
-            var StepSizeX = (int)Math.CopySign((MonitorArea.Right / 100) * 5, -1*(winRect.Left - targetPosition.X)); //sign is wrong
-            var StepSizeY = (int)Math.CopySign((MonitorArea.Bottom / 100) * 5, -1*(winRect.Top - targetPosition.Y));
-            
-            bool inRange(int x, int min, int max) => ((x - max)*(x - min) <= 0);
-
-            if(inRange(targetPosition.X, winRect.Left, winRect.Left + StepSizeX)) {
-                StepSizeX = 0;
-            }
-
-            if (inRange(targetPosition.Y, winRect.Top, winRect.Top + StepSizeY)) {
-                StepSizeY = 0;
-            }
-
-            //if we're already there, bump us to the right spot and return
-            if (StepSizeX == 0 && StepSizeY == 0) {
-                winRect.Left = targetPosition.X;
-                winRect.Top = targetPosition.Y;
-            } else {
-                winRect.Left += (int)StepSizeX;
-                winRect.Top += (int)StepSizeY;
-            }
-
+            winRect.Left += Math.Clamp(NextPosition.X - winRect.Left, -1 * MonitorMaxStepX, MonitorMaxStepX);
+            winRect.Top += Math.Clamp(NextPosition.Y - winRect.Top, -1 * MonitorMaxStepY, MonitorMaxStepY);
             Api.Wrapd_SetWindowPos(WindowHandle, winRect.ToPoint());
         }
 
         private void UpdatePosition()
         {
-            if(State == AnchorStatus.Empty) {
+            if (State == AnchorStatus.Empty) {
                 return;
             }
 
             var OffSet = 30; // => user-defined setting;
             RECT curWinRct = Api.Wrapd_GetWindowRect(WindowHandle);
 
-            targetPosition = new POINT(MonitorArea.Width / 2 - (curWinRct.Width / 2), MonitorArea.Height / 2 - (curWinRct.Height / 2)); //default center screen
+            //VectorToNewPosition = new POINT()
+
+
+            NextPosition = new POINT(MonitorArea.Width / 2 - (curWinRct.Width / 2), MonitorArea.Height / 2 - (curWinRct.Height / 2)); //default center screen
 
             if (State == AnchorStatus.Offscreen) {
                 switch (Direction) {
                     case DragDirection.Left:
-                        targetPosition.X = (AnchorPt.X - curWinRct.Width) + OffSet;
+                        NextPosition.X = (AnchorPt.X - curWinRct.Width) + OffSet;
                         break;
                     case DragDirection.Right:
-                        targetPosition.X = AnchorPt.X - OffSet;
+                        NextPosition.X = AnchorPt.X - OffSet;
                         break;
                     case DragDirection.Up:
-                        targetPosition.Y = (AnchorPt.Y - curWinRct.Height) + OffSet;
+                        NextPosition.Y = (AnchorPt.Y - curWinRct.Height) + OffSet;
                         break;
                     case DragDirection.Down:
-                        targetPosition.Y = AnchorPt.Y - OffSet;
+                        NextPosition.Y = AnchorPt.Y - OffSet;
                         break;
                     default:
                         break;
@@ -131,16 +119,16 @@ namespace WindowShift
             } else if (State == AnchorStatus.OnScreen) {
                 switch (Direction) {
                     case DragDirection.Left:
-                        targetPosition.X = AnchorPt.X;
+                        NextPosition.X = AnchorPt.X;
                         break;
                     case DragDirection.Right:
-                        targetPosition.X = (AnchorPt.X - curWinRct.Width);
+                        NextPosition.X = (AnchorPt.X - curWinRct.Width);
                         break;
                     case DragDirection.Up:
-                        targetPosition.Y = AnchorPt.Y;
+                        NextPosition.Y = AnchorPt.Y;
                         break;
                     case DragDirection.Down:
-                        targetPosition.Y = (AnchorPt.Y - curWinRct.Height);
+                        NextPosition.Y = (AnchorPt.Y - curWinRct.Height);
                         break;
                     default:
                         break;
