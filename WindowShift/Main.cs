@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-
 using DWORD = System.Int32;
 using HWND = System.IntPtr;
 
@@ -81,16 +80,23 @@ namespace WindowShift
         private DragDirection DirectionFromPts(POINT start, POINT end)
         {
             int deadzone = 25; // => user-defined setting
-            (var xDif, var yDif) = (start.X - end.X, start.Y - end.Y);
-            (var axDif, var ayDif) = (Math.Abs(xDif), Math.Abs(yDif));
-            return (axDif < deadzone && ayDif < deadzone) ? DragDirection.None : (xDif > 0, yDif > 0) switch
-            {
-                (_, false) when (axDif < ayDif) => DragDirection.Down,
-                (_, true) when (axDif < ayDif) => DragDirection.Up,
-                (false, _) when (axDif > ayDif) => DragDirection.Right,
-                (true, _) when (axDif > ayDif) => DragDirection.Left,
-                _ => throw new ArgumentOutOfRangeException()
-            };
+
+            //get absolute direction
+            POINT vector = new POINT(start.X - end.X, start.Y - end.Y);
+            if (Math.Abs(vector.X) > Math.Abs(vector.Y)) { //horizontal movement
+                if (vector.X > deadzone) {
+                    return DragDirection.Left;
+                } else if (vector.X < -1 * deadzone) {
+                    return DragDirection.Right;
+                }
+            } else { //vertical movement
+                if (vector.Y > deadzone) {
+                    return DragDirection.Up;
+                } else if (vector.Y < -1 * deadzone) {
+                    return DragDirection.Down;
+                }
+            }
+            return DragDirection.None;
         }
 
         private void UpdateTick(object sender, EventArgs e)
@@ -117,23 +123,23 @@ namespace WindowShift
                 AnchorPoint fromAnchor = null;
 
                 Anchors.ForEach((Anchor) => {
-                    if(Anchor.SameScreen(lParam.pt)) {
+                    if (Anchor.SameScreen(lParam.pt)) {
                         if (Anchor.Direction == DragDirection.None) {
                             centerAnchor = Anchor;
-                        } else if(Anchor.Direction == dir) {
+                        } else if (Anchor.Direction == dir) {
                             toAnchor = Anchor;
                         }
                     }
-                    if(Anchor.WindowHandle == MButtonWindow) {
+                    if (Anchor.WindowHandle == MButtonWindow) {
                         fromAnchor = Anchor;
                     }
                 });
 
-                if(toAnchor != null) {
-                    if(fromAnchor != null) {
+                if (toAnchor != null) {
+                    if (fromAnchor != null) {
                         fromAnchor.WindowHandle = HWND.Zero;
                     }
-                    if(centerAnchor != null && toAnchor.WindowHandle != HWND.Zero) {
+                    if (centerAnchor != null && toAnchor.WindowHandle != HWND.Zero) {
                         centerAnchor.WindowHandle = toAnchor.WindowHandle;
                     }
                     toAnchor.WindowHandle = MButtonWindow;
