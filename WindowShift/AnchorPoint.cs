@@ -93,47 +93,38 @@ namespace WindowShift
 
             var OffSet = 30; // => user-defined setting;
             RECT curWinRct = Api.Wrapd_GetWindowRect(WindowHandle);
+            var _nextPosition = new POINT(MonitorArea.Center.X - curWinRct.Center.X, MonitorArea.Center.Y - curWinRct.Center.Y);
 
-            //VectorToNewPosition = new POINT()
-
-
-            NextPosition = new POINT(MonitorArea.Width / 2 - (curWinRct.Width / 2), MonitorArea.Height / 2 - (curWinRct.Height / 2)); //default center screen
-
-            if (State == AnchorStatus.Offscreen) {
-                switch (Direction) {
-                    case DragDirection.Left:
-                        NextPosition.X = (AnchorPt.X - curWinRct.Width) + OffSet;
-                        break;
-                    case DragDirection.Right:
-                        NextPosition.X = AnchorPt.X - OffSet;
-                        break;
-                    case DragDirection.Up:
-                        NextPosition.Y = (AnchorPt.Y - curWinRct.Height) + OffSet;
-                        break;
-                    case DragDirection.Down:
-                        NextPosition.Y = AnchorPt.Y - OffSet;
-                        break;
-                    default:
-                        break;
-                }
-            } else if (State == AnchorStatus.OnScreen) {
-                switch (Direction) {
-                    case DragDirection.Left:
-                        NextPosition.X = AnchorPt.X;
-                        break;
-                    case DragDirection.Right:
-                        NextPosition.X = (AnchorPt.X - curWinRct.Width);
-                        break;
-                    case DragDirection.Up:
-                        NextPosition.Y = AnchorPt.Y;
-                        break;
-                    case DragDirection.Down:
-                        NextPosition.Y = (AnchorPt.Y - curWinRct.Height);
-                        break;
-                    default:
-                        break;
-                }
+            switch(State, Direction) {
+                case (AnchorStatus.Offscreen, DragDirection.Left):
+                    _nextPosition.X = (AnchorPt.X - curWinRct.Width) + OffSet;
+                    break;
+                case (AnchorStatus.Offscreen, DragDirection.Right):
+                    _nextPosition.X = AnchorPt.X - OffSet;
+                    break;
+                case (AnchorStatus.Offscreen, DragDirection.Up):
+                    _nextPosition.Y = (AnchorPt.Y - curWinRct.Height) + OffSet;
+                    break;
+                case (AnchorStatus.Offscreen, DragDirection.Down):
+                    _nextPosition.Y = (AnchorPt.Y - curWinRct.Height) - OffSet;
+                    break;
+                case (AnchorStatus.OnScreen, DragDirection.Left):
+                    _nextPosition.X = AnchorPt.X;
+                    break;
+                case (AnchorStatus.OnScreen, DragDirection.Right):
+                    _nextPosition.X = AnchorPt.X - curWinRct.Width;
+                    break;
+                case (AnchorStatus.OnScreen, DragDirection.Up):
+                    _nextPosition.Y = AnchorPt.Y - curWinRct.Height;
+                    break;
+                case (AnchorStatus.OnScreen, DragDirection.Down):
+                    _nextPosition.Y = AnchorPt.Y - curWinRct.Height;
+                    break;
+                case (_, _): //leave at center screen
+                    break;
             }
+
+            NextPosition = _nextPosition;
         }
 
         public bool SameScreen(POINT pt)
