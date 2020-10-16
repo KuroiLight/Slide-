@@ -231,7 +231,7 @@ namespace WindowShift
 
         public override string ToString()
         {
-            return base.ToString();
+            return $"POINT [X: {X}, Y: {Y}]";
         }
     }
 
@@ -241,7 +241,7 @@ namespace WindowShift
         public int Left, Top, Right, Bottom;
         public int Width => Right - Left;
         public int Height => Bottom - Top;
-        public POINT Center => new POINT(Left + (Width / 2), Top + (Height / 2));
+        public POINT Center => new POINT((Width / 2), (Height / 2));
 
         public RECT(int left, int top, int right, int bottom)
         {
@@ -297,7 +297,7 @@ namespace WindowShift
 
         public override string ToString()
         {
-            return base.ToString();
+            return $"RECT [Left: {Left}, Right: {Right}, Top: {Top}, Bottom: {Bottom}]";
         }
     }
 }
