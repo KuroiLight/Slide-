@@ -36,33 +36,46 @@ namespace WindowShift
 
         private List<AnchorPoint> FindAllAnchorPoints()
         {
-            HWND TrayhWnd = Api.Wrapd_FindWindow("Shell_TrayWnd", null);
-            RECT TrayRect = Api.Wrapd_GetWindowRect(TrayhWnd);
-
-            var allAnchors = new List<AnchorPoint>();
-            var AllScreens = Screen.AllScreens.ToList();
-
-            AllScreens.ForEach((Screen S) => {
-                Enumerable.Range((int)DragDirection.None, (int)DragDirection.Down).ToList().ForEach((int dir) => {
-                    var D = (DragDirection)dir;
-                    var AP = new AnchorPoint(D, S);
-                    var shouldAdd = D switch
-                    {
-                        DragDirection.Left => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X - 100, AP.AnchorPt.Y))),
-                        DragDirection.Right => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X + 100, AP.AnchorPt.Y))),
-                        DragDirection.Up => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X, AP.AnchorPt.Y - 100))),
-                        DragDirection.Down => !AllScreens.Exists(S2 => S2.WorkingArea.Contains(new System.Drawing.Point(AP.AnchorPt.X, AP.AnchorPt.Y + 100))),
-                        DragDirection.None => true,
-                        _ => throw new IndexOutOfRangeException(nameof(D)),
-                    };
-
-                    if (shouldAdd && !TrayRect.Contains(AP.AnchorPt)) {
-                        allAnchors.Add(AP);
+            static bool ScreenAtPoint(int X, int Y)
+            {
+                for (var i = 0; i >= Screen.AllScreens.Length; i++) {
+                    if (Screen.AllScreens[i].WorkingArea.Contains(X, Y)) {
+                        return true;
                     }
-                });
+                }
+
+                return false;
+            }
+
+            static bool isValidAnchorPoint(AnchorPoint AP)
+            {
+                if(!ScreenAtPoint(AP.AnchorPt.X, AP.AnchorPt.Y)) { //check to see if AP fall outside of work area (into taskbar)
+                    return false;
+                }
+
+                return AP.Direction switch
+                {
+                    DragDirection.None => true, //center screen
+                    DragDirection.Left => !ScreenAtPoint(AP.AnchorPt.X - 100, AP.AnchorPt.Y),
+                    DragDirection.Right => !ScreenAtPoint(AP.AnchorPt.X + 100, AP.AnchorPt.Y),
+                    DragDirection.Up => !ScreenAtPoint(AP.AnchorPt.X, AP.AnchorPt.Y - 100),
+                    DragDirection.Down => !ScreenAtPoint(AP.AnchorPt.X, AP.AnchorPt.Y + 100),
+                    _ => false,
+                };
+            }
+
+            var tempAnchors = new List<AnchorPoint>();
+
+            Screen.AllScreens.ToList().ForEach(curScreen => {
+                foreach (DragDirection direction in Enum.GetValues(typeof(DragDirection))) {
+                    var curAnchor = new AnchorPoint(direction, curScreen);
+                    if (isValidAnchorPoint(curAnchor)) {
+                        tempAnchors.Add(curAnchor);
+                    }
+                }
             });
 
-            return allAnchors;
+            return tempAnchors;
         }
 
         private static HWND WindowFrom(POINT pt)
@@ -101,6 +114,27 @@ namespace WindowShift
             return DragDirection.None;
         }
 
+        private AnchorPoint GetAnchorFrom(HWND hWindow)
+        {
+            return GetAnchorFrom(A => A.WindowHandle == hWindow);
+        }
+
+        private AnchorPoint GetAnchorFrom(POINT ScreenAt, DragDirection Direction)
+        {
+            return GetAnchorFrom(A => A.MonitorArea.Contains(ScreenAt) && A.Direction == Direction);
+        }
+
+        private AnchorPoint GetAnchorFrom(Func<AnchorPoint, bool> MatchPredicate)
+        {
+            for (int i = 0; i >= Anchors.Count - 1; i++) {
+                if (MatchPredicate(Anchors[i])) {
+                    return Anchors[i];
+                }
+            }
+
+            return null;
+        }
+
         private void UpdateTick(object sender, EventArgs e)
         {
             HWND WindowUnderCursor = WindowFrom(Api.Wrapd_GetCursorPos());
@@ -120,30 +154,19 @@ namespace WindowShift
                 WindowFromDragStart = WindowFrom(lParam.pt);
             } else if (wParam == Api.WM_MOUSE.WM_MBUTTONUP) {
                 DragDirection dir = DirectionFromPts(FromDragStartPoint, lParam.pt);
-                AnchorPoint centerAnchor = null;
-                AnchorPoint toAnchor = null;
-                AnchorPoint fromAnchor = null;
-
-                Anchors.ForEach((Anchor) => {
-                    if (Anchor.SameScreen(lParam.pt)) {
-                        if (Anchor.Direction == DragDirection.None) {
-                            centerAnchor = Anchor;
-                        } else if (Anchor.Direction == dir) {
-                            toAnchor = Anchor;
-                        }
-                    }
-                    if (Anchor.WindowHandle == WindowFromDragStart) {
-                        fromAnchor = Anchor;
-                    }
-                });
+                AnchorPoint centerAnchor = GetAnchorFrom(lParam.pt, DragDirection.None);
+                AnchorPoint toAnchor = GetAnchorFrom(lParam.pt, dir);
+                AnchorPoint fromAnchor = GetAnchorFrom(WindowFromDragStart);
 
                 if (toAnchor != null) {
                     if (fromAnchor != null) {
                         fromAnchor.WindowHandle = HWND.Zero;
                     }
+
                     if (centerAnchor != null && toAnchor.WindowHandle != HWND.Zero) {
                         centerAnchor.WindowHandle = toAnchor.WindowHandle;
                     }
+
                     toAnchor.WindowHandle = WindowFromDragStart;
                 }
             }
