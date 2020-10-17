@@ -44,7 +44,7 @@ namespace WindowShift
         public POINT AnchorPt { get; private set; }
         public DragDirection Direction { get; private set; }
 
-        private RECT MonitorArea;
+        public RECT MonitorArea { get; private set; }
         private POINT NextPosition;
         private int MonitorMaxStepX = 10, MonitorMaxStepY = 10;
         private Settings Config = Settings.SettingsInstance;
@@ -52,7 +52,7 @@ namespace WindowShift
         public AnchorPoint(DragDirection direction, Screen monitor)
         {
             Direction = direction;
-            MonitorArea = RECT.FromRectangle(monitor.WorkingArea);
+            MonitorArea = RECT.FromRectangle(monitor.Bounds);
 
             AnchorPt = direction switch
             {
@@ -126,16 +126,6 @@ namespace WindowShift
             }
 
             NextPosition = _nextPosition;
-        }
-
-        public bool SameScreen(POINT pt)
-        {
-            return MonitorArea.Contains(pt);
-        }
-
-        public bool ContainedIn(RECT area)
-        {
-            return area.Contains(AnchorPt);
         }
 
         public override bool Equals(object obj)
