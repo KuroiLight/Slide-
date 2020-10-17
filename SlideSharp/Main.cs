@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using DWORD = System.Int32;
@@ -15,6 +16,7 @@ namespace WindowShift
         private readonly Timer TaskScheduler = new Timer();
         private HWND WindowFromDragStart = HWND.Zero;
         private POINT FromDragStartPoint = new POINT();
+        private POINT MouseLastPosition = new POINT();
         private Settings Config = Settings.SettingsInstance;
 
         public Main()
@@ -38,7 +40,7 @@ namespace WindowShift
         {
             static bool ScreenAtPoint(int X, int Y)
             {
-                for (var i = 0; i >= Screen.AllScreens.Length; i++) {
+                for (var i = 0; i < Screen.AllScreens.Length; i++) {
                     if (Screen.AllScreens[i].WorkingArea.Contains(X, Y)) {
                         return true;
                     }
@@ -98,20 +100,14 @@ namespace WindowShift
 
             //get absolute direction
             var vector = new POINT(start.X - end.X, start.Y - end.Y);
-            if (Math.Abs(vector.X) > Math.Abs(vector.Y)) { //horizontal movement
-                if (vector.X > deadzone) {
-                    return DragDirection.Left;
-                } else if (vector.X < -1 * deadzone) {
-                    return DragDirection.Right;
-                }
-            } else { //vertical movement
-                if (vector.Y > deadzone) {
-                    return DragDirection.Up;
-                } else if (vector.Y < -1 * deadzone) {
-                    return DragDirection.Down;
-                }
-            }
-            return DragDirection.None;
+            return (Math.Abs(vector.X) > Math.Abs(vector.Y)) switch
+            {
+                true when (vector.X > deadzone) => DragDirection.Left,
+                true when (vector.X < -1 * deadzone) => DragDirection.Right,
+                false when (vector.Y > deadzone) => DragDirection.Up,
+                false when (vector.Y < -1 * deadzone) => DragDirection.Down,
+                _ => DragDirection.None
+            };
         }
 
         private AnchorPoint GetAnchorFrom(HWND hWindow)
@@ -126,7 +122,7 @@ namespace WindowShift
 
         private AnchorPoint GetAnchorFrom(Func<AnchorPoint, bool> MatchPredicate)
         {
-            for (var i = 0; i >= Anchors.Count - 1; i++) {
+            for (var i = 0; i < Anchors.Count; i++) {
                 if (MatchPredicate(Anchors[i])) {
                     return Anchors[i];
                 }
@@ -137,7 +133,7 @@ namespace WindowShift
 
         private void UpdateTick(object sender, EventArgs e)
         {
-            HWND WindowUnderCursor = WindowFrom(Api.Wrapd_GetCursorPos());
+            HWND WindowUnderCursor = WindowFrom(MouseLastPosition);
             Anchors.ForEach(delegate (AnchorPoint Anchor) {
                 if (Anchor.WindowHandle == WindowUnderCursor) {
                     Anchor.State = AnchorStatus.OnScreen;
@@ -149,7 +145,9 @@ namespace WindowShift
 
         private HWND MouseHookProc(DWORD code, Api.WM_MOUSE wParam, Api.MSLLHOOKSTRUCT lParam)
         {
-            if (wParam == Api.WM_MOUSE.WM_MBUTTONDOWN) {
+            if(wParam == Api.WM_MOUSE.WM_MOUSEMOVE) {
+                MouseLastPosition = lParam.pt;
+            } else if (wParam == Api.WM_MOUSE.WM_MBUTTONDOWN) {
                 FromDragStartPoint = lParam.pt;
                 WindowFromDragStart = WindowFrom(lParam.pt);
             } else if (wParam == Api.WM_MOUSE.WM_MBUTTONUP) {

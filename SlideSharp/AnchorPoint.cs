@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows.Forms;
 using HWND = System.IntPtr;
 
@@ -56,10 +57,10 @@ namespace WindowShift
 
             AnchorPt = direction switch
             {
-                DragDirection.Left => new POINT(MonitorArea.Left, MonitorArea.Height / 2),
-                DragDirection.Right => new POINT(MonitorArea.Right, MonitorArea.Height / 2),
-                DragDirection.Up => new POINT(MonitorArea.Width / 2, MonitorArea.Top),
-                DragDirection.Down => new POINT(MonitorArea.Width / 2, MonitorArea.Bottom),
+                DragDirection.Left => new POINT(MonitorArea.Left + 1, MonitorArea.Height / 2),
+                DragDirection.Right => new POINT(MonitorArea.Right - 1, MonitorArea.Height / 2),
+                DragDirection.Up => new POINT(MonitorArea.Width / 2, MonitorArea.Top + 1),
+                DragDirection.Down => new POINT(MonitorArea.Width / 2, MonitorArea.Bottom - 1),
                 DragDirection.None => new POINT(MonitorArea.Width / 2, MonitorArea.Height / 2),
                 _ => throw new ArgumentOutOfRangeException(),
             };
@@ -110,16 +111,16 @@ namespace WindowShift
                     _nextPosition.Y = AnchorPt.Y - OffSet;
                     break;
                 case (AnchorStatus.OnScreen, DragDirection.Left):
-                    _nextPosition.X = AnchorPt.X;
+                    _nextPosition.X = AnchorPt.X - 1;
                     break;
                 case (AnchorStatus.OnScreen, DragDirection.Right):
-                    _nextPosition.X = AnchorPt.X - curWinRct.Width;
+                    _nextPosition.X = 1 + AnchorPt.X - curWinRct.Width;
                     break;
                 case (AnchorStatus.OnScreen, DragDirection.Up):
-                    _nextPosition.Y = AnchorPt.Y;
+                    _nextPosition.Y = AnchorPt.Y - 1;
                     break;
                 case (AnchorStatus.OnScreen, DragDirection.Down):
-                    _nextPosition.Y = AnchorPt.Y - curWinRct.Height;
+                    _nextPosition.Y = 1 + AnchorPt.Y - curWinRct.Height;
                     break;
                 case (_, _): //leave at center screen
                     break;
