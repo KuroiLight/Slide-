@@ -36,7 +36,6 @@ namespace SlideSharp
         public static extern bool IsWindowVisible(HWND hWnd);
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         public static extern HWND CallNextHookEx(HWND hhk, int nCode, WM_MOUSE wParam, [In] MSLLHOOKSTRUCT lParam);
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         //############################################################################# wrappers
         public static HWND Wrapd_GetParent(HWND hWnd)
         {
