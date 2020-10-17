@@ -59,7 +59,7 @@ namespace WindowShift
 
         public override string ToString()
         {
-            return SettingsInstance.ToString();
+            return JsonConvert.SerializeObject(SettingsInstance);
         }
     }
 }
