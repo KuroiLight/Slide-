@@ -7,7 +7,7 @@ using DWORD = System.Int32;
 using HWND = System.IntPtr;
 
 
-namespace WindowShift
+namespace SlideSharp
 {
     public class Main
     {

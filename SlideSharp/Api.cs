@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using HWND = System.IntPtr;
 
-namespace WindowShift
+namespace SlideSharp
 {
     public static class Api
     {

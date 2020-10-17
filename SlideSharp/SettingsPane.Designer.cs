@@ -1,5 +1,5 @@
 ﻿
-namespace WindowShift
+namespace SlideSharp
 {
     partial class SettingsPane
     {

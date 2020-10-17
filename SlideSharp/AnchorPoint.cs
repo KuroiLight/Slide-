@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using HWND = System.IntPtr;
 
-namespace WindowShift
+namespace SlideSharp
 {
     public enum AnchorStatus
     {
