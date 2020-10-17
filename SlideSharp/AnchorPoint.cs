@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Windows.Forms;
 using HWND = System.IntPtr;
 
@@ -8,10 +9,9 @@ namespace WindowShift
 {
     public enum AnchorStatus
     {
+        Empty = 0,
         Offscreen = 1,
-        OnScreen = 2,
-        CenterScreen = 3,
-        Empty = 4
+        OnScreen = 2
     }
 
     public class AnchorPoint
@@ -24,7 +24,7 @@ namespace WindowShift
                 _WindowHandle = value;
                 if (_WindowHandle == HWND.Zero) {
                     State = AnchorStatus.Empty;
-                } else if (State != AnchorStatus.CenterScreen) {
+                } else {
                     State = AnchorStatus.Offscreen;
                 }
             }
@@ -38,7 +38,24 @@ namespace WindowShift
                 if (_State != value) {
                     _State = value;
                     UpdatePosition();
+                    TickEventEnabled = true;
                 }
+            }
+        }
+
+        private bool tickEventEnabled;
+        private bool TickEventEnabled {
+            get => tickEventEnabled;
+            set {
+                if(tickEventEnabled != value) {
+                    if(value == false) {
+                        Main.SingletonInstance.TaskScheduler.Tick -= UpdateTick;
+                    } else {
+                        Main.SingletonInstance.TaskScheduler.Tick += UpdateTick;
+                    }
+                    tickEventEnabled = value;
+                }
+                
             }
         }
 
@@ -73,15 +90,27 @@ namespace WindowShift
 
         public void UpdateTick(object sender, EventArgs e)
         {
+            Debug.WriteLine("Tick for " + ToString());
             if (State == AnchorStatus.Empty) {
+                TickEventEnabled = false;
                 return;
             }
 
             RECT winRect = Api.Wrapd_GetWindowRect(WindowHandle);
-            winRect.Left += Math.Clamp(NextPosition.X - winRect.Left, -1 * MonitorMaxStepX, MonitorMaxStepX);
-            winRect.Top += Math.Clamp(NextPosition.Y - winRect.Top, -1 * MonitorMaxStepY, MonitorMaxStepY);
+            var nextPoint = new POINT(
+                winRect.Left + Math.Clamp(NextPosition.X - winRect.Left, -1 * MonitorMaxStepX, MonitorMaxStepX),
+                winRect.Top + Math.Clamp(NextPosition.Y - winRect.Top, -1 * MonitorMaxStepY, MonitorMaxStepY)
+                );
 
-            Api.Wrapd_SetWindowPos(WindowHandle, winRect.ToPoint());
+            if(winRect.ToPoint() == nextPoint) {
+                TickEventEnabled = false;
+                if(Direction == DragDirection.None) {
+                    WindowHandle = HWND.Zero;
+                }
+                return;
+            }
+
+            Api.Wrapd_SetWindowPos(WindowHandle, nextPoint);
         }
 
         private void UpdatePosition()
@@ -150,6 +179,11 @@ namespace WindowShift
         public static bool operator !=(AnchorPoint left, AnchorPoint right)
         {
             return !(left == right);
+        }
+
+        public override string ToString()
+        {
+            return $"AnchorPoint [ Direction: {Direction}, AnchorPt: {AnchorPt}, State: {_State} ]";
         }
     }
 

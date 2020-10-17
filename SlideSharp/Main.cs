@@ -13,20 +13,23 @@ namespace WindowShift
     {
         private readonly List<AnchorPoint> Anchors;
         private readonly HWND hMouseLLHook;
-        private readonly Timer TaskScheduler = new Timer();
+        public Timer TaskScheduler = new Timer();
         private HWND WindowFromDragStart = HWND.Zero;
         private POINT FromDragStartPoint = new POINT();
         private POINT MouseLastPosition = new POINT();
         private Settings Config = Settings.SettingsInstance;
+
+        public static Main SingletonInstance;
 
         public Main()
         {
             hMouseLLHook = Api.Wrapd_SetWindowsHookEx(MouseHookProc);
             Anchors = FindAllAnchorPoints();
             TaskScheduler.Tick += UpdateTick;
-            Anchors.ForEach(Anchor => TaskScheduler.Tick += Anchor.UpdateTick);
+            //Anchors.ForEach(Anchor => TaskScheduler.Tick += Anchor.UpdateTick);
             TaskScheduler.Interval = Config.Update_Interval;
             TaskScheduler.Start();
+            Main.SingletonInstance = this;
         }
 
         public void Dispose()
@@ -80,7 +83,7 @@ namespace WindowShift
             return tempAnchors;
         }
 
-        private static HWND WindowFrom(POINT pt)
+        private static HWND WindowFrom(POINT pt) //!!! find a fast way to filter out bad windows (desktop/taskbar)
         {
             HWND CurrentWindow = Api.WindowFromPoint(pt);
             if (CurrentWindow != HWND.Zero) {
@@ -137,7 +140,7 @@ namespace WindowShift
             Anchors.ForEach(delegate (AnchorPoint Anchor) {
                 if (Anchor.WindowHandle == WindowUnderCursor) {
                     Anchor.State = AnchorStatus.OnScreen;
-                } else {
+                } else if(Anchor.State != AnchorStatus.Empty) {
                     Anchor.State = AnchorStatus.Offscreen;
                 }
             });
