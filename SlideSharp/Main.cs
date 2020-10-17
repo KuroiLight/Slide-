@@ -10,8 +10,8 @@ namespace WindowShift
 {
     public class Main
     {
-        private List<AnchorPoint> Anchors;
-        private HWND hMouseLLHook;
+        private readonly List<AnchorPoint> Anchors;
+        private readonly HWND hMouseLLHook;
         private readonly Timer TaskScheduler = new Timer();
         private HWND WindowFromDragStart = HWND.Zero;
         private POINT FromDragStartPoint = new POINT();
@@ -126,7 +126,7 @@ namespace WindowShift
 
         private AnchorPoint GetAnchorFrom(Func<AnchorPoint, bool> MatchPredicate)
         {
-            for (int i = 0; i >= Anchors.Count - 1; i++) {
+            for (var i = 0; i >= Anchors.Count - 1; i++) {
                 if (MatchPredicate(Anchors[i])) {
                     return Anchors[i];
                 }
