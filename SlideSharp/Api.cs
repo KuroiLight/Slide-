@@ -17,8 +17,6 @@ namespace WindowShift
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool GetWindowRect(HWND hwnd, out RECT lpRect);
         [DllImport("user32.dll", SetLastError = true)]
-        private static extern HWND FindWindow(string lpClassName, string lpWindowName);
-        [DllImport("user32.dll", SetLastError = true)]
         private static extern HWND SetWindowsHookEx(int hookType, HookProc lpfn, HWND hMod, uint dwThreadId);
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern bool UnhookWindowsHookEx(HWND hhk);
@@ -124,17 +122,6 @@ namespace WindowShift
             }
 
             return Rect;
-        }
-
-        public static HWND Wrapd_FindWindow(string className, string windowName)
-        {
-            HWND returnValue = FindWindow(className, windowName);
-
-            if (returnValue == HWND.Zero) {
-                throw new Win32Exception(Marshal.GetLastWin32Error());
-            }
-
-            return returnValue;
         }
         //#############################################################################
         public delegate HWND HookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam);
