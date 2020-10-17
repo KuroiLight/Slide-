@@ -126,15 +126,6 @@ namespace WindowShift
         //#############################################################################
         public delegate HWND HookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam);
 
-        public enum EventType : uint
-        {
-            EVENT_OBJECT_SHOW = 0x8002,
-            EVENT_OBJECT_HIDE = 0x8003,
-            EVENT_OBJECT_CREATE = 0x8000,
-            EVENT_OBJECT_DESTROY = 0x8001,
-            EVENT_OBJECT_FOCUS = 0x8005
-        }
-
         [StructLayout(LayoutKind.Sequential)]
         public struct MSLLHOOKSTRUCT
         {
