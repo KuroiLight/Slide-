@@ -46,6 +46,50 @@ namespace SlideSharp
         }
     }
 
+    public abstract class Container
+    {
+        public Container(Screen screen)
+        {
+            CanBeDisposed = false;
+            Screen = screen;
+        }
+
+        public bool CanBeDisposed { get; protected set; }
+        public WindowObj ContainedWindow { get; protected set; }
+        public MoveIterator Path { get; protected set; }
+        public Screen Screen { get; private set; }
+
+        public void UpdatePosition()
+        {
+            if (ContainedWindow.Exists() && Path.CanTraverse()) {
+                ContainedWindow.MoveWindow(Path.Traverse());
+            }
+        }
+    }
+
+    public class CenterContainer : Container
+    {
+        public CenterContainer(Screen screen, IntPtr windowHandle) : base(screen)
+        {
+            POINT maxStep = new POINT(30, 30); //temporary until i get configs
+            ContainedWindow = new WindowObj(windowHandle);
+            var NextPoint = new POINT(
+                ((int)Screen.WorkingArea.Width / 2) + ContainedWindow.WindowArea.Center.X,
+                ((int)Screen.WorkingArea.Height / 2) + ContainedWindow.WindowArea.Center.Y);
+            Path = new MoveIterator(ContainedWindow.WindowArea.ToPoint(), NextPoint, maxStep);
+            //undecorate window here
+        }
+
+        public new void UpdatePosition()
+        {
+            if (!Path.CanTraverse()) {
+                CanBeDisposed = true;
+            } else {
+                base.UpdatePosition();
+            }
+        }
+    }
+
     public class EdgeContainer : Container
     {
         public EdgeContainer(Orientation orientation, SideModifier sideModifier, Screen screen) : base(screen)
@@ -102,50 +146,6 @@ namespace SlideSharp
                 _ => throw new NotImplementedException(),
             };
             Path = new MoveIterator(ContainedWindow.WindowArea.ToPoint(), NextPoint, maxStep);
-        }
-    }
-
-    public class CenterContainer : Container
-    {
-        public CenterContainer(Screen screen, IntPtr windowHandle) : base(screen)
-        {
-            POINT maxStep = new POINT(30, 30); //temporary until i get configs
-            ContainedWindow = new WindowObj(windowHandle);
-            var NextPoint = new POINT(
-                ((int)Screen.WorkingArea.Width / 2) + ContainedWindow.WindowArea.Center.X,
-                ((int)Screen.WorkingArea.Height / 2) + ContainedWindow.WindowArea.Center.Y);
-            Path = new MoveIterator(ContainedWindow.WindowArea.ToPoint(), NextPoint, maxStep);
-            //undecorate window here
-        }
-
-        public new void UpdatePosition()
-        {
-            if (!Path.CanTraverse()) {
-                CanBeDisposed = true;
-            } else {
-                base.UpdatePosition();
-            }
-        }
-    }
-
-    public abstract class Container
-    {
-        public Container(Screen screen)
-        {
-            CanBeDisposed = false;
-            Screen = screen;
-        }
-
-        public bool CanBeDisposed { get; protected set; }
-        public WindowObj ContainedWindow { get; protected set; }
-        public MoveIterator Path { get; protected set; }
-        public Screen Screen { get; private set; }
-
-        public void UpdatePosition()
-        {
-            if (ContainedWindow.Exists() && Path.CanTraverse()) {
-                ContainedWindow.MoveWindow(Path.Traverse());
-            }
         }
     }
 }
