@@ -35,7 +35,7 @@ namespace SlideSharp
 
         public bool CanTraverse()
         {
-            return (Start - End != default);
+            return Start - End != default;
         }
 
         public POINT Traverse()
@@ -71,7 +71,7 @@ namespace SlideSharp
             }
         }
 
-        public void UpdatePosition()
+        public new void UpdatePosition()
         {
             if (!Path.CanTraverse()) {
                 //set window status specific decor here
@@ -116,7 +116,7 @@ namespace SlideSharp
             //undecorate window here
         }
 
-        public void UpdatePosition()
+        public new void UpdatePosition()
         {
             if (!Path.CanTraverse()) {
                 CanBeDisposed = true;
