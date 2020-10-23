@@ -66,6 +66,12 @@ namespace SlideSharp
                 ContainedWindow.MoveWindow(Path.Traverse());
             }
         }
+
+        public void RemoveWindow()
+        {
+            ContainedWindow = null;
+            Path = default;
+        }
     }
 
     public class CenterContainer : Container
@@ -98,11 +104,20 @@ namespace SlideSharp
             Orientation = orientation;
             SideModifier = sideModifier;
             Status = Status.Showing;
+            ScreenEdge = (orientation, sideModifier) switch
+            {
+                (Orientation.Horizontal, SideModifier.Positive) => new RECT(Screen.Bounds.Right - 1, Screen.Bounds.Top + 1, Screen.Bounds.Right + 1, Screen.Bounds.Bottom - 1),
+                (Orientation.Horizontal, SideModifier.Negative) => new RECT(Screen.Bounds.Left - 1, Screen.Bounds.Top + 1, Screen.Bounds.Left + 1, Screen.Bounds.Bottom - 1),
+                (Orientation.Vertical, SideModifier.Positive) => new RECT(Screen.Bounds.Left + 1, Screen.Bounds.Bottom - 1, Screen.Bounds.Right - 1, Screen.Bounds.Bottom + 1),
+                (Orientation.Vertical, SideModifier.Negative) => new RECT(Screen.Bounds.Left + 1, Screen.Bounds.Top - 1, Screen.Bounds.Right - 1, Screen.Bounds.Top + 1),
+                _ => throw new InvalidOperationException(),
+            };
         }
 
         public Orientation Orientation { get; }
         public SideModifier SideModifier { get; }
         public Status Status { get; private set; }
+        public RECT ScreenEdge { get; private set; }
 
         public void SetNewWindow(IntPtr windowHandle)
         {
@@ -147,6 +162,22 @@ namespace SlideSharp
                 _ => throw new InvalidOperationException(),
             };
             Path = new MoveIterator(ContainedWindow.WindowArea.ToPoint(), NextPoint, maxStep);
+        }
+
+        public bool Intersect(POINT start, POINT end)
+        {
+            var DifOfScreenToStart = ScreenEdge.Center - start;
+            var VecFromStartEnd = start - end;
+            var divs = (Orientation) switch
+            {
+                Orientation.Horizontal => (double)DifOfScreenToStart.X / (double)VecFromStartEnd.X,
+                Orientation.Vertical => (double)DifOfScreenToStart.Y / (double)VecFromStartEnd.Y,
+                _ => throw new InvalidOperationException(),
+            };
+            var PointAtEnd = new POINT(divs * VecFromStartEnd.X, divs * VecFromStartEnd.Y);
+            var EndPoint = start + PointAtEnd;
+
+            return ScreenEdge.Contains(EndPoint);
         }
     }
 }
