@@ -9,4 +9,4 @@ In a nutshell it will allow you to slide windows offscreen with quick access to 
 * #### Support Multi-Monitor setups
 * #### Configurable via Settings Window
 
-###### Most of the functionality has been implemented, the creation of window containers and mousehook need to be added
+###### Most of the functionality has been implemented, the creation of window containers and mousehook is not however.
