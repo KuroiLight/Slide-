@@ -20,6 +20,7 @@ namespace SlideSharp
         Hiding = 1,
         Showing = -1
     }
+
     public struct MoveIterator
     {
         private POINT End;
@@ -57,6 +58,7 @@ namespace SlideSharp
         public Orientation Orientation { get; private set; }
         public SideModifier SideModifier { get; private set; }
         public Status Status { get; private set; }
+
         public void SetNewWindow(IntPtr windowHandle)
         {
             ContainedWindow = new WindowObj(windowHandle);
@@ -138,6 +140,7 @@ namespace SlideSharp
         public WindowObj ContainedWindow { get; protected set; }
         public MoveIterator Path { get; protected set; }
         public Screen Screen { get; private set; }
+
         public void UpdatePosition()
         {
             if (ContainedWindow.Exists() && Path.CanTraverse()) {
