@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Threading;
 
 namespace SlideSharp
@@ -11,9 +10,8 @@ namespace SlideSharp
     internal class Coordinator
     {
         private List<Container> Containers = new List<Container>();
-        private ConcurrentQueue<Task> HookMessages = new ConcurrentQueue<Task>();
         private DispatcherTimer Dispatcher = new DispatcherTimer();
-
+        private ConcurrentQueue<Task> HookMessages = new ConcurrentQueue<Task>();
         public Coordinator()
         {
             Dispatcher.Tick += UpdateStates;
