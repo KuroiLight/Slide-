@@ -1,4 +1,5 @@
 ﻿using System;
+using Win32Api;
 using WpfScreenHelper;
 
 namespace SlideSharp
@@ -46,7 +47,7 @@ namespace SlideSharp
         }
     }
 
-    public abstract class Container
+    public class Container
     {
         public Container(Screen screen)
         {
@@ -57,7 +58,7 @@ namespace SlideSharp
         public bool CanBeDisposed { get; protected set; }
         public WindowObj ContainedWindow { get; protected set; }
         public MoveIterator Path { get; protected set; }
-        public Screen Screen { get; private set; }
+        public Screen Screen { get; }
 
         public void UpdatePosition()
         {
@@ -99,8 +100,8 @@ namespace SlideSharp
             Status = Status.Showing;
         }
 
-        public Orientation Orientation { get; private set; }
-        public SideModifier SideModifier { get; private set; }
+        public Orientation Orientation { get; }
+        public SideModifier SideModifier { get; }
         public Status Status { get; private set; }
 
         public void SetNewWindow(IntPtr windowHandle)
@@ -143,7 +144,7 @@ namespace SlideSharp
                 (Orientation.Vertical, SideModifier.Negative) => new POINT(
                     ((int)Screen.WorkingArea.Width / 2) + ContainedWindow.WindowArea.Center.X,
                     (int)Screen.WorkingArea.Y + ((int)Status * (int)SideModifier * ContainedWindow.WindowArea.Height)),
-                _ => throw new NotImplementedException(),
+                _ => throw new InvalidOperationException(),
             };
             Path = new MoveIterator(ContainedWindow.WindowArea.ToPoint(), NextPoint, maxStep);
         }

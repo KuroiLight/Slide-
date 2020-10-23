@@ -19,6 +19,7 @@ namespace Win32Api
     [Flags]
     public enum SetWindowPosFlags : uint
     {
+        SWP_NONE = 0x0000,
         SWP_NOSIZE = 0x0001,
         SWP_NOMOVE = 0x0002,
         SWP_NOZORDER = 0x0004,
@@ -63,12 +64,16 @@ namespace Win32Api
     {
         [DllImport("user32.dll")]
         public static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
+
         [DllImport("user32.dll")]
         public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
         [DllImport("user32.dll", SetLastError = true)]
         public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool GetLayeredWindowAttributes(IntPtr hwnd, uint crKey, out byte bAlpha, out uint dwFlags);
+
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool EnableWindow(IntPtr hWnd, bool bEnable);
@@ -137,7 +142,7 @@ namespace Win32Api
             RECT Rect; //do not inline
             var returnValue = GetWindowRect(hWnd, out Rect);
 
-            if (returnValue != true) {
+            if (!returnValue) {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 
@@ -159,7 +164,7 @@ namespace Win32Api
 
             var returnValue = SetWindowPos(hWnd, HWND.Zero, pt.X, pt.Y, 0, 0, SetWindowPosFlags.SWP_NOZORDER | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_FRAMECHANGED);
 
-            if (returnValue != true) {
+            if (!returnValue) {
                 //this usually fails during a race condition, e.g window is closed right before SetWindowPos is called
                 //instead of throwing here, we should just write the exception to debug
                 Debug.WriteLine(new Win32Exception(Marshal.GetLastWin32Error()).Message);
@@ -173,7 +178,7 @@ namespace Win32Api
                 throw new ArgumentNullException(nameof(lpfn));
             }
 
-            var WH_MOUSE_LL = 14;
+            const int WH_MOUSE_LL = 14;
             HWND returnValue = SetWindowsHookEx(WH_MOUSE_LL, lpfn, HWND.Zero, 0);
 
             if (returnValue == HWND.Zero) {
@@ -191,7 +196,7 @@ namespace Win32Api
 
             var returnValue = UnhookWindowsHookEx(hhk);
 
-            if (returnValue == false) {
+            if (!returnValue) {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 
@@ -209,133 +214,139 @@ namespace Win32Api
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
+
         [DllImport("user32.dll", SetLastError = true)]
         private static extern HWND SetWindowsHookEx(int hookType, HookProc lpfn, HWND hMod, uint dwThreadId);
+
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern bool UnhookWindowsHookEx(HWND hhk);
     }
-}
 
-[StructLayout(LayoutKind.Sequential)]
-public struct POINT
-{
-    public int X;
-    public int Y;
-
-    public POINT(int x, int y)
+    [StructLayout(LayoutKind.Sequential)]
+    public struct POINT
     {
-        X = x;
-        Y = y;
-    }
+        public int X;
+        public int Y;
 
-    public static POINT operator +(POINT p1, POINT p2)
-    {
-        return new POINT(p1.X + p2.X, p1.Y + p2.Y);
-    }
+        public POINT(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
 
-    public static POINT operator -(POINT p1, POINT p2)
-    {
-        return new POINT(p1.X - p2.X, p1.Y - p2.Y);
-    }
+        public static POINT operator +(POINT p1, POINT p2)
+        {
+            return new POINT(p1.X + p2.X, p1.Y + p2.Y);
+        }
 
-    public static bool operator ==(POINT p1, POINT p2)
-    {
-        return p1.Equals(p2);
-    }
+        public static POINT operator -(POINT p1, POINT p2)
+        {
+            return new POINT(p1.X - p2.X, p1.Y - p2.Y);
+        }
 
-    public static POINT operator /(POINT p1, int divisor)
-    {
-        return new POINT(p1.X / divisor, p1.Y / divisor);
-    }
+        public static bool operator ==(POINT p1, POINT p2)
+        {
+            return p1.Equals(p2);
+        }
 
-    public static bool operator !=(POINT p1, POINT p2)
-    {
-        return !p1.Equals(p2);
-    }
+        public static POINT operator /(POINT p1, int divisor)
+        {
+            return new POINT(p1.X / divisor, p1.Y / divisor);
+        }
 
-    public bool Equals(POINT p)
-    {
-        return p.X == X && p.Y == Y;
-    }
+        public static bool operator !=(POINT p1, POINT p2)
+        {
+            return !p1.Equals(p2);
+        }
 
-    public override int GetHashCode()
-    {
-        return X + (19 * Y);
-    }
+        public bool Equals(POINT p)
+        {
+            return p.X == X && p.Y == Y;
+        }
 
-    public override bool Equals(object obj)
-    {
-        return base.Equals(obj);
-    }
+        public override int GetHashCode()
+        {
+            return X + (19 * Y);
+        }
 
-    public override string ToString()
-    {
-        return $"POINT [X: {X}, Y: {Y}]";
-    }
-}
+        public override string ToString()
+        {
+            return $"POINT [X: {X}, Y: {Y}]";
+        }
 
-[StructLayout(LayoutKind.Sequential)]
-public struct RECT
-{
-    public int Left, Top, Right, Bottom;
-    public int Width => Right - Left;
-    public int Height => Bottom - Top;
-    public POINT Center => new POINT((Width / 2), (Height / 2));
-
-    public RECT(int left, int top, int right, int bottom)
-    {
-        Left = left;
-        Top = top;
-        Right = right;
-        Bottom = bottom;
-    }
-
-    public static RECT FromRectangle(System.Drawing.Rectangle R)
-    {
-        return (new RECT(R.Left, R.Top, R.Right, R.Bottom));
-    }
-
-    public POINT ToPoint()
-    {
-        return new POINT(Left, Top);
-    }
-
-    public bool Contains(POINT pt)
-    {
-        if (Left > pt.X || Right < pt.X || Top > pt.Y || Bottom < pt.Y) {
-            return false;
-        } else {
-            return true;
+        public override bool Equals(object obj)
+        {
+            if (!(obj is POINT)) {
+                return false;
+            } else {
+                return Equals((POINT)obj);
+            }
         }
     }
 
-    public static bool operator ==(RECT r1, RECT r2)
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RECT
     {
-        return r1.Equals(r2);
-    }
+        public int Left, Top, Right, Bottom;
+        public int Width => Right - Left;
+        public int Height => Bottom - Top;
+        public POINT Center => new POINT(Width / 2, Height / 2);
 
-    public static bool operator !=(RECT r1, RECT r2)
-    {
-        return !r1.Equals(r2);
-    }
+        public RECT(int left, int top, int right, int bottom)
+        {
+            Left = left;
+            Top = top;
+            Right = right;
+            Bottom = bottom;
+        }
 
-    public bool Equals(RECT r)
-    {
-        return r.Left == Left && r.Top == Top && r.Right == Right && r.Bottom == Bottom;
-    }
+        public static RECT FromRectangle(System.Drawing.Rectangle R)
+        {
+            return new RECT(R.Left, R.Top, R.Right, R.Bottom);
+        }
 
-    public override int GetHashCode()
-    {
-        return Left + (15 * Top) + (17 * Right) + (21 * Bottom);
-    }
+        public POINT ToPoint()
+        {
+            return new POINT(Left, Top);
+        }
 
-    public override bool Equals(object obj)
-    {
-        return base.Equals(obj);
-    }
+        public bool Contains(POINT pt)
+        {
+            return Left <= pt.X && Right >= pt.X && Top <= pt.Y && Bottom >= pt.Y;
+        }
 
-    public override string ToString()
-    {
-        return $"RECT [Left: {Left}, Right: {Right}, Top: {Top}, Bottom: {Bottom}]";
+        public static bool operator ==(RECT r1, RECT r2)
+        {
+            return r1.Equals(r2);
+        }
+
+        public static bool operator !=(RECT r1, RECT r2)
+        {
+            return !r1.Equals(r2);
+        }
+
+        public bool Equals(RECT r)
+        {
+            return r.Left == Left && r.Top == Top && r.Right == Right && r.Bottom == Bottom;
+        }
+
+        public override int GetHashCode()
+        {
+            return Left + (15 * Top) + (17 * Right) + (21 * Bottom);
+        }
+
+        public override string ToString()
+        {
+            return $"RECT [Left: {Left}, Right: {Right}, Top: {Top}, Bottom: {Bottom}]";
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is RECT)) {
+                return false;
+            } else {
+                return Equals((RECT)obj);
+            }
+        }
     }
 }

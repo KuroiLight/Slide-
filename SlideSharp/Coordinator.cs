@@ -4,14 +4,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using Win32Api;
 
 namespace SlideSharp
 {
     internal class Coordinator
     {
         private List<Container> Containers = new List<Container>();
-        private DispatcherTimer Dispatcher = new DispatcherTimer();
-        private ConcurrentQueue<Task> HookMessages = new ConcurrentQueue<Task>();
+        private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
+        private readonly ConcurrentQueue<Task> HookMessages = new ConcurrentQueue<Task>();
+
         public Coordinator()
         {
             Dispatcher.Tick += UpdateStates;
@@ -30,16 +32,16 @@ namespace SlideSharp
                 }
             }
 
-            Containers = Containers.Where((WC) => WC.CanBeDisposed == false).ToList();
+            Containers = Containers.Where((WC) => !WC.CanBeDisposed).ToList();
 
             var MousePoint = WpfScreenHelper.MouseHelper.MousePosition;
             var WindowUnderMouse = Win32Api.User32.WindowFromPoint(new POINT((int)MousePoint.X, (int)MousePoint.Y));
             Containers.ForEach((WC) => {
-                if (WC is EdgeContainer) {
+                if (WC is EdgeContainer container) {
                     if (WC.ContainedWindow.GetHandle() == WindowUnderMouse) {
-                        ((EdgeContainer)WC).SetState(Status.Showing);
+                        container.SetState(Status.Showing);
                     } else {
-                        ((EdgeContainer)WC).SetState(Status.Hiding);
+                        container.SetState(Status.Hiding);
                     }
                 }
 

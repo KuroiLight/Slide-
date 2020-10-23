@@ -1,4 +1,5 @@
 ﻿using System;
+using Win32Api;
 
 namespace SlideSharp
 {
@@ -21,10 +22,10 @@ namespace SlideSharp
         /// </summary>
         public RECT WindowArea { get; private set; }
 
-        private bool Enabled { get; set; }
-        private IntPtr Handle { get; set; }
-        private byte Transparency { get; set; }
-        private int WindowStyle { get; set; }
+        private bool Enabled { get; }
+        private IntPtr Handle { get; }
+        private byte Transparency { get; }
+        private int WindowStyle { get; }
 
         /// <summary>
         /// Checks to see if window still exists
@@ -59,7 +60,7 @@ namespace SlideSharp
         /// </summary>
         public void ResetAttributes()
         {
-            Win32Api.User32.SetLayeredWindowAttributes(Handle, 0, 255, Win32Api.Constants.LWA_ALPHA);
+            Win32Api.User32.SetLayeredWindowAttributes(Handle, 0, Transparency, Win32Api.Constants.LWA_ALPHA);
             Win32Api.User32.SetWindowLong(Handle, Win32Api.Constants.GWL_EXSTYLE, WindowStyle);
             SetEnabled(Enabled);
         }
@@ -82,6 +83,7 @@ namespace SlideSharp
             Win32Api.User32.Wrapd_SetWindowPos(Handle, pt);
             WindowArea = Win32Api.User32.Wrapd_GetWindowRect(Handle);
         }
+
         /// <summary>
         /// Set the transparency of the window
         /// </summary>
