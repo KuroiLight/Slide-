@@ -9,7 +9,7 @@ namespace SlideSharp
 {
     internal class Coordinator
     {
-        private List<WindowContainer> Containers = new List<WindowContainer>();
+        private List<Container> Containers = new List<Container>();
         private ConcurrentQueue<Task> HookMessages = new ConcurrentQueue<Task>();
         //Implement async task to run UpdateStates in a loop
 
@@ -30,11 +30,11 @@ namespace SlideSharp
             var MousePoint = WpfScreenHelper.MouseHelper.MousePosition;
             var WindowUnderMouse = Win32Api.User32.WindowFromPoint(new POINT((int)MousePoint.X, (int)MousePoint.Y));
             Containers.ForEach((WC) => {
-                if (WC is DockedWindow) {
+                if (WC is EdgeContainer) {
                     if (WC.ContainedWindow.GetHandle() == WindowUnderMouse) {
-                        ((DockedWindow)WC).SetState(Status.Showing);
+                        ((EdgeContainer)WC).SetState(Status.Showing);
                     } else {
-                        ((DockedWindow)WC).SetState(Status.Hiding);
+                        ((EdgeContainer)WC).SetState(Status.Hiding);
                     }
                 }
 

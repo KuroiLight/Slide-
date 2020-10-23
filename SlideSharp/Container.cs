@@ -45,9 +45,9 @@ namespace SlideSharp
         }
     }
 
-    public class DockedWindow : WindowContainer
+    public class EdgeContainer : Container
     {
-        public DockedWindow(Orientation orientation, SideModifier sideModifier, Screen screen) : base(screen)
+        public EdgeContainer(Orientation orientation, SideModifier sideModifier, Screen screen) : base(screen)
         {
             Orientation = orientation;
             SideModifier = sideModifier;
@@ -103,9 +103,9 @@ namespace SlideSharp
         }
     }
 
-    public class UndockedWindow : WindowContainer
+    public class CenterContainer : Container
     {
-        public UndockedWindow(Screen screen, IntPtr windowHandle) : base(screen)
+        public CenterContainer(Screen screen, IntPtr windowHandle) : base(screen)
         {
             POINT maxStep = new POINT(30, 30); //temporary until i get configs
             ContainedWindow = new WindowObj(windowHandle);
@@ -126,9 +126,9 @@ namespace SlideSharp
         }
     }
 
-    public abstract class WindowContainer
+    public abstract class Container
     {
-        public WindowContainer(Screen screen)
+        public Container(Screen screen)
         {
             CanBeDisposed = false;
             Screen = screen;
@@ -141,7 +141,7 @@ namespace SlideSharp
         public void UpdatePosition()
         {
             if (ContainedWindow.Exists() && Path.CanTraverse()) {
-                ContainedWindow.SetPosition(Path.Traverse());
+                ContainedWindow.MoveWindow(Path.Traverse());
             }
         }
     }
