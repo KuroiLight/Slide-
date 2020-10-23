@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace SlideSharp
 {
@@ -11,11 +12,19 @@ namespace SlideSharp
     {
         private List<Container> Containers = new List<Container>();
         private ConcurrentQueue<Task> HookMessages = new ConcurrentQueue<Task>();
-        //Implement async task to run UpdateStates in a loop
+        private DispatcherTimer Dispatcher = new DispatcherTimer();
 
-        private void UpdateStates()
+        public Coordinator()
         {
-            //process Hook messages
+            Dispatcher.Tick += UpdateStates;
+            Dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 16);
+            Dispatcher.Start();
+        }
+
+        private void UpdateStates(object sender, EventArgs e)
+        {
+            Dispatcher.Stop();
+
             while (!HookMessages.IsEmpty) {
                 var dequeSuccess = HookMessages.TryDequeue(out Task messageTask);
                 if (dequeSuccess && messageTask is Task) {
@@ -23,10 +32,8 @@ namespace SlideSharp
                 }
             }
 
-            //remove dead containers
             Containers = Containers.Where((WC) => WC.CanBeDisposed == false).ToList();
 
-            //update container positions and statuses
             var MousePoint = WpfScreenHelper.MouseHelper.MousePosition;
             var WindowUnderMouse = Win32Api.User32.WindowFromPoint(new POINT((int)MousePoint.X, (int)MousePoint.Y));
             Containers.ForEach((WC) => {
@@ -40,6 +47,8 @@ namespace SlideSharp
 
                 WC.UpdatePosition();
             });
+
+            Dispatcher.Start();
         }
     }
 }
