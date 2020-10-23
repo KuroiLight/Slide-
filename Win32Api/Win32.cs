@@ -234,6 +234,12 @@ namespace Win32Api
             Y = y;
         }
 
+        public POINT(double x, double y)
+        {
+            X = (int)x;
+            Y = (int)y;
+        }
+
         public static POINT operator +(POINT p1, POINT p2)
         {
             return new POINT(p1.X + p2.X, p1.Y + p2.Y);
@@ -298,6 +304,11 @@ namespace Win32Api
             Top = top;
             Right = right;
             Bottom = bottom;
+        }
+
+        public RECT(double left, double top, double right, double bottom)
+        {
+            (Left, Top, Right, Bottom) = ((int)left, (int)top, (int)right, (int)bottom);
         }
 
         public static RECT FromRectangle(System.Drawing.Rectangle R)
