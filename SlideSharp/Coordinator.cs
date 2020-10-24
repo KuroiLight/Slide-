@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -8,7 +9,7 @@ using Win32Api;
 
 namespace SlideSharp
 {
-    internal class Coordinator
+    public class Coordinator
     {
         private List<Container> Containers = new List<Container>();
         private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
@@ -16,12 +17,16 @@ namespace SlideSharp
         private POINT MStart, MEnd;
         private IntPtr MStartWindow;
 
+        private IntPtr HookHandle;
+        private User32.HookProc MouseHookProcHandle = null;
+
         public Coordinator()
         {
             Dispatcher.Tick += UpdateStates;
-            Dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 16);
+            Dispatcher.Interval = new TimeSpan(0, 0, 0, 3, 0);
             Dispatcher.Start();
-            Win32Api.User32.Wrapd_SetWindowsHookEx(MouseHookProc);
+            MouseHookProcHandle = MouseHookProc;
+            HookHandle = User32.Wrapd_SetWindowsHookEx(MouseHookProcHandle);
         }
 
         private void UpdateStates(object sender, EventArgs e)
@@ -43,8 +48,10 @@ namespace SlideSharp
                 if (WC is EdgeContainer edge) {
                     if (WC.ContainedWindow.GetHandle() == WindowUnderMouse) {
                         edge.SetState(Status.Showing);
+                        Debug.WriteLine($"{edge.ToString()} Showing");
                     } else {
                         edge.SetState(Status.Hiding);
+                        Debug.WriteLine($"{edge.ToString()} Hiding");
                     }
                 }
 
@@ -54,13 +61,12 @@ namespace SlideSharp
             Dispatcher.Start();
         }
 
-        private IntPtr MouseHookProc(int code, Win32Api.WM_MOUSE wParam, Win32Api.MSLLHOOKSTRUCT lParam)
+        private IntPtr MouseHookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam)
         {
-            if (wParam == Win32Api.WM_MOUSE.WM_MOUSEMOVE) {
-            } else if (wParam == Win32Api.WM_MOUSE.WM_MBUTTONDOWN) {
+            if (wParam == WM_MOUSE.WM_MBUTTONDOWN) {
                 MStart = lParam.pt;
-                MStartWindow = Win32Api.User32.WindowFromPoint(MStart);
-            } else if (wParam == Win32Api.WM_MOUSE.WM_MBUTTONUP) {
+                MStartWindow = User32.WindowFromPoint(MStart);
+            } else if (wParam == WM_MOUSE.WM_MBUTTONUP) {
                 MEnd = lParam.pt;
 
                 HookMessages.Enqueue(new Task(() => {
@@ -76,18 +82,16 @@ namespace SlideSharp
                         return C is EdgeContainer edge && edge.ContainedWindow.GetHandle() == CapturedMStartWindow;
                     });
 
-                    if (toContainer != null) {
-                        if (toContainer.ContainedWindow.Exists()) {
-                            fromContainer?.RemoveWindow();
-                            Containers.Add(new CenterContainer(toContainer.Screen, toContainer.ContainedWindow.GetHandle()));
-                        }
-
-                        (toContainer as EdgeContainer)?.SetNewWindow(CapturedMStartWindow);
+                    if ((toContainer?.ContainedWindow.Exists()) == true) {
+                        fromContainer?.RemoveWindow();
+                        Containers.Add(new CenterContainer(toContainer.Screen, toContainer.ContainedWindow.GetHandle()));
                     }
+
+                    (toContainer as EdgeContainer)?.SetNewWindow(CapturedMStartWindow);
                 }));
             }
 
-            return Win32Api.User32.CallNextHookEx(IntPtr.Zero, code, wParam, lParam);
+            return User32.CallNextHookEx(HookHandle, code, wParam, lParam);
         }
     }
 }
