@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Windows;
 
 namespace Win32Api
 {
@@ -358,6 +359,11 @@ namespace Win32Api
             } else {
                 return false;
             }
+        }
+
+        public System.Windows.Rect ToWindowsRect()
+        {
+            return new Rect(Left, Top, Width, Height);
         }
     }
 }
