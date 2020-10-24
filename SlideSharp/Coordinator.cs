@@ -15,8 +15,8 @@ namespace SlideSharp
         private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
         private readonly ConcurrentQueue<Task> HookMessages = new ConcurrentQueue<Task>();
         private List<Container> Containers = new List<Container>();
-        private IntPtr HookHandle;
-        private User32.HookProc MouseHookProcHandle = null;
+        private readonly IntPtr HookHandle;
+        private readonly User32.HookProc MouseHookProcHandle = null;
         private POINT MStart, MEnd;
         private IntPtr MStartWindow;
 
@@ -36,10 +36,7 @@ namespace SlideSharp
 
         internal static Coordinator GetInstance()
         {
-            if (SingletonInstance == null) {
-                SingletonInstance = new Coordinator();
-            }
-            return SingletonInstance;
+            return SingletonInstance ??= new Coordinator();
         }
 
         private IntPtr MouseHookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam)
@@ -55,13 +52,9 @@ namespace SlideSharp
                     var CapturedMEnd = MEnd;
                     var CapturedMStartWindow = MStartWindow;
 
-                    var toContainer = Containers.Find((C) => {
-                        return C is EdgeContainer edge && edge.Intersect(CapturedMStart, CapturedMEnd);
-                    });
+                    Container toContainer = Containers.Find((C) => C is EdgeContainer edge && edge.Intersect(CapturedMStart, CapturedMEnd));
 
-                    var fromContainer = Containers.Find((C) => {
-                        return C is EdgeContainer edge && edge.ContainedWindow.GetHandle() == CapturedMStartWindow;
-                    });
+                    Container fromContainer = Containers.Find((C) => C is EdgeContainer edge && edge.ContainedWindow.GetHandle() == CapturedMStartWindow);
 
                     if ((toContainer?.ContainedWindow.Exists()) == true) {
                         fromContainer?.RemoveWindow();
@@ -93,13 +86,13 @@ namespace SlideSharp
             var WindowUnderMouse = Win32Api.User32.WindowFromPoint(new POINT((int)MousePoint.X, (int)MousePoint.Y));
             Containers.ForEach((WC) => {
                 if (WC is EdgeContainer edge) {
+                    Debug.Write($"{edge} {edge.Status} => ");
                     if (WC.ContainedWindow.GetHandle() == WindowUnderMouse) {
                         edge.SetState(Status.Showing);
-                        Debug.WriteLine($"{edge.ToString()} Showing");
                     } else {
                         edge.SetState(Status.Hiding);
-                        Debug.WriteLine($"{edge.ToString()} Hiding");
                     }
+                    Debug.Write($"{edge.Status}.");
                 }
 
                 WC.UpdatePosition();

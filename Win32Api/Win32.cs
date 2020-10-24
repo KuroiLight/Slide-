@@ -23,12 +23,12 @@ namespace Win32Api
         SWP_NOREDRAW = 0x0008,
         SWP_NOACTIVATE = 0x0010,
         SWP_DRAWFRAME = 0x0020,
-        SWP_FRAMECHANGED = 0x0020,
+        SWP_FRAMECHANGED = SWP_DRAWFRAME,
         SWP_SHOWWINDOW = 0x0040,
         SWP_HIDEWINDOW = 0x0080,
         SWP_NOCOPYBITS = 0x0100,
         SWP_NOOWNERZORDER = 0x0200,
-        SWP_NOREPOSITION = 0x0200,
+        SWP_NOREPOSITION = SWP_NOOWNERZORDER,
         SWP_NOSENDCHANGING = 0x0400,
         SWP_DEFERERASE = 0x2000,
         SWP_ASYNCWINDOWPOS = 0x4000
@@ -132,6 +132,7 @@ namespace Win32Api
             return GetParent(hWnd);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0018:Inline variable declaration", Justification = "Incase of failure we dont know if Rect will be initialized by GetWindowRect")]
         public static RECT Wrapd_GetWindowRect(IntPtr hWnd)
         {
             if (hWnd == IntPtr.Zero) {
@@ -281,10 +282,10 @@ namespace Win32Api
 
         public override bool Equals(object obj)
         {
-            if (!(obj is POINT)) {
-                return false;
+            if (obj is POINT pOINT) {
+                return Equals(pOINT);
             } else {
-                return Equals((POINT)obj);
+                return false;
             }
         }
     }
@@ -352,10 +353,10 @@ namespace Win32Api
 
         public override bool Equals(object obj)
         {
-            if (!(obj is RECT)) {
-                return false;
+            if (obj is RECT rECT) {
+                return Equals(rECT);
             } else {
-                return Equals((RECT)obj);
+                return false;
             }
         }
     }

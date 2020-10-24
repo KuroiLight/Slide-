@@ -5,6 +5,7 @@ namespace SlideSharp
 {
     public class WindowObj
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification = "GetLayeredWindowAttributes requires pre-initialize out reference to LWA_ALPHA")]
         public WindowObj(IntPtr Handle)
         {
             uint lwaa = Win32Api.Constants.LWA_ALPHA;
