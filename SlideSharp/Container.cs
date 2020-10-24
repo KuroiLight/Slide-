@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Win32Api;
 using WpfScreenHelper;
 
@@ -42,7 +45,9 @@ namespace SlideSharp
 
         public POINT Traverse()
         {
+            Debug.Write($"{Start} => ");
             Start += new POINT(Math.Clamp(Start.X - End.X, -1 * StepSize.X, StepSize.X), Math.Clamp(Start.Y - End.Y, -1 * StepSize.Y, StepSize.Y));
+            Debug.WriteLine($"{Start}.");
             return Start;
         }
     }
@@ -63,7 +68,7 @@ namespace SlideSharp
         public void UpdatePosition()
         {
             if (ContainedWindow.Exists() && Path.CanTraverse()) {
-                ContainedWindow.MoveWindow(Path.Traverse());
+                ContainedWindow.SetPosition(Path.Traverse());
             }
         }
 
@@ -127,7 +132,7 @@ namespace SlideSharp
 
         public void SetState(Status status)
         {
-            if (status != Status) {
+            if (ContainedWindow != null && status != Status) {
                 Status = status;
                 GenerateNewPath();
             }
@@ -178,6 +183,34 @@ namespace SlideSharp
             var EndPoint = start + PointAtEnd;
 
             return ScreenEdge.Contains(EndPoint);
+        }
+
+        public static EdgeContainer GetValidInstance(Orientation orientation, SideModifier sideModifier, Screen screen)
+        {
+            var NewInstance = new EdgeContainer(orientation, sideModifier, screen);
+            return Screen.AllScreens.ToList().Exists((S) => {
+                if (S == NewInstance.Screen) {
+                    return false;
+                } else {
+                    return S.Bounds.Contains(NewInstance.ScreenEdge.ToWindowsRect());
+                }
+            }) ? null : NewInstance;
+        }
+
+        public static List<EdgeContainer> GetAllValidInstances()
+        {
+            List<EdgeContainer> NewList = new List<EdgeContainer>();
+            Screen.AllScreens.ToList().ForEach((S) => {
+                foreach(Orientation o in Enum.GetValues(typeof(Orientation))) {
+                    foreach(SideModifier sm in Enum.GetValues(typeof(SideModifier))) {
+                        EdgeContainer edge = GetValidInstance(o, sm, S);
+                        if (edge != null) {
+                            NewList.Add(edge);
+                        }
+                    }
+                }
+            });
+            return NewList;
         }
     }
 }
