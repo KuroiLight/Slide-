@@ -25,29 +25,32 @@ namespace SlideSharp
         Showing = -1
     }
 
-    public struct MoveIterator
+    public class MoveIterator
     {
-        private POINT End;
+        private POINT Distance;
         private POINT Start;
-        private POINT StepSize;
+        private POINT Step;
 
         public MoveIterator(POINT start, POINT end, POINT maxStep)
         {
             Start = start;
-            End = end;
-            StepSize = maxStep;
+            Distance = start - end;
+            Step = maxStep;
         }
 
         public bool CanTraverse()
         {
-            return Start - End != default;
+            return Start + Distance != Start;
         }
 
         public POINT Traverse()
         {
-            Debug.Write($"{Start} => ");
-            Start += new POINT(Math.Clamp(Start.X - End.X, -1 * StepSize.X, StepSize.X), Math.Clamp(Start.Y - End.Y, -1 * StepSize.Y, StepSize.Y));
-            Debug.WriteLine($"{Start}.");
+            
+            var NextStep = new POINT(Math.Clamp(Distance.X, -1 * Step.X, Step.X), Math.Clamp(Distance.Y, -1 * Step.Y, Step.Y));
+            Debug.Write($"Distance Left: {Distance}, Start {Start} + ");
+            Start = Start + NextStep;
+            Distance = Distance - NextStep;
+            Debug.WriteLine($"{NextStep} = {Start}");
             return Start;
         }
     }
@@ -150,22 +153,17 @@ namespace SlideSharp
         private void GenerateNewPath()
         {
             POINT maxStep = new POINT(30, 30); //temporary until i get configs
-            POINT NextPoint = (Orientation, SideModifier) switch
-            {
-                (Orientation.Horizontal, SideModifier.Positive) => new POINT(
-                    (int)Screen.WorkingArea.Right + ((int)Status * (int)SideModifier * ContainedWindow.WindowArea.Width),
-                    ((int)Screen.WorkingArea.Height / 2) + ContainedWindow.WindowArea.Center.Y),
-                (Orientation.Vertical, SideModifier.Positive) => new POINT(
-                    ((int)Screen.WorkingArea.Width / 2) + ContainedWindow.WindowArea.Center.X,
-                    (int)Screen.WorkingArea.Bottom + ((int)Status * (int)SideModifier * ContainedWindow.WindowArea.Height)),
-                (Orientation.Horizontal, SideModifier.Negative) => new POINT(
-                    (int)Screen.WorkingArea.X + ((int)Status * (int)SideModifier * ContainedWindow.WindowArea.Width),
-                    ((int)Screen.WorkingArea.Height / 2) + ContainedWindow.WindowArea.Center.Y),
-                (Orientation.Vertical, SideModifier.Negative) => new POINT(
-                    ((int)Screen.WorkingArea.Width / 2) + ContainedWindow.WindowArea.Center.X,
-                    (int)Screen.WorkingArea.Y + ((int)Status * (int)SideModifier * ContainedWindow.WindowArea.Height)),
-                _ => throw new InvalidOperationException(),
-            };
+            int offSet = Status == Status.Showing ? 0 : 30;
+            POINT NextPoint = new POINT(
+                ScreenEdge.Center.X - (ContainedWindow.WindowArea.Width / 2),
+                ScreenEdge.Center.Y - (ContainedWindow.WindowArea.Height / 2));
+
+            if (Orientation == Orientation.Horizontal) {
+                NextPoint.X += ((int)Status * (int)SideModifier * (ContainedWindow.WindowArea.Width / 2)) + ((int)SideModifier * offSet);
+            } else if(Orientation == Orientation.Vertical) {
+                NextPoint.Y += ((int)Status * (int)SideModifier * (ContainedWindow.WindowArea.Height / 2)) + ((int)SideModifier * offSet);
+            }
+            Debug.WriteLine($"{NextPoint} {ScreenEdge.Center}");
             Path = new MoveIterator(ContainedWindow.WindowArea.ToPoint(), NextPoint, maxStep);
         }
 
