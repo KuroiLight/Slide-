@@ -29,6 +29,11 @@ namespace SlideSharp
             HookHandle = User32.Wrapd_SetWindowsHookEx(MouseHookProcHandle);
         }
 
+        ~Coordinator()
+        {
+            User32.Wrapd_UnhookWindowsHookEx(HookHandle);
+        }
+
         internal static Coordinator GetInstance()
         {
             if (SingletonInstance == null) {
