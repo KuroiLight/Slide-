@@ -7,6 +7,8 @@ namespace SlideSharp
     /// </summary>
     public partial class MainWindow : Window
     {
+        Coordinator Coordinator = Coordinator.GetInstance();
+
         public MainWindow()
         {
             InitializeComponent();

@@ -20,6 +20,8 @@ namespace SlideSharp
         private IntPtr HookHandle;
         private User32.HookProc MouseHookProcHandle = null;
 
+        private static Coordinator SingletonInstance = null;
+
         public Coordinator()
         {
             Dispatcher.Tick += UpdateStates;
@@ -93,6 +95,14 @@ namespace SlideSharp
             }
 
             return User32.CallNextHookEx(HookHandle, code, wParam, lParam);
+        }
+
+        internal static Coordinator GetInstance()
+        {
+            if(SingletonInstance == null) {
+                SingletonInstance = new Coordinator();
+            }
+            return SingletonInstance;
         }
     }
 }
