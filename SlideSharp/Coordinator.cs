@@ -11,16 +11,14 @@ namespace SlideSharp
 {
     public class Coordinator
     {
-        private List<Container> Containers = new List<Container>();
+        private static Coordinator SingletonInstance = null;
         private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
         private readonly ConcurrentQueue<Task> HookMessages = new ConcurrentQueue<Task>();
-        private POINT MStart, MEnd;
-        private IntPtr MStartWindow;
-
+        private List<Container> Containers = new List<Container>();
         private IntPtr HookHandle;
         private User32.HookProc MouseHookProcHandle = null;
-
-        private static Coordinator SingletonInstance = null;
+        private POINT MStart, MEnd;
+        private IntPtr MStartWindow;
 
         public Coordinator()
         {
@@ -31,37 +29,12 @@ namespace SlideSharp
             HookHandle = User32.Wrapd_SetWindowsHookEx(MouseHookProcHandle);
         }
 
-        private void UpdateStates(object sender, EventArgs e)
+        internal static Coordinator GetInstance()
         {
-            // In the event that UpdateStates takes longer than our interval, we stop and give it some breathing room.
-            Dispatcher.Stop();
-
-            while (!HookMessages.IsEmpty) {
-                var dequeSuccess = HookMessages.TryDequeue(out Task messageTask);
-                if (dequeSuccess && messageTask is Task) {
-                    messageTask.RunSynchronously();
-                }
+            if (SingletonInstance == null) {
+                SingletonInstance = new Coordinator();
             }
-
-            Containers = Containers.Where((WC) => !WC.CanBeDisposed).ToList();
-
-            var MousePoint = WpfScreenHelper.MouseHelper.MousePosition;
-            var WindowUnderMouse = Win32Api.User32.WindowFromPoint(new POINT((int)MousePoint.X, (int)MousePoint.Y));
-            Containers.ForEach((WC) => {
-                if (WC is EdgeContainer edge) {
-                    if (WC.ContainedWindow.GetHandle() == WindowUnderMouse) {
-                        edge.SetState(Status.Showing);
-                        Debug.WriteLine($"{edge.ToString()} Showing");
-                    } else {
-                        edge.SetState(Status.Hiding);
-                        Debug.WriteLine($"{edge.ToString()} Hiding");
-                    }
-                }
-
-                WC.UpdatePosition();
-            });
-
-            Dispatcher.Start();
+            return SingletonInstance;
         }
 
         private IntPtr MouseHookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam)
@@ -97,12 +70,37 @@ namespace SlideSharp
             return User32.CallNextHookEx(HookHandle, code, wParam, lParam);
         }
 
-        internal static Coordinator GetInstance()
+        private void UpdateStates(object sender, EventArgs e)
         {
-            if(SingletonInstance == null) {
-                SingletonInstance = new Coordinator();
+            // In the event that UpdateStates takes longer than our interval, we stop and give it some breathing room.
+            Dispatcher.Stop();
+
+            while (!HookMessages.IsEmpty) {
+                var dequeSuccess = HookMessages.TryDequeue(out Task messageTask);
+                if (dequeSuccess && messageTask is Task) {
+                    messageTask.RunSynchronously();
+                }
             }
-            return SingletonInstance;
+
+            Containers = Containers.Where((WC) => !WC.CanBeDisposed).ToList();
+
+            var MousePoint = WpfScreenHelper.MouseHelper.MousePosition;
+            var WindowUnderMouse = Win32Api.User32.WindowFromPoint(new POINT((int)MousePoint.X, (int)MousePoint.Y));
+            Containers.ForEach((WC) => {
+                if (WC is EdgeContainer edge) {
+                    if (WC.ContainedWindow.GetHandle() == WindowUnderMouse) {
+                        edge.SetState(Status.Showing);
+                        Debug.WriteLine($"{edge.ToString()} Showing");
+                    } else {
+                        edge.SetState(Status.Hiding);
+                        Debug.WriteLine($"{edge.ToString()} Hiding");
+                    }
+                }
+
+                WC.UpdatePosition();
+            });
+
+            Dispatcher.Start();
         }
     }
 }
