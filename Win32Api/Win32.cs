@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 
 namespace Win32Api
@@ -124,6 +125,9 @@ namespace Win32Api
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         public static extern IntPtr WindowFromPoint(POINT p);
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
         public static IntPtr Wrapd_GetParent(IntPtr hWnd)
         {
             if (hWnd == IntPtr.Zero) {
@@ -170,6 +174,31 @@ namespace Win32Api
                 //instead of throwing here, we should just write the exception to debug
                 Debug.WriteLine(new Win32Exception(Marshal.GetLastWin32Error()).Message);
                 //throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+        }
+
+        public static string GetWindowText(IntPtr handle)
+        {
+            var sb = new StringBuilder(512);
+            GetWindowText(handle, sb, sb.Capacity);
+            return sb.ToString();
+        }
+
+        public static IntPtr GetParentWindowFromPoint(POINT pt)
+        {
+            IntPtr currentWindow = WindowFromPoint(pt);
+            //Debug.Write($"{currentWindow}  ({GetWindowText(currentWindow)}) ");
+            if (currentWindow != IntPtr.Zero) {
+                IntPtr parent = GetParent(currentWindow);
+                while (parent != IntPtr.Zero) {
+                    currentWindow = parent;
+                    //Debug.Write($"{currentWindow} ({GetWindowText(currentWindow)}) ");
+                    parent = GetParent(currentWindow);
+                }
+                //Debug.WriteLine($"{currentWindow} ({GetWindowText(currentWindow)}) [{parent}].");
+                return currentWindow;
+            } else {
+                return IntPtr.Zero;
             }
         }
 
@@ -278,7 +307,7 @@ namespace Win32Api
 
         public override string ToString()
         {
-            return $"POINT [X: {X}, Y: {Y}]";
+            return $"*{X}:{Y}";
         }
 
         public override bool Equals(object obj)
@@ -349,7 +378,7 @@ namespace Win32Api
 
         public override string ToString()
         {
-            return $"RECT [Left: {Left}, Right: {Right}, Top: {Top}, Bottom: {Bottom}]";
+            return $"[*{Left}:{Top}, *{Right}:{Bottom}]";
         }
 
         public override bool Equals(object obj)
