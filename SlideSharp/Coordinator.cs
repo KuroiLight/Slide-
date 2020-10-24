@@ -14,14 +14,15 @@ namespace SlideSharp
         private static Coordinator SingletonInstance = null;
         private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
         private readonly ConcurrentQueue<Task> HookMessages = new ConcurrentQueue<Task>();
-        private List<Container> Containers = new List<Container>();
+        private List<Container> Containers;
         private readonly IntPtr HookHandle;
         private readonly User32.HookProc MouseHookProcHandle = null;
-        private POINT MStart, MEnd;
+        private POINT MStart;
         private IntPtr MStartWindow;
 
         public Coordinator()
         {
+            Containers = EdgeContainer.GetAllValidInstances().ToList<Container>();
             Dispatcher.Tick += UpdateStates;
             Dispatcher.Interval = new TimeSpan(0, 0, 0, 3, 0);
             Dispatcher.Start();
@@ -45,18 +46,16 @@ namespace SlideSharp
                 MStart = lParam.pt;
                 MStartWindow = User32.WindowFromPoint(MStart);
             } else if (wParam == WM_MOUSE.WM_MBUTTONUP) {
-                MEnd = lParam.pt;
+                var CapturedMStart = MStart;
+                var CapturedMEnd = lParam.pt;
+                var CapturedMStartWindow = MStartWindow;
 
                 HookMessages.Enqueue(new Task(() => {
-                    var CapturedMStart = MStart;
-                    var CapturedMEnd = MEnd;
-                    var CapturedMStartWindow = MStartWindow;
-
                     Container toContainer = Containers.Find((C) => C is EdgeContainer edge && edge.Intersect(CapturedMStart, CapturedMEnd));
 
-                    Container fromContainer = Containers.Find((C) => C is EdgeContainer edge && edge.ContainedWindow.GetHandle() == CapturedMStartWindow);
+                    Container fromContainer = Containers.Find((C) => C is EdgeContainer edge && edge.ContainedWindow?.GetHandle() == CapturedMStartWindow);
 
-                    if ((toContainer?.ContainedWindow.Exists()) == true) {
+                    if ((toContainer?.ContainedWindow?.Exists()) == true) {
                         fromContainer?.RemoveWindow();
                         Containers.Add(new CenterContainer(toContainer.Screen, toContainer.ContainedWindow.GetHandle()));
                     }
@@ -85,17 +84,19 @@ namespace SlideSharp
             var MousePoint = WpfScreenHelper.MouseHelper.MousePosition;
             var WindowUnderMouse = Win32Api.User32.WindowFromPoint(new POINT((int)MousePoint.X, (int)MousePoint.Y));
             Containers.ForEach((WC) => {
-                if (WC is EdgeContainer edge) {
-                    Debug.Write($"{edge} {edge.Status} => ");
-                    if (WC.ContainedWindow.GetHandle() == WindowUnderMouse) {
-                        edge.SetState(Status.Showing);
-                    } else {
-                        edge.SetState(Status.Hiding);
+                if (WC.ContainedWindow?.Exists() == true) {
+                    if (WC is EdgeContainer edge) {
+                        Debug.Write($"{edge} {edge.Status} => ");
+                        if (WC.ContainedWindow.GetHandle() == WindowUnderMouse) {
+                            edge.SetState(Status.Showing);
+                        } else {
+                            edge.SetState(Status.Hiding);
+                        }
+                        Debug.WriteLine($"{edge.Status}.");
                     }
-                    Debug.Write($"{edge.Status}.");
-                }
 
-                WC.UpdatePosition();
+                    WC.UpdatePosition();
+                }
             });
 
             Dispatcher.Start();
