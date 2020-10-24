@@ -31,6 +31,7 @@ namespace SlideSharp
 
         private void UpdateStates(object sender, EventArgs e)
         {
+            // In the event that UpdateStates takes longer than our interval, we stop and give it some breathing room.
             Dispatcher.Stop();
 
             while (!HookMessages.IsEmpty) {
