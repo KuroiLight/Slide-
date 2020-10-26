@@ -55,8 +55,12 @@ namespace SlideSharp
                         Container toContainer = Containers.Find((C) => C is EdgeContainer edge && edge.Intersect(CapturedMStart, CapturedMEnd));
 
                         Container fromContainer = Containers.Find((C) => C is EdgeContainer edge && edge.ContainedWindow?.GetHandle() == CapturedMStartWindow);
-
+                        if(toContainer != null) {
+                            Debug.WriteLine($"{((EdgeContainer)toContainer).Direction}");
+                        }
+                        
                         if ((toContainer?.ContainedWindow?.Exists()) == true) {
+                            
                             fromContainer?.RemoveWindow();
                             Containers.Add(new CenterContainer(toContainer.Screen, toContainer.ContainedWindow.GetHandle()));
                         }
