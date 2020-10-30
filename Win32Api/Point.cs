@@ -38,12 +38,12 @@ namespace Win32Api
 
         public POINT ClampedVectorTo(POINT targetPoint, POINT maxVector)
         {
-            return new POINT(Math.Clamp(X - targetPoint.X, -1 * maxVector.X, maxVector.X), Math.Clamp(Y - targetPoint.Y, -1 * maxVector.Y, maxVector.Y));
+            return new POINT(Math.Clamp(targetPoint.X - X, -1 * maxVector.X, maxVector.X), Math.Clamp(targetPoint.Y - Y, -1 * maxVector.Y, maxVector.Y));
         }
 
-        public POINT ClampedVectorTo(POINT targetPoint, int maxMove)
+        public POINT ClampedVectorTo(POINT targetPoint, uint maxMove)
         {
-            return new POINT(Math.Clamp(X - targetPoint.X, -1 * maxMove, maxMove), Math.Clamp(Y - targetPoint.Y, -1 * maxMove, maxMove));
+            return new POINT(Math.Clamp(targetPoint.X - X, -1 * maxMove, maxMove), Math.Clamp(targetPoint.Y - Y, -1 * maxMove, maxMove));
         }
 
         public static POINT operator +(POINT p1, POINT p2)
