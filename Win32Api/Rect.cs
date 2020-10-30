@@ -3,13 +3,9 @@
 namespace Win32Api
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct RECT
+    public struct RECT : System.IEquatable<RECT>
     {
         public int Left, Top, Right, Bottom;
-        public int Width => Right - Left;
-        public int Height => Bottom - Top;
-        public POINT Center => new POINT(Width / 2, Height / 2);
-
         public RECT(int left, int top, int right, int bottom)
         {
             Left = left;
@@ -23,35 +19,29 @@ namespace Win32Api
             (Left, Top, Right, Bottom) = ((int)left, (int)top, (int)right, (int)bottom);
         }
 
-        public static RECT FromRectangle(System.Drawing.Rectangle R)
-        {
-            return new RECT(R.Left, R.Top, R.Right, R.Bottom);
-        }
+        public int Width => Right - Left;
 
-        public POINT ToPoint()
-        {
-            return new POINT(Left, Top);
-        }
+        public int Height => Bottom - Top;
 
-        public bool Contains(POINT pt)
-        {
-            return Left <= pt.X && Right >= pt.X && Top <= pt.Y && Bottom >= pt.Y;
-        }
+        public POINT Center => new POINT(Left + (Width / 2), Top + (Height / 2));
 
-        public static bool operator ==(RECT r1, RECT r2)
-        {
-            return r1.Equals(r2);
-        }
+        public bool Contains(POINT pt) => Left <= pt.X && Right >= pt.X && Top <= pt.Y && Bottom >= pt.Y;
 
-        public static bool operator !=(RECT r1, RECT r2)
-        {
-            return !r1.Equals(r2);
-        }
+        public bool Equals(RECT r) => r.Left == Left && r.Top == Top && r.Right == Right && r.Bottom == Bottom;
 
-        public bool Equals(RECT r)
-        {
-            return r.Left == Left && r.Top == Top && r.Right == Right && r.Bottom == Bottom;
-        }
+        public System.Windows.Rect ToWindowsRectangle => new System.Windows.Rect(Left, Top, Width, Height);
+
+        public System.Drawing.Rectangle ToDrawingRectangle => new System.Drawing.Rectangle(Left, Top, Width, Height);
+
+        public POINT ToPoint => new POINT(Left, Top);
+
+        public static RECT FromDrawingRectangle(System.Drawing.Rectangle R) => new RECT(R.Left, R.Top, R.Right, R.Bottom);
+
+        public static RECT FromWindowsRectangle(System.Windows.Rect R) => new RECT(R.Left, R.Top, R.Right, R.Bottom);
+
+        public static bool operator ==(RECT r1, RECT r2) => r1.Equals(r2);
+
+        public static bool operator !=(RECT r1, RECT r2) => !r1.Equals(r2);
 
         public override int GetHashCode()
         {
@@ -70,11 +60,6 @@ namespace Win32Api
             } else {
                 return false;
             }
-        }
-
-        public System.Windows.Rect ToWindowsRect()
-        {
-            return new System.Windows.Rect(Left, Top, Width, Height);
         }
     }
 }

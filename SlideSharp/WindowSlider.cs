@@ -84,7 +84,7 @@ namespace SlideSharp
         {
             if (Window?.Exists() == true) {
                 if (TargetPosition != Window.WindowArea.Center) {
-                    Window.SetPosition(Window.WindowArea.ToPoint() + Window.WindowArea.ToPoint().ClampedVectorTo(TargetPosition, 30));
+                    Window.SetPosition(Window.WindowArea.ToPoint + Window.WindowArea.ToPoint.ClampedVectorTo(TargetPosition, 30));
                 } else {
                     if (Direction == Direction.Center) {
                         Window = null;
@@ -148,7 +148,7 @@ namespace SlideSharp
                 if (S != screen) {
                     return false;
                 } else {
-                    return S.Bounds.Contains(NewInstance.Screen.ToWindowsRect());
+                    return S.Bounds.Contains(NewInstance.Screen.ToWindowsRectangle);
                 }
             }) ? null : NewInstance;
         }

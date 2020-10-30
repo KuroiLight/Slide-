@@ -52,7 +52,7 @@ namespace SlideSharp
         /// <param name="pt">amount to add to windows current position</param>
         public void MoveWindow(POINT pt)
         {
-            Win32Api.User32.Wrapd_SetWindowPos(Handle, WindowArea.ToPoint() + pt);
+            Win32Api.User32.Wrapd_SetWindowPos(Handle, WindowArea.ToPoint + pt);
             WindowArea = Win32Api.User32.Wrapd_GetWindowRect(Handle);
         }
 
