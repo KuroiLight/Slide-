@@ -48,6 +48,22 @@ namespace Win32Api
         WM_MOUSEHWHEEL = 0x020E
     }
 
+    enum GetAncestorFlags
+    {
+        /// <summary>
+        /// Retrieves the parent window. This does not include the owner, as it does with the GetParent function.
+        /// </summary>
+        GetParent = 1,
+        /// <summary>
+        /// Retrieves the root window by walking the chain of parent windows.
+        /// </summary>
+        GetRoot = 2,
+        /// <summary>
+        /// Retrieves the owned root window by walking the chain of parent and owner windows returned by GetParent.
+        /// </summary>
+        GetRootOwner = 3
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct MSLLHOOKSTRUCT
     {
@@ -183,19 +199,10 @@ namespace Win32Api
             return sb.ToString();
         }
 
-        public static IntPtr GetParentWindowFromPoint(POINT pt)
+        public static IntPtr GetRootWindow(POINT pt)
         {
-            IntPtr currentWindow = WindowFromPoint(pt);
-            if (currentWindow != IntPtr.Zero) {
-                IntPtr parent = GetParent(currentWindow);
-                while (parent != IntPtr.Zero) {
-                    currentWindow = parent;
-                    parent = GetParent(currentWindow);
-                }
-                return currentWindow;
-            } else {
-                return IntPtr.Zero;
-            }
+            IntPtr WFPhWnd = WindowFromPoint(pt);
+            return GetAncestor(WFPhWnd, GetAncestorFlags.GetRoot);
         }
 
         public static IntPtr Wrapd_SetWindowsHookEx(HookProc lpfn)
@@ -246,5 +253,12 @@ namespace Win32Api
 
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+        [DllImport("user32.dll", ExactSpelling = true)]
+        private static extern IntPtr GetAncestor(IntPtr hwnd, GetAncestorFlags flags);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GetCursorPos(out POINT lpPoint);
     }
 }
