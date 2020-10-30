@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Win32Api
 {
@@ -18,6 +19,31 @@ namespace Win32Api
         {
             X = (int)x;
             Y = (int)y;
+        }
+
+        public POINT VectorTo(POINT targetPoint)
+        {
+            return this - targetPoint;
+        }
+
+        public double DistanceTo(POINT targetPoint)
+        {
+            return Math.Sqrt((X - targetPoint.X)^2 + (Y - targetPoint.Y)^2);
+        }
+
+        public double ClampedDistanceTo(POINT targetPoint, double maxDistance)
+        {
+            return Math.Clamp(DistanceTo(targetPoint), -1 * maxDistance, maxDistance);
+        }
+
+        public POINT ClampedVectorTo(POINT targetPoint, POINT maxVector)
+        {
+            return new POINT(Math.Clamp(X - targetPoint.X, -1 * maxVector.X, maxVector.X), Math.Clamp(Y - targetPoint.Y, -1 * maxVector.Y, maxVector.Y));
+        }
+
+        public POINT ClampedVectorTo(POINT targetPoint, int maxMove)
+        {
+            return new POINT(Math.Clamp(X - targetPoint.X, -1 * maxMove, maxMove), Math.Clamp(Y - targetPoint.Y, -1 * maxMove, maxMove));
         }
 
         public static POINT operator +(POINT p1, POINT p2)
