@@ -71,12 +71,12 @@ namespace SlideSharp
             IntPtr? WindowUnderlMEnd = null;
             (POINT? lMStart, POINT? lMEnd) = MiddleMouseData;
             if (lMEnd != null && lMStart != null) {
-                WindowUnderlMEnd = Win32Api.User32.GetParentWindowFromPoint((POINT)lMStart);
+                WindowUnderlMEnd = Win32Api.User32.GetRootWindow((POINT)lMStart);
                 MiddleMouseData = (null, null);
             }
 
-            var CurMousePosition = new POINT(WpfScreenHelper.MouseHelper.MousePosition.X, WpfScreenHelper.MouseHelper.MousePosition.Y);
-            var WindowUnderMouse = Win32Api.User32.GetParentWindowFromPoint(CurMousePosition);
+            Win32Api.User32.GetCursorPos(out POINT MousePos);
+            var WindowUnderMouse = Win32Api.User32.GetRootWindow(MousePos);
             WindowSlider toSlider = null, centerSlider = null;
 
             Sliders.ForEach((Slider) => {
