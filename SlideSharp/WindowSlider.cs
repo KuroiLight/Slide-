@@ -91,7 +91,7 @@ namespace SlideSharp
             if (Window?.Exists() == true) {
                 if(TargetPosition != Window.WindowArea.ToPoint) {
                     Debug.WriteLine($"{Window.WindowArea.ToPoint} => {TargetPosition}");
-                    Window.SetPosition(Window.WindowArea.ToPoint + Window.WindowArea.ToPoint.ClampedVectorTo(TargetPosition, 60));
+                    Window.SetPosition(Window.WindowArea.ToPoint + Window.WindowArea.ToPoint.ClampedVectorTo(TargetPosition, 90));
                 } else {
                     if (Direction == Direction.Center) {
                         Window = null;

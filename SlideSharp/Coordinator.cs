@@ -19,7 +19,7 @@ namespace SlideSharp
         {
             Sliders = WindowSlider.GetAllValidInstances().ToList<WindowSlider>();
             Dispatcher.Tick += UpdateStates;
-            Dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 16);
+            Dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 12);
             Dispatcher.Start();
             MouseHookProcHandle = MouseHookProc;
             HookHandle = SetWindowsHookEx(MouseHookProcHandle);
