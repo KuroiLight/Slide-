@@ -186,15 +186,12 @@ namespace Win32Api
         public static IntPtr GetParentWindowFromPoint(POINT pt)
         {
             IntPtr currentWindow = WindowFromPoint(pt);
-            //Debug.Write($"{currentWindow}  ({GetWindowText(currentWindow)}) ");
             if (currentWindow != IntPtr.Zero) {
                 IntPtr parent = GetParent(currentWindow);
                 while (parent != IntPtr.Zero) {
                     currentWindow = parent;
-                    //Debug.Write($"{currentWindow} ({GetWindowText(currentWindow)}) ");
                     parent = GetParent(currentWindow);
                 }
-                //Debug.WriteLine($"{currentWindow} ({GetWindowText(currentWindow)}) [{parent}].");
                 return currentWindow;
             } else {
                 return IntPtr.Zero;
