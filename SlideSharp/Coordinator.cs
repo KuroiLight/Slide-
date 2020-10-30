@@ -80,16 +80,14 @@ namespace SlideSharp
             WindowSlider toSlider = null, centerSlider = null;
 
             Sliders.ForEach((Slider) => {
-                if (Slider.Window != null) {
-                    if (Slider.Window.GetHandle() == WindowUnderMouse) {
-                        Slider.SetState(Status.Showing).UpdatePosition();
-                    } else {
-                        Slider.SetState(Status.Hiding).UpdatePosition();
-                    }
+                if (Slider.Window?.GetHandle() == WindowUnderMouse) {
+                    Slider.SetState(Status.Showing).UpdatePosition();
+                } else {
+                    Slider.SetState(Status.Hiding).UpdatePosition();
+                }
 
-                    if (Slider.Window.GetHandle() == WindowUnderlMEnd) {
-                        Slider.SetWindow(IntPtr.Zero);
-                    }
+                if (Slider.Window?.GetHandle() == WindowUnderlMEnd) {
+                    Slider.SetWindow(IntPtr.Zero);
                 }
 
                 if (WindowUnderlMEnd != null) {
