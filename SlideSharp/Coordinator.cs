@@ -35,6 +35,7 @@ namespace SlideSharp
 
         ~Coordinator()
         {
+            Dispatcher.Stop();
             User32.Wrapd_UnhookWindowsHookEx(HookHandle);
         }
 
@@ -45,6 +46,22 @@ namespace SlideSharp
 
         private POINT? MStart, MEnd;
         private readonly object MouseDataLock = new object();
+
+        private (POINT?, POINT?) MiddleMouseData
+        {
+            get
+            {
+                lock (MouseDataLock) {
+                    return (MStart, MEnd);
+                }
+            }
+            set
+            {
+                lock (MouseDataLock) {
+                    (MStart, MEnd) = value;
+                }
+            }
+        }
 
         private IntPtr MouseHookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam)
         {
@@ -66,22 +83,15 @@ namespace SlideSharp
             // In the event that UpdateStates takes longer than our interval, we stop and give it some breathing room.
             Dispatcher.Stop();
 
-            POINT? lMStart = null, lMEnd = null;
-            lock (MouseDataLock) {
-                if (MStart != null && MEnd != null) {
-                    (lMStart, MStart) = (MStart, lMStart);
-                    (lMEnd, MEnd) = (MEnd, lMEnd);
-                }
+            IntPtr? WindowUnderlMEnd = null;
+            (POINT? lMStart, POINT? lMEnd) = MiddleMouseData;
+            if (lMEnd != null && lMStart != null) {
+                WindowUnderlMEnd = Win32Api.User32.GetParentWindowFromPoint((POINT)lMStart);
+                MiddleMouseData = (null, null);
             }
 
             var CurMousePosition = new POINT(WpfScreenHelper.MouseHelper.MousePosition.X, WpfScreenHelper.MouseHelper.MousePosition.Y);
             var WindowUnderMouse = Win32Api.User32.GetParentWindowFromPoint(CurMousePosition);
-            IntPtr? WindowUnderlMEnd = null;
-
-            if (lMEnd != null && lMStart != null) {
-                WindowUnderlMEnd = Win32Api.User32.GetParentWindowFromPoint((POINT)lMStart);
-            }
-
             WindowSlider toSlider = null, centerSlider = null;
 
             Sliders.ForEach((Slider) => {
