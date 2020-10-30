@@ -74,7 +74,7 @@ namespace Win32Api
 
         public System.Windows.Rect ToWindowsRect()
         {
-            return new Rect(Left, Top, Width, Height);
+            return new System.Windows.Rect(Left, Top, Width, Height);
         }
     }
 }
