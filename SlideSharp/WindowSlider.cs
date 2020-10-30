@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using Win32Api;
-using static Win32Api.Imports;
-using static Win32Api.User32;
 using WpfScreenHelper;
 
 namespace SlideSharp
@@ -87,7 +84,7 @@ namespace SlideSharp
         {
             if (Window?.Exists() == true) {
                 if (TargetPosition != Window.WindowArea.Center) {
-                    Window.SetPosition(Window.WindowArea.ToPoint + Window.WindowArea.ToPoint.ClampedVectorTo(TargetPosition, 30));
+                    Window.SetPosition(Window.WindowArea.ToPoint + Window.WindowArea.ToPoint.ClampedVectorTo(TargetPosition, 60));
                 } else {
                     if (Direction == Direction.Center) {
                         Window = null;

@@ -6,6 +6,7 @@ namespace Win32Api
     public struct RECT : System.IEquatable<RECT>
     {
         public int Left, Top, Right, Bottom;
+
         public RECT(int left, int top, int right, int bottom)
         {
             Left = left;
