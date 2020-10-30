@@ -12,5 +12,4 @@ In a nutshell it will allow you to slide windows offscreen with quick access to 
 * #### Support Multi-Monitor setups
 * #### Configurable via Settings Window
 
-###### Functionality has been completely implemented, except the settings interface.
-###### There are still some bugs present mostly related to timing issues.
+###### Functionality has been completely implemented, except the settings interface. There are still some bugs present mostly related to timing issues.
