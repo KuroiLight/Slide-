@@ -93,18 +93,12 @@ namespace Win32Api
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern bool GetLayeredWindowAttributes(IntPtr hwnd, uint crKey, out byte bAlpha, out uint dwFlags);
 
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        internal static extern IntPtr GetParent(IntPtr hWnd);
-
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
         /// <summary>
         /// Checks if given handle is a valid window

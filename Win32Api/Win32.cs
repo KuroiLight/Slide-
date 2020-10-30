@@ -31,15 +31,6 @@ namespace Win32Api
             return Imports.GetLayeredWindowAttributes(hwnd, crKey, out bAlpha, out dwFlags);
         }
 
-        public static IntPtr GetParent(IntPtr hWnd)
-        {
-            if (hWnd == IntPtr.Zero) {
-                throw new ArgumentNullException(nameof(hWnd));
-            }
-
-            return Imports.GetParent(hWnd);
-        }
-
         public static IntPtr GetRootWindow(POINT pt)
         {
             IntPtr WFPhWnd = Imports.WindowFromPoint(pt);
@@ -62,17 +53,13 @@ namespace Win32Api
             var returnValue = Imports.GetWindowRect(hWnd, out Rect);
 
             if (!returnValue) {
-                throw new Win32Exception(Marshal.GetLastWin32Error());
+                //this usually fails during a race condition, e.g window is closed right before GetWindowRect is called
+                //instead of throwing here, we should just write the exception to debug
+                Debug.WriteLine(new Win32Exception(Marshal.GetLastWin32Error()).Message);
+                //throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 
             return Rect;
-        }
-
-        public static string GetWindowText(IntPtr handle)
-        {
-            var sb = new StringBuilder(512);
-            Imports.GetWindowText(handle, sb, sb.Capacity);
-            return sb.ToString();
         }
 
         public static bool IsWindow(IntPtr hWnd)
