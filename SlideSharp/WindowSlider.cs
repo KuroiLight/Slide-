@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using Win32Api;
+using static Win32Api.Imports;
+using static Win32Api.User32;
 using WpfScreenHelper;
 
 namespace SlideSharp

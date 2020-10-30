@@ -1,5 +1,7 @@
 ﻿using System;
 using Win32Api;
+using static Win32Api.Imports;
+using static Win32Api.User32;
 
 namespace SlideSharp
 {
@@ -8,14 +10,14 @@ namespace SlideSharp
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification = "GetLayeredWindowAttributes requires pre-initialize out reference to LWA_ALPHA")]
         public WindowObj(IntPtr Handle)
         {
-            uint lwaa = Win32Api.Constants.LWA_ALPHA;
+            uint lwaa = LWA_ALPHA;
 
             this.Handle = Handle;
-            WindowArea = Win32Api.User32.Wrapd_GetWindowRect(Handle);
-            WindowStyle = Win32Api.User32.GetWindowLong(Handle, Win32Api.Constants.GWL_EXSTYLE);
-            Win32Api.User32.GetLayeredWindowAttributes(Handle, 0, out byte trans, out lwaa);
+            WindowArea = GetWindowRect(Handle);
+            WindowStyle = GetWindowLong(Handle, GWL_EXSTYLE);
+            GetLayeredWindowAttributes(Handle, 0, out byte trans, out lwaa);
             Transparency = trans;
-            Enabled = Win32Api.User32.IsWindowEnabled(Handle);
+            Enabled = IsWindowEnabled(Handle);
         }
 
         /// <summary>
@@ -34,7 +36,7 @@ namespace SlideSharp
         /// <returns>true if window exists false otherwise</returns>
         public bool Exists()
         {
-            return Win32Api.User32.IsWindow(Handle);
+            return IsWindow(Handle);
         }
 
         /// <summary>
@@ -52,8 +54,8 @@ namespace SlideSharp
         /// <param name="pt">amount to add to windows current position</param>
         public void MoveWindow(POINT pt)
         {
-            Win32Api.User32.Wrapd_SetWindowPos(Handle, WindowArea.ToPoint + pt);
-            WindowArea = Win32Api.User32.Wrapd_GetWindowRect(Handle);
+            SetWindowPos(Handle, WindowArea.ToPoint + pt);
+            WindowArea = GetWindowRect(Handle);
         }
 
         /// <summary>
@@ -61,8 +63,8 @@ namespace SlideSharp
         /// </summary>
         public void ResetAttributes()
         {
-            Win32Api.User32.SetLayeredWindowAttributes(Handle, 0, Transparency, Win32Api.Constants.LWA_ALPHA);
-            Win32Api.User32.SetWindowLong(Handle, Win32Api.Constants.GWL_EXSTYLE, WindowStyle);
+            SetLayeredWindowAttributes(Handle, 0, Transparency, LWA_ALPHA);
+            SetWindowLong(Handle, GWL_EXSTYLE, WindowStyle);
             SetEnabled(Enabled);
         }
 
@@ -72,7 +74,7 @@ namespace SlideSharp
         /// <param name="Enable">bool true to enable, otherwise false</param>
         public void SetEnabled(bool Enable)
         {
-            Win32Api.User32.EnableWindow(Handle, Enable);
+            EnableWindow(Handle, Enable);
         }
 
         /// <summary>
@@ -81,8 +83,8 @@ namespace SlideSharp
         /// <param name="pt">POINT to set the window to</param>
         public void SetPosition(POINT pt)
         {
-            Win32Api.User32.Wrapd_SetWindowPos(Handle, pt);
-            WindowArea = Win32Api.User32.Wrapd_GetWindowRect(Handle);
+            SetWindowPos(Handle, pt);
+            WindowArea = GetWindowRect(Handle);
         }
 
         /// <summary>
@@ -91,9 +93,9 @@ namespace SlideSharp
         /// <param name="percent">the transparency percent, 100 being opaque and 0 being invisible</param>
         public void SetTransparency(int percent)
         {
-            Win32Api.User32.SetWindowLong(Handle, Win32Api.Constants.GWL_EXSTYLE, WindowStyle ^ Win32Api.Constants.WS_EX_LAYERED);
+            SetWindowLong(Handle, GWL_EXSTYLE, WindowStyle ^ WS_EX_LAYERED);
             byte newTrans = (byte)(255 * (percent / 100));
-            Win32Api.User32.SetLayeredWindowAttributes(Handle, 0, newTrans, Win32Api.Constants.LWA_ALPHA);
+            SetLayeredWindowAttributes(Handle, 0, newTrans, LWA_ALPHA);
         }
     }
 }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Threading;
 using Win32Api;
+using static Win32Api.Imports;
+using static Win32Api.User32;
 
 namespace SlideSharp
 {
@@ -11,7 +13,7 @@ namespace SlideSharp
         private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
         private readonly List<WindowSlider> Sliders;
         private readonly IntPtr HookHandle;
-        private readonly User32.HookProc MouseHookProcHandle = null;
+        private readonly HookProc MouseHookProcHandle = null;
 
         public Coordinator()
         {
@@ -20,13 +22,13 @@ namespace SlideSharp
             Dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 16);
             Dispatcher.Start();
             MouseHookProcHandle = MouseHookProc;
-            HookHandle = User32.Wrapd_SetWindowsHookEx(MouseHookProcHandle);
+            HookHandle = SetWindowsHookEx(MouseHookProcHandle);
         }
 
         ~Coordinator()
         {
             Dispatcher.Stop();
-            User32.Wrapd_UnhookWindowsHookEx(HookHandle);
+            UnhookWindowsHookEx(HookHandle);
         }
 
         private POINT? MStart, MEnd;
@@ -60,7 +62,7 @@ namespace SlideSharp
                 }
             }
 
-            return User32.CallNextHookEx(HookHandle, code, wParam, lParam);
+            return CallNextHookEx(HookHandle, code, wParam, lParam);
         }
 
         private void UpdateStates(object sender, EventArgs e)
@@ -71,12 +73,12 @@ namespace SlideSharp
             IntPtr? WindowUnderlMEnd = null;
             (POINT? lMStart, POINT? lMEnd) = MiddleMouseData;
             if (lMEnd != null && lMStart != null) {
-                WindowUnderlMEnd = Win32Api.User32.GetRootWindow((POINT)lMStart);
+                WindowUnderlMEnd = GetRootWindow((POINT)lMStart);
                 MiddleMouseData = (null, null);
             }
 
-            Win32Api.User32.GetCursorPos(out POINT MousePos);
-            var WindowUnderMouse = Win32Api.User32.GetRootWindow(MousePos);
+            POINT MousePos = GetCursorPos();
+            var WindowUnderMouse = GetRootWindow(MousePos);
             WindowSlider toSlider = null, centerSlider = null;
 
             Sliders.ForEach((Slider) => {

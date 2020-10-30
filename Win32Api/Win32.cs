@@ -4,169 +4,95 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using static Win32Api.Imports;
+
 namespace Win32Api
 {
-    public struct Constants
-    {
-        public const int GWL_EXSTYLE = -20;
-        public const int GWL_STYLE = -16;
-        public const uint LWA_ALPHA = 0x2;
-        public const int WS_EX_LAYERED = 0x80000;
-    }
-
-    [Flags]
-    public enum SetWindowPosFlags : uint
-    {
-        SWP_NONE = 0x0000,
-        SWP_NOSIZE = 0x0001,
-        SWP_NOMOVE = 0x0002,
-        SWP_NOZORDER = 0x0004,
-        SWP_NOREDRAW = 0x0008,
-        SWP_NOACTIVATE = 0x0010,
-        SWP_DRAWFRAME = 0x0020,
-        SWP_FRAMECHANGED = SWP_DRAWFRAME,
-        SWP_SHOWWINDOW = 0x0040,
-        SWP_HIDEWINDOW = 0x0080,
-        SWP_NOCOPYBITS = 0x0100,
-        SWP_NOOWNERZORDER = 0x0200,
-        SWP_NOREPOSITION = SWP_NOOWNERZORDER,
-        SWP_NOSENDCHANGING = 0x0400,
-        SWP_DEFERERASE = 0x2000,
-        SWP_ASYNCWINDOWPOS = 0x4000
-    }
-
-    public enum WM_MOUSE : uint
-    {
-        WM_MOUSEMOVE = 0x0200,
-        WM_LBUTTONDOWN = 0x0201,
-        WM_LBUTTONUP = 0x0202,
-        WM_RBUTTONDOWN = 0x0204,
-        WM_RBUTTONUP = 0x0205,
-        WM_MBUTTONDOWN = 0x0207,
-        WM_MBUTTONUP = 0x0208,
-        WM_MOUSEWHEEL = 0x020A,
-        WM_MOUSEHWHEEL = 0x020E
-    }
-
-    enum GetAncestorFlags
-    {
-        /// <summary>
-        /// Retrieves the parent window. This does not include the owner, as it does with the GetParent function.
-        /// </summary>
-        GetParent = 1,
-        /// <summary>
-        /// Retrieves the root window by walking the chain of parent windows.
-        /// </summary>
-        GetRoot = 2,
-        /// <summary>
-        /// Retrieves the owned root window by walking the chain of parent and owner windows returned by GetParent.
-        /// </summary>
-        GetRootOwner = 3
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MSLLHOOKSTRUCT
-    {
-        public POINT pt;
-        public int mouseData;
-        public int flags;
-        public int time;
-        public UIntPtr dwExtraInfo;
-    }
-
     public static class User32
     {
-        public delegate IntPtr HookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam);
+        public static IntPtr CallNextHookEx(IntPtr hhk, int nCode, WM_MOUSE wParam, [In] MSLLHOOKSTRUCT lParam)
+        {
+            return Imports.CallNextHookEx(hhk, nCode, wParam, lParam);
+        }
 
-        [DllImport("user32.dll")]
-        public static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
+        public static bool EnableWindow(IntPtr hWnd, bool bEnable)
+        {
+            return Imports.EnableWindow(hWnd, bEnable);
+        }
 
-        [DllImport("user32.dll")]
-        public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+        public static POINT GetCursorPos()
+        {
+            Imports.GetCursorPos(out POINT pOINT);
+            return pOINT;
+        }
 
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+        public static bool GetLayeredWindowAttributes(IntPtr hwnd, uint crKey, out byte bAlpha, out uint dwFlags)
+        {
+            return Imports.GetLayeredWindowAttributes(hwnd, crKey, out bAlpha, out dwFlags);
+        }
 
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool GetLayeredWindowAttributes(IntPtr hwnd, uint crKey, out byte bAlpha, out uint dwFlags);
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool EnableWindow(IntPtr hWnd, bool bEnable);
-
-        /// <summary>
-        /// Calls the next hook in the chain, should be called if not blocking the event
-        /// </summary>
-        /// <param name="hhk"></param>
-        /// <param name="nCode"></param>
-        /// <param name="wParam"></param>
-        /// <param name="lParam"></param>
-        /// <returns></returns>
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        public static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, WM_MOUSE wParam, [In] MSLLHOOKSTRUCT lParam);
-
-        /// <summary>
-        /// Checks if given handle is a valid window
-        /// </summary>
-        /// <param name="hWnd">handle to the window being tested</param>
-        /// <returns>bool true if hadnle is a window, otherwise false</returns>
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool IsWindow(IntPtr hWnd);
-
-        /// <summary>
-        /// Checks if a given window handle is a window thats enabled
-        /// </summary>
-        /// <param name="hWnd">handle to the widnow to check</param>
-        /// <returns>bool true if window is enabled, false otherwise</returns>
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool IsWindowEnabled(IntPtr hWnd);
-
-        /// <summary>
-        /// Checks if a given window handle is a window thats visible
-        /// </summary>
-        /// <param name="hWnd">handle to the widnow to check</param>
-        /// <returns>bool true if window is visible, false otherwise</returns>
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool IsWindowVisible(IntPtr hWnd);
-
-        /// <summary>
-        /// Get the window handle of the window at POINT p
-        /// </summary>
-        /// <param name="p">POINT p of location to find window at</param>
-        /// <returns>IntPtr handle of window</returns>
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        public static extern IntPtr WindowFromPoint(POINT p);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
-
-        public static IntPtr Wrapd_GetParent(IntPtr hWnd)
+        public static IntPtr GetParent(IntPtr hWnd)
         {
             if (hWnd == IntPtr.Zero) {
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
-            return GetParent(hWnd);
+            return Imports.GetParent(hWnd);
+        }
+
+        public static IntPtr GetRootWindow(POINT pt)
+        {
+            IntPtr WFPhWnd = Imports.WindowFromPoint(pt);
+            return Imports.GetAncestor(WFPhWnd, GetAncestorFlags.GetRoot);
+        }
+
+        public static int GetWindowLong(IntPtr hWnd, int nIndex)
+        {
+            return Imports.GetWindowLong(hWnd, nIndex);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0018:Inline variable declaration", Justification = "Incase of failure we dont know if Rect will be initialized by GetWindowRect")]
-        public static RECT Wrapd_GetWindowRect(IntPtr hWnd)
+        public static RECT GetWindowRect(IntPtr hWnd)
         {
             if (hWnd == IntPtr.Zero) {
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
             RECT Rect; //do not inline
-            var returnValue = GetWindowRect(hWnd, out Rect);
+            var returnValue = Imports.GetWindowRect(hWnd, out Rect);
 
             if (!returnValue) {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 
             return Rect;
+        }
+
+        public static string GetWindowText(IntPtr handle)
+        {
+            var sb = new StringBuilder(512);
+            Imports.GetWindowText(handle, sb, sb.Capacity);
+            return sb.ToString();
+        }
+
+        public static bool IsWindow(IntPtr hWnd)
+        {
+            return Imports.IsWindow(hWnd);
+        }
+
+        public static bool IsWindowEnabled(IntPtr hWnd)
+        {
+            return Imports.IsWindowEnabled(hWnd);
+        }
+
+        public static bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags)
+        {
+            return Imports.SetLayeredWindowAttributes(hwnd, crKey, bAlpha, dwFlags);
+        }
+
+        public static int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong)
+        {
+            return Imports.SetWindowLong(hWnd, nIndex, dwNewLong);
         }
 
         /// <summary>
@@ -176,13 +102,13 @@ namespace Win32Api
         /// </summary>
         /// <param name="hWnd">window to move</param>
         /// <param name="pt">absolute position to be set</param>
-        public static void Wrapd_SetWindowPos(IntPtr hWnd, POINT pt)
+        public static void SetWindowPos(IntPtr hWnd, POINT pt)
         {
             if (hWnd == IntPtr.Zero) {
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
-            var returnValue = SetWindowPos(hWnd, IntPtr.Zero, pt.X, pt.Y, 0, 0, SetWindowPosFlags.SWP_NOZORDER | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_FRAMECHANGED);
+            var returnValue = Imports.SetWindowPos(hWnd, IntPtr.Zero, pt.X, pt.Y, 0, 0, Imports.SetWindowPosFlags.SWP_NOZORDER | Imports.SetWindowPosFlags.SWP_NOSIZE | Imports.SetWindowPosFlags.SWP_FRAMECHANGED);
 
             if (!returnValue) {
                 //this usually fails during a race condition, e.g window is closed right before SetWindowPos is called
@@ -192,27 +118,14 @@ namespace Win32Api
             }
         }
 
-        public static string GetWindowText(IntPtr handle)
-        {
-            var sb = new StringBuilder(512);
-            GetWindowText(handle, sb, sb.Capacity);
-            return sb.ToString();
-        }
-
-        public static IntPtr GetRootWindow(POINT pt)
-        {
-            IntPtr WFPhWnd = WindowFromPoint(pt);
-            return GetAncestor(WFPhWnd, GetAncestorFlags.GetRoot);
-        }
-
-        public static IntPtr Wrapd_SetWindowsHookEx(HookProc lpfn)
+        public static IntPtr SetWindowsHookEx(HookProc lpfn)
         {
             if (lpfn == null) {
                 throw new ArgumentNullException(nameof(lpfn));
             }
 
             const int WH_MOUSE_LL = 14;
-            IntPtr returnValue = SetWindowsHookEx(WH_MOUSE_LL, lpfn, IntPtr.Zero, 0);
+            IntPtr returnValue = Imports.SetWindowsHookEx(WH_MOUSE_LL, lpfn, IntPtr.Zero, 0);
 
             if (returnValue == IntPtr.Zero) {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
@@ -221,13 +134,13 @@ namespace Win32Api
             return returnValue;
         }
 
-        public static bool Wrapd_UnhookWindowsHookEx(IntPtr hhk)
+        public static bool UnhookWindowsHookEx(IntPtr hhk)
         {
             if (hhk == IntPtr.Zero) {
                 throw new ArgumentNullException(nameof(hhk));
             }
 
-            var returnValue = UnhookWindowsHookEx(hhk);
+            var returnValue = Imports.UnhookWindowsHookEx(hhk);
 
             if (!returnValue) {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
@@ -235,30 +148,5 @@ namespace Win32Api
 
             return returnValue;
         }
-
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        private static extern IntPtr GetParent(IntPtr hWnd);
-
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
-
-        //These functions are wrapped
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern IntPtr SetWindowsHookEx(int hookType, HookProc lpfn, IntPtr hMod, uint dwThreadId);
-
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
-
-        [DllImport("user32.dll", ExactSpelling = true)]
-        private static extern IntPtr GetAncestor(IntPtr hwnd, GetAncestorFlags flags);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool GetCursorPos(out POINT lpPoint);
     }
 }
