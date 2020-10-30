@@ -11,7 +11,7 @@ namespace SlideSharp
         private static Coordinator SingletonInstance = null;
         private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
 
-        private List<WindowSlider> Sliders;
+        private readonly List<WindowSlider> Sliders;
         private readonly IntPtr HookHandle;
         private readonly User32.HookProc MouseHookProcHandle = null;
 
@@ -39,7 +39,7 @@ namespace SlideSharp
 
         internal static Coordinator GetInstance()
         {
-            return SingletonInstance != null ? SingletonInstance : new Coordinator();
+            return SingletonInstance ?? new Coordinator();
         }
 
         private POINT? MStart, MEnd;

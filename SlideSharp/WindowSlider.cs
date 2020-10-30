@@ -59,9 +59,9 @@ namespace SlideSharp
 
         private void GenerateTargetPosition()
         {
-            var WindowOffSet = 30;
-            Func<int> GetCenterY = () => Screen.Center.Y - (Window.WindowArea.Height / 2);
-            Func<int> GetCenterX = () => Screen.Center.X - (Window.WindowArea.Width / 2);
+            const int WindowOffSet = 30;
+            int GetCenterY() => Screen.Center.Y - (Window.WindowArea.Height / 2);
+            int GetCenterX() => Screen.Center.X - (Window.WindowArea.Width / 2);
 
             if (Window?.Exists() == true) {
                 TargetPosition = (Direction, Status) switch
@@ -111,10 +111,10 @@ namespace SlideSharp
 
             Vector endVector = (Direction) switch
             {
-                Direction.Up => Vector.Multiply(((Screen.Top - start.Y) / vec.Y), vec),
-                Direction.Down => Vector.Multiply(((Screen.Bottom - start.Y) / vec.Y), vec),
-                Direction.Left => Vector.Multiply(((Screen.Left - start.X) / vec.X), vec),
-                Direction.Right => Vector.Multiply(((Screen.Right - start.X) / vec.X), vec),
+                Direction.Up => Vector.Multiply((Screen.Top - start.Y) / vec.Y, vec),
+                Direction.Down => Vector.Multiply((Screen.Bottom - start.Y) / vec.Y, vec),
+                Direction.Left => Vector.Multiply((Screen.Left - start.X) / vec.X, vec),
+                Direction.Right => Vector.Multiply((Screen.Right - start.X) / vec.X, vec),
                 _ => default,
             };
 
