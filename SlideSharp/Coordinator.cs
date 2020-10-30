@@ -8,21 +8,13 @@ namespace SlideSharp
 {
     public class Coordinator
     {
-        private static Coordinator SingletonInstance = null;
         private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
-
         private readonly List<WindowSlider> Sliders;
         private readonly IntPtr HookHandle;
         private readonly User32.HookProc MouseHookProcHandle = null;
 
         public Coordinator()
         {
-            if (SingletonInstance == null) {
-                SingletonInstance = this;
-            } else {
-                throw new Exception("Singleton already initialized.");
-            }
-
             Sliders = WindowSlider.GetAllValidInstances().ToList<WindowSlider>();
             Dispatcher.Tick += UpdateStates;
             Dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 16);
@@ -35,11 +27,6 @@ namespace SlideSharp
         {
             Dispatcher.Stop();
             User32.Wrapd_UnhookWindowsHookEx(HookHandle);
-        }
-
-        internal static Coordinator GetInstance()
-        {
-            return SingletonInstance ?? new Coordinator();
         }
 
         private POINT? MStart, MEnd;
