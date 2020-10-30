@@ -37,7 +37,7 @@ namespace SlideSharp
         public Status Status { get; protected set; }
         public Direction Direction { get; }
 
-        public void SetWindow(IntPtr windowHandle)
+        public WindowSlider SetWindow(IntPtr windowHandle)
         {
             if (windowHandle == IntPtr.Zero) {
                 Window = null;
@@ -45,14 +45,16 @@ namespace SlideSharp
             } else {
                 Window = new WindowObj(windowHandle);
             }
+            return this;
         }
 
-        public void SetState(Status S)
+        public WindowSlider SetState(Status S)
         {
             if (S != Status) {
                 Status = S;
                 GenerateTargetPosition();
             }
+            return this;
         }
 
         private void GenerateTargetPosition()
@@ -78,7 +80,7 @@ namespace SlideSharp
             }
         }
 
-        public void UpdatePosition()
+        public WindowSlider UpdatePosition()
         {
             if (Window?.Exists() == true) {
                 if (TargetPosition != Window.WindowArea.Center) {
@@ -89,6 +91,7 @@ namespace SlideSharp
                     }
                 }
             }
+            return this;
         }
 
         public bool WillIntersect(POINT start, POINT end)
