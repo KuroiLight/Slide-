@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Threading;
 using Win32Api;
 
@@ -13,16 +10,22 @@ namespace SlideSharp
     {
         private static Coordinator SingletonInstance = null;
         private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
-        private readonly ConcurrentQueue<Task> HookMessages = new ConcurrentQueue<Task>();
-        private List<Container> Containers;
+
+        private List<WindowSlider> Sliders;
         private readonly IntPtr HookHandle;
         private readonly User32.HookProc MouseHookProcHandle = null;
-        private POINT MStart;
+
         private IntPtr MStartWindow;
 
         public Coordinator()
         {
-            Containers = EdgeContainer.GetAllValidInstances().ToList<Container>();
+            if (SingletonInstance == null) {
+                SingletonInstance = this;
+            } else {
+                throw new Exception("Singleton already initialized.");
+            }
+
+            Sliders = WindowSlider.GetAllValidInstances().ToList<WindowSlider>();
             Dispatcher.Tick += UpdateStates;
             Dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 16);
             Dispatcher.Start();
@@ -37,36 +40,21 @@ namespace SlideSharp
 
         internal static Coordinator GetInstance()
         {
-            return SingletonInstance ??= new Coordinator();
+            return SingletonInstance != null ? SingletonInstance : new Coordinator();
         }
+
+        private POINT? MStart, MEnd;
+        private readonly object MouseDataLock = new object();
 
         private IntPtr MouseHookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam)
         {
             if (wParam == WM_MOUSE.WM_MBUTTONDOWN) {
-                MStart = lParam.pt;
-                MStartWindow = User32.GetParentWindowFromPoint(MStart);
+                lock (MouseDataLock) {
+                    MStart = lParam.pt;
+                }
             } else if (wParam == WM_MOUSE.WM_MBUTTONUP) {
-                var CapturedMStart = MStart;
-                var CapturedMEnd = lParam.pt;
-                var CapturedMStartWindow = MStartWindow;
-
-                if (MStartWindow != null && lParam.pt != MStart) {
-                    HookMessages.Enqueue(new Task(() => {
-                        Container toContainer = Containers.Find((C) => C is EdgeContainer edge && edge.Intersect(CapturedMStart, CapturedMEnd));
-
-                        Container fromContainer = Containers.Find((C) => C is EdgeContainer edge && edge.ContainedWindow?.GetHandle() == CapturedMStartWindow);
-                        if(toContainer != null) {
-                            Debug.WriteLine($"{((EdgeContainer)toContainer).Direction}");
-                        }
-                        
-                        if ((toContainer?.ContainedWindow?.Exists()) == true) {
-                            
-                            fromContainer?.RemoveWindow();
-                            Containers.Add(new CenterContainer(toContainer.Screen, toContainer.ContainedWindow.GetHandle()));
-                        }
-
-                        (toContainer as EdgeContainer)?.SetNewWindow(CapturedMStartWindow);
-                    }));
+                lock (MouseDataLock) {
+                    MEnd = lParam.pt;
                 }
             }
 
@@ -78,32 +66,55 @@ namespace SlideSharp
             // In the event that UpdateStates takes longer than our interval, we stop and give it some breathing room.
             Dispatcher.Stop();
 
-            while (!HookMessages.IsEmpty) {
-                var dequeSuccess = HookMessages.TryDequeue(out Task messageTask);
-                if (dequeSuccess && messageTask is Task) {
-                    messageTask.RunSynchronously();
+            POINT? lMStart = null, lMEnd = null;
+            lock (MouseDataLock) {
+                if (MStart != null && MEnd != null) {
+                    (lMStart, MStart) = (MStart, lMStart);
+                    (lMEnd, MEnd) = (MEnd, lMEnd);
                 }
             }
 
-            Containers = Containers.Where((WC) => !WC.CanBeDisposed).ToList();
+            var CurMousePosition = new POINT(WpfScreenHelper.MouseHelper.MousePosition.X, WpfScreenHelper.MouseHelper.MousePosition.Y);
+            var WindowUnderMouse = Win32Api.User32.GetParentWindowFromPoint(CurMousePosition);
+            IntPtr? WindowUnderlMEnd = null;
 
-            var MousePoint = WpfScreenHelper.MouseHelper.MousePosition;
-            var WindowUnderMouse = Win32Api.User32.GetParentWindowFromPoint(new POINT((int)MousePoint.X, (int)MousePoint.Y));
-            Containers.ForEach((WC) => {
-                if (WC.ContainedWindow?.Exists() == true) {
-                    if (WC is EdgeContainer edge) {
-                        Debug.Write($"{edge} {edge.Status} => ");
-                        if (WC.ContainedWindow.GetHandle() == WindowUnderMouse) {
-                            edge.SetState(Status.Showing);
-                        } else {
-                            edge.SetState(Status.Hiding);
-                        }
-                        Debug.WriteLine($"{edge.Status}.");
+            if (lMEnd != null && lMStart != null) {
+                WindowUnderlMEnd = Win32Api.User32.GetParentWindowFromPoint((POINT)lMStart);
+            }
+
+            WindowSlider toSlider = null, centerSlider = null;
+
+            Sliders.ForEach((Slider) => {
+                if (Slider.Window != null) {
+                    if (Slider.Window.GetHandle() == WindowUnderMouse) {
+                        Slider.SetState(Status.Showing);
+                    } else {
+                        Slider.SetState(Status.Hiding);
+                    }
+                    Slider.UpdatePosition();
+
+                    if (Slider.Window.GetHandle() == WindowUnderlMEnd) {
+                        Slider.SetWindow(IntPtr.Zero);
+                    }
+                }
+
+                if (WindowUnderlMEnd != null) {
+                    if (Slider.WillIntersect((POINT)lMStart, (POINT)lMEnd)) {
+                        toSlider = Slider;
                     }
 
-                    WC.UpdatePosition();
+                    if (Slider.Direction == Direction.Center && Slider.Screen.Contains((POINT)lMStart)) {
+                        centerSlider = Slider;
+                    }
                 }
             });
+
+            if (WindowUnderlMEnd != null && toSlider != null) {
+                if (toSlider.Window != null && toSlider.Window.Exists() && centerSlider != null) {
+                    centerSlider.SetWindow(toSlider.Window.GetHandle());
+                }
+                toSlider.SetWindow((IntPtr)WindowUnderlMEnd);
+            }
 
             Dispatcher.Start();
         }
