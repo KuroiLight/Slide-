@@ -28,7 +28,7 @@ namespace Win32Api
 
         public double DistanceTo(POINT targetPoint)
         {
-            return Math.Sqrt((X - targetPoint.X)^2 + (Y - targetPoint.Y)^2);
+            return Math.Sqrt((X - targetPoint.X) ^ 2 + (Y - targetPoint.Y) ^ 2);
         }
 
         public double ClampedDistanceTo(POINT targetPoint, double maxDistance)
