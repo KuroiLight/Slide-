@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using Win32Api;
@@ -37,23 +38,27 @@ namespace SlideSharp
         public Status Status { get; protected set; }
         public Direction Direction { get; }
 
-        public WindowSlider SetWindow(IntPtr windowHandle)
+
+        public WindowSlider Assign(IntPtr windowHandle)
         {
-            if (windowHandle == IntPtr.Zero) {
-                Window = null;
-                TargetPosition = default;
-            } else {
-                Window = new WindowObj(windowHandle);
-            }
-            return this;
+            return Assign(windowHandle, Status.Hiding);
         }
 
-        public WindowSlider SetState(Status S)
+        public WindowSlider Assign(Status status)
         {
-            if (S != Status) {
-                Status = S;
-                GenerateTargetPosition();
+            return Assign(Window.GetHandle(), status);
+        }
+
+        public WindowSlider Assign(IntPtr windowHandle, Status status)
+        {
+            if(windowHandle != Window?.GetHandle() || status != Status) {
+                Window = windowHandle != IntPtr.Zero ? new WindowObj(windowHandle) : null;
+                if(Window != null) {
+                    Status = status;
+                    GenerateTargetPosition();
+                }
             }
+
             return this;
         }
 
@@ -78,12 +83,14 @@ namespace SlideSharp
                     _ => throw new ArgumentOutOfRangeException("Direction, Status"),
                 };
             }
+            Debug.WriteLine($"{TargetPosition} {Status} {Direction}, {GetCenterX()} {GetCenterY()}");
         }
 
         public WindowSlider UpdatePosition()
         {
             if (Window?.Exists() == true) {
-                if (TargetPosition != Window.WindowArea.Center) {
+                if(TargetPosition != Window.WindowArea.ToPoint) {
+                    Debug.WriteLine($"{Window.WindowArea.ToPoint} => {TargetPosition}");
                     Window.SetPosition(Window.WindowArea.ToPoint + Window.WindowArea.ToPoint.ClampedVectorTo(TargetPosition, 60));
                 } else {
                     if (Direction == Direction.Center) {
