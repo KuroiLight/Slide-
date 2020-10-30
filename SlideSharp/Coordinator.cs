@@ -15,8 +15,6 @@ namespace SlideSharp
         private readonly IntPtr HookHandle;
         private readonly User32.HookProc MouseHookProcHandle = null;
 
-        private IntPtr MStartWindow;
-
         public Coordinator()
         {
             if (SingletonInstance == null) {
@@ -97,11 +95,10 @@ namespace SlideSharp
             Sliders.ForEach((Slider) => {
                 if (Slider.Window != null) {
                     if (Slider.Window.GetHandle() == WindowUnderMouse) {
-                        Slider.SetState(Status.Showing);
+                        Slider.SetState(Status.Showing).UpdatePosition();
                     } else {
-                        Slider.SetState(Status.Hiding);
+                        Slider.SetState(Status.Hiding).UpdatePosition();
                     }
-                    Slider.UpdatePosition();
 
                     if (Slider.Window.GetHandle() == WindowUnderlMEnd) {
                         Slider.SetWindow(IntPtr.Zero);
@@ -119,11 +116,11 @@ namespace SlideSharp
                 }
             });
 
-            if (WindowUnderlMEnd != null && toSlider != null) {
-                if (toSlider.Window != null && toSlider.Window.Exists() && centerSlider != null) {
-                    centerSlider.SetWindow(toSlider.Window.GetHandle());
+            if (WindowUnderlMEnd != null) {
+                if (toSlider?.Window?.Exists() == true && centerSlider != null) {
+                    centerSlider?.SetWindow(toSlider.Window.GetHandle());
                 }
-                toSlider.SetWindow((IntPtr)WindowUnderlMEnd);
+                toSlider?.SetWindow((IntPtr)WindowUnderlMEnd);
             }
 
             Dispatcher.Start();
