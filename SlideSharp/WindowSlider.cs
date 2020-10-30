@@ -32,10 +32,10 @@ namespace SlideSharp
         }
 
         public WindowObj Window { get; protected set; }
-        public POINT TargetPosition { get; protected set; }
+        private POINT TargetPosition { get; set; }
         public RECT Screen { get; }
         public Status Status { get; protected set; }
-        public Direction Direction { get; private set; }
+        public Direction Direction { get; }
 
         public void SetWindow(IntPtr windowHandle)
         {
