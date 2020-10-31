@@ -13,6 +13,7 @@ namespace SlideSharp
             this.Handle = Handle;
             Rect = GetWindowRect(Handle);
             TopMost = (GetWindowLong(Handle, GWL_EXSTYLE) & WS_EX_TOPMOST) == WS_EX_TOPMOST;
+            SetTopMost(true);
         }
 
         /// <summary>
@@ -20,7 +21,7 @@ namespace SlideSharp
         /// </summary>
         public RECT Rect { get; private set; }
         private IntPtr Handle { get; }
-        private bool TopMost { get; }
+        internal bool TopMost { get; }
 
         /// <summary>
         /// Checks to see if window still exists
@@ -47,14 +48,6 @@ namespace SlideSharp
         internal void SetTopMost(bool topmost)
         {
             SetWindowPos(Handle, topmost ? HWND_INSERTAFTER.HWND_TOPMOST : HWND_INSERTAFTER.HWND_NOTOPMOST);
-        }
-
-        /// <summary>
-        /// Reset the windows attributes: TopMost
-        /// </summary>
-        public void ResetTopMost()
-        {
-            SetTopMost(TopMost);
         }
 
         /// <summary>
