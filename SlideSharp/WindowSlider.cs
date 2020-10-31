@@ -38,7 +38,6 @@ namespace SlideSharp
         public Status Status { get; protected set; }
         public Direction Direction { get; }
 
-
         public WindowSlider Assign(IntPtr windowHandle)
         {
             return Assign(windowHandle, Status.Hiding);
@@ -54,7 +53,7 @@ namespace SlideSharp
             if(windowHandle != Window?.GetHandle() || status != Status) {
                 Window = windowHandle != IntPtr.Zero ? new WindowObj(windowHandle) : null;
                 if(Window != null) {
-                    Status = status;
+                    ChangeStatus(status);
                     GenerateTargetPosition();
                 }
             }
@@ -62,23 +61,33 @@ namespace SlideSharp
             return this;
         }
 
+        private void ChangeStatus(Status status)
+        {
+            if(status == Status.Showing) {
+                Window.SetTopMost(true);
+            } else {
+                Window.ResetTopMost();
+            }
+            Status = status;
+        }
+
         private void GenerateTargetPosition()
         {
             const int WindowOffSet = 30;
-            int GetCenterY() => Screen.Center.Y - (Window.WindowArea.Height / 2);
-            int GetCenterX() => Screen.Center.X - (Window.WindowArea.Width / 2);
+            int GetCenterY() => Screen.Center.Y - (Window.Rect.Height / 2);
+            int GetCenterX() => Screen.Center.X - (Window.Rect.Width / 2);
 
             if (Window?.Exists() == true) {
                 TargetPosition = (Direction, Status) switch
                 {
                     (Direction.Center, _) => new POINT(GetCenterX(), GetCenterY()),
                     (Direction.Left, Status.Showing) => new POINT(Screen.Left, GetCenterY()),
-                    (Direction.Left, Status.Hiding) => new POINT(Screen.Left - Window.WindowArea.Width + WindowOffSet, GetCenterY()),
-                    (Direction.Right, Status.Showing) => new POINT(Screen.Right - Window.WindowArea.Width, GetCenterY()),
+                    (Direction.Left, Status.Hiding) => new POINT(Screen.Left - Window.Rect.Width + WindowOffSet, GetCenterY()),
+                    (Direction.Right, Status.Showing) => new POINT(Screen.Right - Window.Rect.Width, GetCenterY()),
                     (Direction.Right, Status.Hiding) => new POINT(Screen.Right - WindowOffSet, GetCenterY()),
                     (Direction.Up, Status.Showing) => new POINT(GetCenterX(), Screen.Top),
-                    (Direction.Up, Status.Hiding) => new POINT(GetCenterX(), Screen.Top - Window.WindowArea.Height + WindowOffSet),
-                    (Direction.Down, Status.Showing) => new POINT(GetCenterX(), Screen.Bottom - Window.WindowArea.Height),
+                    (Direction.Up, Status.Hiding) => new POINT(GetCenterX(), Screen.Top - Window.Rect.Height + WindowOffSet),
+                    (Direction.Down, Status.Showing) => new POINT(GetCenterX(), Screen.Bottom - Window.Rect.Height),
                     (Direction.Down, Status.Hiding) => new POINT(GetCenterX(), Screen.Bottom - WindowOffSet),
                     _ => throw new ArgumentOutOfRangeException("Direction, Status"),
                 };
@@ -89,9 +98,9 @@ namespace SlideSharp
         public WindowSlider UpdatePosition()
         {
             if (Window?.Exists() == true) {
-                if(TargetPosition != Window.WindowArea.ToPoint) {
-                    Debug.WriteLine($"{Window.WindowArea.ToPoint} => {TargetPosition}");
-                    Window.SetPosition(Window.WindowArea.ToPoint + Window.WindowArea.ToPoint.ClampedVectorTo(TargetPosition, 90));
+                if(TargetPosition != Window.Rect.ToPoint) {
+                    Debug.WriteLine($"{Window.Rect.ToPoint} => {TargetPosition}");
+                    Window.SetPosition(Window.Rect.ToPoint + Window.Rect.ToPoint.ClampedVectorTo(TargetPosition, 90));
                 } else {
                     if (Direction == Direction.Center) {
                         Window = null;
