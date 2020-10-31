@@ -76,11 +76,6 @@ namespace Win32Api
             return Imports.IsWindow(hWnd);
         }
 
-        public static bool IsWindowEnabled(IntPtr hWnd)
-        {
-            return Imports.IsWindowEnabled(hWnd);
-        }
-
         /// <summary>
         /// Sets the windows new position
         /// uses flags SWP_NOZORDER, SWP_NOSIZE and SWP_FRAMECHANGED
