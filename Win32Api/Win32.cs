@@ -9,6 +9,20 @@ namespace Win32Api
 {
     public static class User32
     {
+        public static TITLEBARINFO GetTitleBarInfo(IntPtr hWnd)
+        {
+            TITLEBARINFO TBI = new TITLEBARINFO();
+            TBI.cbSize = (uint)Marshal.SizeOf(TBI);
+
+            bool returnValue = Imports.GetTitleBarInfo(hWnd, ref TBI);
+
+            if(!returnValue) {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            return TBI;
+        }
+
         public static IntPtr CallNextHookEx(IntPtr hhk, int nCode, WM_MOUSE wParam, [In] MSLLHOOKSTRUCT lParam)
         {
             return Imports.CallNextHookEx(hhk, nCode, wParam, lParam);
@@ -28,6 +42,12 @@ namespace Win32Api
         public static bool GetLayeredWindowAttributes(IntPtr hwnd, uint crKey, out byte bAlpha, out uint dwFlags)
         {
             return Imports.GetLayeredWindowAttributes(hwnd, crKey, out bAlpha, out dwFlags);
+        }
+
+        public static IntPtr GetRootWindowIf(POINT pt, Func<IntPtr, bool> predicate)
+        {
+            IntPtr rootWindow = GetRootWindow(pt);
+            return predicate(rootWindow) ? rootWindow : IntPtr.Zero;
         }
 
         public static IntPtr GetRootWindow(POINT pt)
@@ -94,7 +114,23 @@ namespace Win32Api
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
-            var returnValue = Imports.SetWindowPos(hWnd, IntPtr.Zero, pt.X, pt.Y, 0, 0, Imports.SetWindowPosFlags.SWP_NOZORDER | Imports.SetWindowPosFlags.SWP_NOSIZE | Imports.SetWindowPosFlags.SWP_FRAMECHANGED);
+            var returnValue = Imports.SetWindowPos(hWnd, IntPtr.Zero, pt.X, pt.Y, 0, 0, Imports.SetWindowPosFlags.SWP_NOACTIVATE | Imports.SetWindowPosFlags.SWP_NOZORDER | Imports.SetWindowPosFlags.SWP_NOSIZE | Imports.SetWindowPosFlags.SWP_FRAMECHANGED);
+
+            if (!returnValue) {
+                //this usually fails during a race condition, e.g window is closed right before SetWindowPos is called
+                //instead of throwing here, we should just write the exception to debug
+                Debug.WriteLine(new Win32Exception(Marshal.GetLastWin32Error()).Message);
+                //throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+        }
+
+        public static void SetWindowPos(IntPtr hWnd, HWND_INSERTAFTER hWndInsertAfter)
+        {
+            if (hWnd == IntPtr.Zero) {
+                throw new ArgumentNullException(nameof(hWnd));
+            }
+
+            var returnValue = Imports.SetWindowPos(hWnd, (IntPtr)hWndInsertAfter, 0, 0, 0, 0, Imports.SetWindowPosFlags.SWP_NOACTIVATE | Imports.SetWindowPosFlags.SWP_NOMOVE | Imports.SetWindowPosFlags.SWP_NOSIZE | Imports.SetWindowPosFlags.SWP_FRAMECHANGED);
 
             if (!returnValue) {
                 //this usually fails during a race condition, e.g window is closed right before SetWindowPos is called
