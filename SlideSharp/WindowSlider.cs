@@ -50,12 +50,13 @@ namespace SlideSharp
 
         public WindowSlider Assign(IntPtr windowHandle, Status status)
         {
-            if(windowHandle != Window?.GetHandle() || status != Status) {
+            if(Window?.GetHandle() != windowHandle) {
                 Window = windowHandle != IntPtr.Zero ? new WindowObj(windowHandle) : null;
-                if(Window != null) {
-                    ChangeStatus(status);
-                    GenerateTargetPosition();
-                }
+            }
+
+            if(status != Status && Window != null) {
+                ChangeStatus(status);
+                GenerateTargetPosition();
             }
 
             return this;
@@ -63,7 +64,7 @@ namespace SlideSharp
 
         private void ChangeStatus(Status status)
         {
-            if(status == Status.Showing) {
+            if(status == Status.Hiding) {
                 Window.SetTopMost(true);
             } else {
                 Window.ResetTopMost();
@@ -92,14 +93,12 @@ namespace SlideSharp
                     _ => throw new ArgumentOutOfRangeException("Direction, Status"),
                 };
             }
-            Debug.WriteLine($"{TargetPosition} {Status} {Direction}, {GetCenterX()} {GetCenterY()}");
         }
 
         public WindowSlider UpdatePosition()
         {
             if (Window?.Exists() == true) {
                 if(TargetPosition != Window.Rect.ToPoint) {
-                    Debug.WriteLine($"{Window.Rect.ToPoint} => {TargetPosition}");
                     Window.SetPosition(Window.Rect.ToPoint + Window.Rect.ToPoint.ClampedVectorTo(TargetPosition, 90));
                 } else {
                     if (Direction == Direction.Center) {
