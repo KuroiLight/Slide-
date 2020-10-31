@@ -78,14 +78,6 @@ namespace Win32Api
             WM_MOUSEHWHEEL = 0x020E
         }
 
-        /// <summary>
-        /// Calls the next hook in the chain, should be called if not blocking the event
-        /// </summary>
-        /// <param name="hhk"></param>
-        /// <param name="nCode"></param>
-        /// <param name="wParam"></param>
-        /// <param name="lParam"></param>
-        /// <returns></returns>
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         internal static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, WM_MOUSE wParam, [In] MSLLHOOKSTRUCT lParam);
 
