@@ -104,6 +104,9 @@ namespace SlideSharp
         public bool WillIntersect(POINT start, POINT end)
         {
             Vector vec = new Vector(start.X - end.X, start.Y - end.Y);
+            if(vec.Length < 25) {
+                return false;
+            }
 
             Direction possibleDirections = new Direction();
             if (vec.X != 0) {

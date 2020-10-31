@@ -79,7 +79,7 @@ namespace SlideSharp
 
             POINT MousePos = GetCursorPos();
             var WindowUnderMouse = GetRootWindow(MousePos);
-            WindowSlider toSlider = null, centerSlider = null;
+            WindowSlider toSlider = null, centerSlider = null, fromSlider = null;
 
             Sliders.ForEach((Slider) => {
                 if (Slider.Window != null) {
@@ -87,9 +87,6 @@ namespace SlideSharp
                         Slider.Assign(Status.Showing);
                     } else {
                         Slider.Assign(Status.Hiding);
-                    }
-                    if (Slider.Window.GetHandle() == WindowUnderlMEnd) {
-                        Slider.Assign(IntPtr.Zero);
                     }
                     Slider.UpdatePosition();
                 }
@@ -102,6 +99,11 @@ namespace SlideSharp
                     if (Slider.Direction == Direction.Center && Slider.Screen.Contains((POINT)lMStart)) {
                         centerSlider = Slider;
                     }
+
+                    if (Slider.Window?.GetHandle() == WindowUnderlMEnd) {
+                        fromSlider = Slider;
+                        Slider.Assign(IntPtr.Zero);
+                    }
                 }
             });
 
@@ -109,7 +111,15 @@ namespace SlideSharp
                 if (toSlider?.Window?.Exists() == true && centerSlider != null) {
                     centerSlider?.Assign(toSlider.Window.GetHandle());
                 }
-                toSlider?.Assign((IntPtr)WindowUnderlMEnd);
+                if (fromSlider != null & toSlider == null) {
+                    centerSlider?.Assign((IntPtr)WindowUnderlMEnd);
+                } else {
+                    if (toSlider?.Window?.Exists() == true && centerSlider != null) {
+                        centerSlider?.Assign(toSlider.Window.GetHandle());
+                    }
+                    toSlider?.Assign((IntPtr)WindowUnderlMEnd);
+                }
+                
             }
 
             Dispatcher.Start();
