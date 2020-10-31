@@ -12,7 +12,7 @@ namespace SlideSharp
         {
             this.Handle = Handle;
             Rect = GetWindowRect(Handle);
-            WindowStyle = GetWindowLong(Handle, GWL_EXSTYLE);
+            TopMost = (GetWindowLong(Handle, GWL_EXSTYLE) & WS_EX_TOPMOST) == WS_EX_TOPMOST;
         }
 
         /// <summary>
@@ -20,7 +20,7 @@ namespace SlideSharp
         /// </summary>
         public RECT Rect { get; private set; }
         private IntPtr Handle { get; }
-        private int WindowStyle { get; }
+        private bool TopMost { get; }
 
         /// <summary>
         /// Checks to see if window still exists
@@ -50,11 +50,11 @@ namespace SlideSharp
         }
 
         /// <summary>
-        /// Reset the windows attributes: Transparency and Enabled state to default
+        /// Reset the windows attributes: TopMost
         /// </summary>
         public void ResetTopMost()
         {
-            SetWindowLong(Handle, GWL_EXSTYLE, WindowStyle);
+            SetTopMost(TopMost);
         }
 
         /// <summary>
