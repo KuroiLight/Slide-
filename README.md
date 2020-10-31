@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="slidesharp logo.png">
+  <img src="slidesharp logo.png" width="300">
 </p>
 
 #### This application is a reimplementation of the "touch slide" functionality from Preme for Windows but completely written in C#.
