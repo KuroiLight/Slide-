@@ -14,6 +14,14 @@ namespace Win32Api
 
         public const int WS_EX_LAYERED = 0x80000;
 
+        public enum HWND_INSERTAFTER : int
+        {
+            HWND_NOTOPMOST = -2,
+            HWND_TOPMOST = -1,
+            HWND_TOP = 0,
+            HWND_BOTTOM = 1,
+        }
+
         public delegate IntPtr HookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam);
 
         public enum GetAncestorFlags
@@ -86,9 +94,13 @@ namespace Win32Api
         [DllImport("user32.dll", ExactSpelling = true)]
         internal static extern IntPtr GetAncestor(IntPtr hwnd, GetAncestorFlags flags);
 
-        [DllImport("user32.dll", SetLastError = true)]
+        [DllImport("user32.dll", SetLastError = true, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool GetCursorPos(out POINT lpPoint);
+
+        [DllImport("user32.dll", SetLastError = true, ExactSpelling = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool GetTitleBarInfo(IntPtr hwnd, ref TITLEBARINFO pti);
 
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern bool GetLayeredWindowAttributes(IntPtr hwnd, uint crKey, out byte bAlpha, out uint dwFlags);
@@ -159,6 +171,16 @@ namespace Win32Api
             public int flags;
             public int time;
             public UIntPtr dwExtraInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct TITLEBARINFO
+        {
+            public const int CCHILDREN_TITLEBAR = 5;
+            public uint cbSize;
+            public RECT rcTitleBar;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHILDREN_TITLEBAR + 1)]
+            public uint[] rgstate;
         }
     }
 }
