@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Threading;
 using Win32Api;
 using static Win32Api.Imports;
@@ -73,7 +74,7 @@ namespace SlideSharp
             IntPtr? WindowUnderlMEnd = null;
             (POINT? lMStart, POINT? lMEnd) = MiddleMouseData;
             if (lMEnd != null && lMStart != null) {
-                WindowUnderlMEnd = GetRootWindow((POINT)lMStart);
+                WindowUnderlMEnd = GetRootWindowIf((POINT)lMStart, (hwnd) => GetTitleBarInfo(hwnd).rcTitleBar.Contains((POINT)lMStart));
                 MiddleMouseData = (null, null);
             }
 
@@ -81,7 +82,7 @@ namespace SlideSharp
             var WindowUnderMouse = GetRootWindow(MousePos);
             WindowSlider toSlider = null, centerSlider = null, fromSlider = null;
 
-            Sliders.ForEach((Slider) => {
+            Sliders.AsParallel().ForAll((Slider) => {
                 if (Slider.Window != null) {
                     if (Slider.Window.GetHandle() == WindowUnderMouse) {
                         Slider.Assign(Status.Showing);
@@ -111,7 +112,7 @@ namespace SlideSharp
                 if (toSlider?.Window?.Exists() == true && centerSlider != null) {
                     centerSlider?.Assign(toSlider.Window.GetHandle());
                 }
-                if (fromSlider != null & toSlider == null) {
+                if (fromSlider != null && toSlider == null) {
                     centerSlider?.Assign((IntPtr)WindowUnderlMEnd);
                 } else {
                     if (toSlider?.Window?.Exists() == true && centerSlider != null) {
@@ -119,7 +120,6 @@ namespace SlideSharp
                     }
                     toSlider?.Assign((IntPtr)WindowUnderlMEnd);
                 }
-                
             }
 
             Dispatcher.Start();
