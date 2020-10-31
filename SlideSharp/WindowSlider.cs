@@ -102,6 +102,7 @@ namespace SlideSharp
                     Window.SetPosition(Window.Rect.ToPoint + Window.Rect.ToPoint.ClampedVectorTo(TargetPosition, 90));
                 } else {
                     if (Direction == Direction.Center) {
+                        Window.ResetTopMost();
                         Window = null;
                     }
                 }

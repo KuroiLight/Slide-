@@ -28,20 +28,10 @@ namespace Win32Api
             return Imports.CallNextHookEx(hhk, nCode, wParam, lParam);
         }
 
-        public static bool EnableWindow(IntPtr hWnd, bool bEnable)
-        {
-            return Imports.EnableWindow(hWnd, bEnable);
-        }
-
         public static POINT GetCursorPos()
         {
             Imports.GetCursorPos(out POINT pOINT);
             return pOINT;
-        }
-
-        public static bool GetLayeredWindowAttributes(IntPtr hwnd, uint crKey, out byte bAlpha, out uint dwFlags)
-        {
-            return Imports.GetLayeredWindowAttributes(hwnd, crKey, out bAlpha, out dwFlags);
         }
 
         public static IntPtr GetRootWindowIf(POINT pt, Func<IntPtr, bool> predicate)
@@ -89,16 +79,6 @@ namespace Win32Api
         public static bool IsWindowEnabled(IntPtr hWnd)
         {
             return Imports.IsWindowEnabled(hWnd);
-        }
-
-        public static bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags)
-        {
-            return Imports.SetLayeredWindowAttributes(hwnd, crKey, bAlpha, dwFlags);
-        }
-
-        public static int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong)
-        {
-            return Imports.SetWindowLong(hWnd, nIndex, dwNewLong);
         }
 
         /// <summary>

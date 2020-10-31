@@ -89,10 +89,6 @@ namespace Win32Api
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         internal static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, WM_MOUSE wParam, [In] MSLLHOOKSTRUCT lParam);
 
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool EnableWindow(IntPtr hWnd, bool bEnable);
-
         [DllImport("user32.dll", ExactSpelling = true)]
         internal static extern IntPtr GetAncestor(IntPtr hwnd, GetAncestorFlags flags);
 
@@ -105,47 +101,15 @@ namespace Win32Api
         internal static extern bool GetTitleBarInfo(IntPtr hwnd, ref TITLEBARINFO pti);
 
         [DllImport("user32.dll", SetLastError = true)]
-        internal static extern bool GetLayeredWindowAttributes(IntPtr hwnd, uint crKey, out byte bAlpha, out uint dwFlags);
-
-        [DllImport("user32.dll", SetLastError = true)]
         internal static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
 
-        /// <summary>
-        /// Checks if given handle is a valid window
-        /// </summary>
-        /// <param name="hWnd">handle to the window being tested</param>
-        /// <returns>bool true if hadnle is a window, otherwise false</returns>
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool IsWindow(IntPtr hWnd);
-
-        /// <summary>
-        /// Checks if a given window handle is a window thats enabled
-        /// </summary>
-        /// <param name="hWnd">handle to the widnow to check</param>
-        /// <returns>bool true if window is enabled, false otherwise</returns>
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool IsWindowEnabled(IntPtr hWnd);
-
-        /// <summary>
-        /// Checks if a given window handle is a window thats visible
-        /// </summary>
-        /// <param name="hWnd">handle to the widnow to check</param>
-        /// <returns>bool true if window is visible, false otherwise</returns>
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool IsWindowVisible(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        internal static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
-
-        [DllImport("user32.dll")]
-        internal static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -157,11 +121,6 @@ namespace Win32Api
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
 
-        /// <summary>
-        /// Get the window handle of the window at POINT p
-        /// </summary>
-        /// <param name="p">POINT p of location to find window at</param>
-        /// <returns>IntPtr handle of window</returns>
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         internal static extern IntPtr WindowFromPoint(POINT p);
 

@@ -58,15 +58,6 @@ namespace SlideSharp
         }
 
         /// <summary>
-        /// Set the Enabled state of the window
-        /// </summary>
-        /// <param name="Enable">bool true to enable, otherwise false</param>
-        public void SetEnabled(bool Enable)
-        {
-            EnableWindow(Handle, Enable);
-        }
-
-        /// <summary>
         /// Set the windows absolute position
         /// </summary>
         /// <param name="pt">POINT to set the window to</param>
