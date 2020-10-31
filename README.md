@@ -6,6 +6,10 @@
 I'm building this project as a way to re-learn C# after a long hiatus from programming in general.
 In a nutshell it will allow you to slide windows offscreen with quick access to them via cursor hover (gifs to come).
 
+<p align="center">
+  <img src="https://github.com/KuroiLight/SlideSharp/blob/resources/VhqKyqQnBY.gif" width="400">
+</p>
+
 ### Aims to be:
 * #### Fast
 * #### Asynchronous
