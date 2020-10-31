@@ -68,7 +68,7 @@ namespace SlideSharp
 
         private void GenerateTargetPosition()
         {
-            const int WindowOffSet = 30;
+            int WindowOffSet = MainWindow.config.Window_Offscreen_Offset;
             int GetCenterY() => Screen.Center.Y - (Window.Rect.Height / 2);
             int GetCenterX() => Screen.Center.X - (Window.Rect.Width / 2);
 
@@ -93,7 +93,7 @@ namespace SlideSharp
         {
             if (Window?.Exists() == true) {
                 if(TargetPosition != Window.Rect.ToPoint) {
-                    Window.SetPosition(Window.Rect.ToPoint + Window.Rect.ToPoint.ClampedVectorTo(TargetPosition, 90));
+                    Window.SetPosition(Window.Rect.ToPoint + Window.Rect.ToPoint.ClampedVectorTo(TargetPosition, new POINT(MainWindow.config.Window_Movement_Rate, MainWindow.config.Window_Movement_Rate)));
                 } else {
                     if (Direction == Direction.Center) {
                         Window.SetTopMost(Window.TopMost);
@@ -107,10 +107,10 @@ namespace SlideSharp
         public bool WillIntersect(POINT start, POINT end)
         {
             Vector vec = new Vector(start.X - end.X, start.Y - end.Y);
-            if(vec.Length < 25) {
+            if(vec.Length < MainWindow.config.Middle_Button_DeadZone) {
                 return false;
             }
-
+            
             Direction possibleDirections = new Direction();
             if (vec.X != 0) {
                 possibleDirections |= (vec.X > 0 ? Direction.Left : Direction.Right);
