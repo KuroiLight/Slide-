@@ -1,5 +1,7 @@
 <p align="center">
   <img src="slidesharp logo.png" width="300">
+</p>
+<p align="center">
   <img src="https://github.com/KuroiLight/SlideSharp/blob/resources/VhqKyqQnBY.gif" width="300">
 </p>
 
