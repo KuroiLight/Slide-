@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SlideSharp"
         mc:Ignorable="d"
-        Title="Slide# Settings" SizeToContent="Height" Height="Auto" Width="200" StateChanged="Window_StateChanged" ShowInTaskbar="False" ResizeMode="NoResize" WindowStyle="None">
+        Title="Slide# Settings" SizeToContent="Height" Height="Auto" Width="200" ShowInTaskbar="False" ResizeMode="NoResize" WindowStyle="None" Unloaded="Window_Unloaded">
 
     <DockPanel Margin="10" Grid.Column="1">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical">

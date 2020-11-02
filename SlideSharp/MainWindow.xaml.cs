@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Hardcodet.Wpf.TaskbarNotification;
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using Hardcodet.Wpf.TaskbarNotification;
 
 namespace SlideSharp
 {
@@ -20,8 +20,10 @@ namespace SlideSharp
             this.Hide();
             config = Configuration.Load();
             UpdateInterFaceConfigs();
-            TBIcon = new TaskbarIcon();
-            TBIcon.Icon = SlideSharp.Properties.Resources.SSharp;
+            TBIcon = new TaskbarIcon
+            {
+                Icon = SlideSharp.Properties.Resources.SSharp
+            };
             TBIcon.TrayMouseDoubleClick += TBIcon_TrayMouseDoubleClick;
         }
 
@@ -32,7 +34,7 @@ namespace SlideSharp
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            int getValueOfTextBlock(Slider control) => (int)Math.Clamp(control.Value, control.Minimum, control.Maximum);
+            static int getValueOfTextBlock(Slider control) => (int)Math.Clamp(control.Value, control.Minimum, control.Maximum);
 
             config.Middle_Button_DeadZone = getValueOfTextBlock(dragDeadzoneSlider);
             config.Window_Movement_Rate = getValueOfTextBlock(stepSizeSlider);
@@ -61,9 +63,9 @@ namespace SlideSharp
             offScreenOffsetSlider.Value = config.Window_Offscreen_Offset;
         }
 
-        private void Window_StateChanged(object sender, System.EventArgs e)
+        private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
-            
+            TBIcon.Visibility = Visibility.Hidden;
         }
     }
 }
