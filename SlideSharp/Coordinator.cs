@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Windows;
 using System.Windows.Threading;
 using Win32Api;
 using static Win32Api.Imports;
@@ -32,34 +32,35 @@ namespace SlideSharp
             UnhookWindowsHookEx(HookHandle);
         }
 
-        private POINT? MStart, MEnd;
-        private readonly object MouseDataLock = new object();
+        private Ray? _ray;
 
-        private (POINT?, POINT?) MiddleMouseData
+        private Ray? Ray
         {
             get
             {
                 lock (MouseDataLock) {
-                    return (MStart, MEnd);
+                    return _ray;
                 }
             }
             set
             {
                 lock (MouseDataLock) {
-                    (MStart, MEnd) = value;
+                    _ray = value;
                 }
             }
         }
 
+        private POINT? MStart;
+        private readonly object MouseDataLock = new object();
+
         private IntPtr MouseHookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam)
         {
             if (wParam == WM_MOUSE.WM_MBUTTONDOWN) {
-                lock (MouseDataLock) {
-                    MStart = lParam.pt;
-                }
+                MStart = lParam.pt;
             } else if (wParam == WM_MOUSE.WM_MBUTTONUP) {
-                lock (MouseDataLock) {
-                    MEnd = lParam.pt;
+                if (MStart != null) {
+                    Ray = new Ray((POINT)MStart, lParam.pt);
+                    MStart = null;
                 }
             }
 
@@ -71,11 +72,12 @@ namespace SlideSharp
             // In the event that UpdateStates takes longer than our interval, we stop and give it some breathing room.
             Dispatcher.Stop();
 
-            IntPtr? WindowUnderlMEnd = null;
-            (POINT? lMStart, POINT? lMEnd) = MiddleMouseData;
-            if (lMEnd != null && lMStart != null) {
-                WindowUnderlMEnd = GetRootWindowIf((POINT)lMStart, (hwnd) => GetTitleBarInfo(hwnd).rcTitleBar.Contains((POINT)lMStart));
-                MiddleMouseData = (null, null);
+            IntPtr WindowUnderlMEnd = IntPtr.Zero;
+            Ray localRay = default;
+            if (Ray.HasValue) {
+                localRay = Ray.Value;
+                WindowUnderlMEnd = GetRootWindowIf(localRay.Position, (hwnd) => GetTitleBarInfo(hwnd).rcTitleBar.Contains(localRay.Position));
+                Ray = null;
             }
 
             POINT MousePos = GetCursorPos();
@@ -84,42 +86,40 @@ namespace SlideSharp
 
             Sliders.AsParallel().ForAll((Slider) => {
                 if (Slider.Window != null) {
-                    if (Slider.Window.GetHandle() == WindowUnderMouse) {
-                        Slider.Assign(Status.Showing);
+                    if (Slider.Window?.Handle == WindowUnderMouse) {
+                        Slider.AssignStatus(Status.Showing);
                     } else {
-                        Slider.Assign(Status.Hiding);
+                        Slider.AssignStatus(Status.Hiding);
                     }
                     Slider.UpdatePosition();
                 }
 
-                if (WindowUnderlMEnd != null) {
-                    if (Slider.WillIntersect((POINT)lMStart, (POINT)lMEnd)) {
+                if (WindowUnderlMEnd != IntPtr.Zero) {
+                    if (Slider.WillIntersect(localRay)) {
                         toSlider = Slider;
                     }
 
-                    if (Slider.Direction == Direction.Center && Slider.Screen.Contains((POINT)lMStart)) {
+                    if (Slider.Direction == Direction.Center && Slider.Screen.Contains(localRay.Position)) {
                         centerSlider = Slider;
                     }
 
-                    if (Slider.Window?.GetHandle() == WindowUnderlMEnd) {
-                        fromSlider = Slider;
-                        Slider.Assign(IntPtr.Zero);
+                    if (Slider.Window?.Handle == WindowUnderlMEnd) {
+                        Slider.UnAssignWindow();
                     }
                 }
             });
 
-            if (WindowUnderlMEnd != null) {
-                if (toSlider?.Window?.Exists() == true && centerSlider != null) {
-                    centerSlider?.Assign(toSlider.Window.GetHandle());
-                }
-                if (fromSlider != null && toSlider == null) {
-                    centerSlider?.Assign((IntPtr)WindowUnderlMEnd);
-                } else {
-                    if (toSlider?.Window?.Exists() == true && centerSlider != null) {
-                        centerSlider?.Assign(toSlider.Window.GetHandle());
+            if (WindowUnderlMEnd != IntPtr.Zero) {
+                if (toSlider != null) {
+                    if (toSlider.Window != null) {
+                        centerSlider?.AssignWindow(toSlider.Window);
                     }
-                    toSlider?.Assign((IntPtr)WindowUnderlMEnd);
+                    toSlider.AssignWindow(WindowUnderlMEnd);
                 }
+            }
+
+            if (toSlider != null || fromSlider != null || centerSlider != null) {
+                Debug.WriteLine($"{toSlider?.Direction}={toSlider?.Window?.Handle}, {fromSlider?.Direction}={fromSlider?.Window?.Handle}, {centerSlider?.Direction}={centerSlider?.Window?.Handle}");
             }
 
             Dispatcher.Start();
