@@ -16,7 +16,7 @@ namespace Win32Api
 
             bool returnValue = Imports.GetTitleBarInfo(hWnd, ref TBI);
 
-            if(!returnValue) {
+            if (!returnValue) {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 

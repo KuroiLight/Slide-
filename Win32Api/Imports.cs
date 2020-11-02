@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Win32Api
 {
@@ -132,6 +131,7 @@ namespace Win32Api
             public const int CCHILDREN_TITLEBAR = 5;
             public uint cbSize;
             public RECT rcTitleBar;
+
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHILDREN_TITLEBAR + 1)]
             public uint[] rgstate;
         }
