@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using Win32Api;
@@ -32,38 +31,38 @@ namespace SlideSharp
             Direction = direction;
         }
 
-        public WindowObj Window { get; protected set; }
         private POINT TargetPosition { get; set; }
-        public RECT Screen { get; }
-        public Status Status { get; protected set; }
         public Direction Direction { get; }
+        public RECT Screen { get; }
+        public Status Status { get; private set; }
+        public WindowObj Window { get; private set; }
 
-        public WindowSlider Assign(IntPtr windowHandle)
+        public WindowObj UnAssignWindow()
         {
-            return Assign(windowHandle, Status.Hiding);
+            Window?.SetTopMost(Window.TopMost);
+            var window = Window;
+            Window = null;
+            return window;
         }
 
-        public WindowSlider Assign(Status status)
+        public void AssignWindow(WindowObj window)
         {
-            return Assign(Window.GetHandle(), status);
+            Window = window;
+            Window?.SetTopMost(true);
+            AssignStatus(Status.Showing);
         }
 
-        public WindowSlider Assign(IntPtr windowHandle, Status status)
+        public void AssignWindow(IntPtr windowHandle)
         {
-            if(windowHandle == IntPtr.Zero && Window != null) {
-                Window.SetTopMost(Window.TopMost);
-            }
+            AssignWindow(windowHandle != IntPtr.Zero ? new WindowObj(windowHandle) : null);
+        }
 
-            if(Window?.GetHandle() != windowHandle) {
-                Window = windowHandle != IntPtr.Zero ? new WindowObj(windowHandle) : null;
-            }
-
-            if(status != Status && Window != null) {
+        public void AssignStatus(Status status)
+        {
+            if (status != Status && Window != null) {
                 Status = status;
                 GenerateTargetPosition();
             }
-
-            return this;
         }
 
         private void GenerateTargetPosition()
@@ -92,8 +91,10 @@ namespace SlideSharp
         public WindowSlider UpdatePosition()
         {
             if (Window?.Exists() == true) {
-                if(TargetPosition != Window.Rect.ToPoint) {
-                    Window.SetPosition(Window.Rect.ToPoint + Window.Rect.ToPoint.ClampedVectorTo(TargetPosition, new POINT(MainWindow.config.Window_Movement_Rate, MainWindow.config.Window_Movement_Rate)));
+                if (TargetPosition != Window.Rect.ToPoint) {
+                    Vector nextMove = new Vector(Window.Rect.ToPoint, TargetPosition);
+                    Window.SetPosition(nextMove.Clamp(MainWindow.config.Window_Movement_Rate).ToPoint() + Window.Rect.ToPoint);
+                    Window.UpdateRect();
                 } else {
                     if (Direction == Direction.Center) {
                         Window.SetTopMost(Window.TopMost);
@@ -104,39 +105,34 @@ namespace SlideSharp
             return this;
         }
 
-        public bool WillIntersect(POINT start, POINT end)
+        public bool WillIntersect(Ray ray)
         {
-            Vector vec = new Vector(start.X - end.X, start.Y - end.Y);
-            if(vec.Length < MainWindow.config.Middle_Button_DeadZone) {
+            if (ray.Direction.Length() <= MainWindow.config.Middle_Button_DeadZone) {
                 return false;
             }
-            
-            Direction possibleDirections = new Direction();
-            if (vec.X != 0) {
-                possibleDirections |= (vec.X > 0 ? Direction.Left : Direction.Right);
-            }
-            if (vec.Y != 0) {
-                possibleDirections |= (vec.Y > 0 ? Direction.Up : Direction.Down);
-            }
-            if ((possibleDirections & Direction) != Direction) {
+            if (Direction != (ray.Direction.X > 0 ? Direction.Left : Direction.Right) && Direction != (ray.Direction.Y > 0 ? Direction.Up : Direction.Down)) {
                 return false;
             }
 
-            Vector endVector = (Direction) switch
+            if (Direction == Direction.Center) {
+                return false;
+            }
+
+            Ray scaledRay = (Direction) switch
             {
-                Direction.Up => Vector.Multiply((Screen.Top - start.Y) / vec.Y, vec),
-                Direction.Down => Vector.Multiply((Screen.Bottom - start.Y) / vec.Y, vec),
-                Direction.Left => Vector.Multiply((Screen.Left - start.X) / vec.X, vec),
-                Direction.Right => Vector.Multiply((Screen.Right - start.X) / vec.X, vec),
-                _ => default,
+                Direction.Up => ray.Scale((Screen.Top - ray.Position.Y) / ray.Direction.Y),
+                Direction.Down => ray.Scale((Screen.Bottom - ray.Position.Y) / ray.Direction.Y),
+                Direction.Left => ray.Scale((Screen.Left - ray.Position.X) / ray.Direction.X),
+                Direction.Right => ray.Scale((Screen.Right - ray.Position.X) / ray.Direction.X),
+                _ => throw new ArgumentOutOfRangeException(nameof(Direction)),
             };
 
-            if (endVector == default) {
-                return false;
-            }
+            return Screen.Contains(scaledRay.EndPoint());
+        }
 
-            var endPoint = new POINT(start.X + endVector.X, start.Y + endVector.Y);
-            return Screen.Contains(endPoint);
+        public bool WillIntersect(POINT start, POINT end)
+        {
+            return WillIntersect(new Ray(start, end));
         }
 
         public static List<WindowSlider> GetAllValidInstances()
@@ -158,17 +154,19 @@ namespace SlideSharp
             bool ScreenAtPoint(Point pt) => WpfScreenHelper.Screen.AllScreens.All((S) => S.Bounds.Contains(pt));
             var NewInstance = new WindowSlider(screen, direction);
 
-            if (direction == Direction.Up && screen.WorkingArea.Top != screen.Bounds.Top) {
-                return ScreenAtPoint(new Point(0, screen.Bounds.Top - 1)) ? null : NewInstance;
-            } else if (direction == Direction.Down && screen.WorkingArea.Bottom != screen.Bounds.Bottom) {
-                return ScreenAtPoint(new Point(0, screen.Bounds.Bottom + 1)) ? null : NewInstance;
-            } else if (direction == Direction.Left && screen.WorkingArea.Left != screen.Bounds.Left) {
-                return ScreenAtPoint(new Point(screen.Bounds.Left - 1, 0)) ? null : NewInstance;
-            } else if (direction == Direction.Right && screen.WorkingArea.Right != screen.Bounds.Right) {
-                return ScreenAtPoint(new Point(screen.Bounds.Right + 1, 0)) ? null : NewInstance;
-            }
-
-            return WpfScreenHelper.Screen.AllScreens.Contains(screen) ? null : NewInstance;
+            return (direction) switch
+            {
+                Direction.Center => NewInstance,
+                Direction.Up when screen.WorkingArea.Top == screen.Bounds.Top =>
+                    ScreenAtPoint(new Point(0, screen.Bounds.Top - 1)) ? null : NewInstance,
+                Direction.Down when screen.WorkingArea.Bottom == screen.Bounds.Bottom =>
+                    ScreenAtPoint(new Point(0, screen.Bounds.Bottom + 1)) ? null : NewInstance,
+                Direction.Left when screen.WorkingArea.Left == screen.Bounds.Left =>
+                    ScreenAtPoint(new Point(screen.Bounds.Left - 1, 0)) ? null : NewInstance,
+                Direction.Right when screen.WorkingArea.Right == screen.Bounds.Right =>
+                    ScreenAtPoint(new Point(screen.Bounds.Right + 1, 0)) ? null : NewInstance,
+                _ => null,
+            };
         }
     }
 }

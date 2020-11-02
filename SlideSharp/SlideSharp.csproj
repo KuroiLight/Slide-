@@ -2,8 +2,10 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
+    <LangVersion>preview</LangVersion>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
+    <StartupObject>SlideSharp.App</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
