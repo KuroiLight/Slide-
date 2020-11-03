@@ -33,14 +33,14 @@ namespace SlideSharp
 
         public Vector(POINT p1, POINT p2)
         {
-            POINT diff = p2 - p1;
+            var diff = p2 - p1;
             X = diff.X;
             Y = diff.Y;
         }
 
         public Vector Clamp(int absoluteMinMax)
         {
-            int absoluteMinMin = absoluteMinMax * -1;
+            var absoluteMinMin = absoluteMinMax * -1;
             return new Vector(this)
             {
                 X = Math.Clamp(X, absoluteMinMin, absoluteMinMax),
@@ -55,7 +55,7 @@ namespace SlideSharp
 
         public double Length()
         {
-            return Math.Abs(Math.Sqrt((X * X) + (Y * Y)));
+            return Math.Abs(Math.Sqrt(X * X + Y * Y));
         }
 
         public POINT ToPoint()

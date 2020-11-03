@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using Win32Api;
@@ -10,163 +11,197 @@ namespace SlideSharp
     [Flags]
     public enum Direction
     {
-        Center = 0,
+        Center = 16,
         Up = 1,
         Down = 2,
         Left = 4,
         Right = 8
     }
 
-    public enum Status : int
+
+    public enum Status
     {
         Hiding = 1,
         Showing = -1
     }
 
-    public class WindowSlider
+    public class SlidingWindow
     {
-        public WindowSlider(Screen screen, Direction direction)
+        private readonly Direction _hideDirection;
+        private readonly RECT _screen;
+        private Status _status;
+
+        private IntPtr _windowHandle;
+        private RECT _windowRect;
+        private POINT _windowShown, _windowHidden;
+
+        private SlidingWindow(Screen screen, Direction hideDirection)
         {
-            Screen = new RECT(screen.WorkingArea.Left, screen.WorkingArea.Top, screen.WorkingArea.Right, screen.WorkingArea.Bottom);
-            Direction = direction;
+            MarkedForDeletion = false;
+            _hideDirection = hideDirection;
+            _status = Status.Hiding;
+            _screen = new RECT(screen.WorkingArea.Left, screen.WorkingArea.Top, screen.WorkingArea.Right,
+                screen.WorkingArea.Bottom);
+            _windowHandle = IntPtr.Zero;
+            _windowRect = new RECT();
+            _windowHidden = new POINT();
+            _windowShown = new POINT();
         }
 
-        private POINT TargetPosition { get; set; }
-        public Direction Direction { get; }
-        public RECT Screen { get; }
-        public Status Status { get; private set; }
-        public WindowObj Window { get; private set; }
+        public bool MarkedForDeletion { get; private set; }
 
-        public WindowObj UnAssignWindow()
+        public static SlidingWindow CreateInstance(Screen screen, Direction hideDirection)
         {
-            Window?.SetTopMost(Window.TopMost);
-            var window = Window;
-            Window = null;
-            return window;
+            return new SlidingWindow(screen, hideDirection);
         }
 
-        public void AssignWindow(WindowObj window)
+        public static SlidingWindow CreateFromRay(Ray ray)
         {
-            Window = window;
-            Window?.SetTopMost(true);
-            AssignStatus(Status.Showing);
-        }
-
-        public void AssignWindow(IntPtr windowHandle)
-        {
-            AssignWindow(windowHandle != IntPtr.Zero ? new WindowObj(windowHandle) : null);
-        }
-
-        public void AssignStatus(Status status)
-        {
-            if (status != Status && Window != null) {
-                Status = status;
-                GenerateTargetPosition();
+            static IEnumerable<Enum> GetFlags(Enum e)
+            {
+                return Enum.GetValues(e.GetType()).Cast<Enum>().Where(e.HasFlag);
             }
-        }
 
-        private void GenerateTargetPosition()
-        {
-            int WindowOffSet = MainWindow.config.Window_Offscreen_Offset;
-            int GetCenterY() => Screen.Center.Y - (Window.Rect.Height / 2);
-            int GetCenterX() => Screen.Center.X - (Window.Rect.Width / 2);
+            var screen = Screen.FromPoint(new Point(ray.EndPoint().X, ray.EndPoint().Y));
+            if (ray.Movement.Length() <= MainWindow.config.Middle_Button_DeadZone)
+                return CreateInstance(screen, Direction.Center);
 
-            if (Window?.Exists() == true) {
-                TargetPosition = (Direction, Status) switch
+            foreach (var flag in GetFlags(ray.Direction))
+            {
+                var scaledRay = flag switch
                 {
-                    (Direction.Center, _) => new POINT(GetCenterX(), GetCenterY()),
-                    (Direction.Left, Status.Showing) => new POINT(Screen.Left, GetCenterY()),
-                    (Direction.Left, Status.Hiding) => new POINT(Screen.Left - Window.Rect.Width + WindowOffSet, GetCenterY()),
-                    (Direction.Right, Status.Showing) => new POINT(Screen.Right - Window.Rect.Width, GetCenterY()),
-                    (Direction.Right, Status.Hiding) => new POINT(Screen.Right - WindowOffSet, GetCenterY()),
-                    (Direction.Up, Status.Showing) => new POINT(GetCenterX(), Screen.Top),
-                    (Direction.Up, Status.Hiding) => new POINT(GetCenterX(), Screen.Top - Window.Rect.Height + WindowOffSet),
-                    (Direction.Down, Status.Showing) => new POINT(GetCenterX(), Screen.Bottom - Window.Rect.Height),
-                    (Direction.Down, Status.Hiding) => new POINT(GetCenterX(), Screen.Bottom - WindowOffSet),
-                    _ => throw new ArgumentOutOfRangeException("Direction, Status"),
+                    Direction.Up => ray.Scale((screen.Bounds.Top - ray.Position.Y) / ray.Movement.Y),
+                    Direction.Down => ray.Scale((screen.Bounds.Bottom - ray.Position.Y) / ray.Movement.Y),
+                    Direction.Left => ray.Scale((screen.Bounds.Left - ray.Position.X) / ray.Movement.X),
+                    Direction.Right => ray.Scale((screen.Bounds.Right - ray.Position.X) / ray.Movement.X),
+                    _ => throw new ArgumentOutOfRangeException(nameof(flag))
                 };
+
+                if (screen.Bounds.Contains(new Point(scaledRay.EndPoint().X, scaledRay.EndPoint().Y)))
+                    return CreateInstance(screen, (Direction) flag);
+            }
+
+            return CreateInstance(screen, Direction.Center);
+        }
+
+        public void ManageWindow(IntPtr handle)
+        {
+            _windowHandle = handle;
+            if (handle != IntPtr.Zero)
+            {
+                User32.SetWindowPos(_windowHandle, Imports.HWND_INSERTAFTER.HWND_TOPMOST);
+                PrecalculateWindowPlacements();
             }
         }
 
-        public WindowSlider UpdatePosition()
+        private void PrecalculateWindowPlacements()
         {
-            if (Window?.Exists() == true) {
-                if (TargetPosition != Window.Rect.ToPoint) {
-                    Vector nextMove = new Vector(Window.Rect.ToPoint, TargetPosition);
-                    Window.SetPosition(nextMove.Clamp(MainWindow.config.Window_Movement_Rate).ToPoint() + Window.Rect.ToPoint);
-                    Window.UpdateRect();
-                } else {
-                    if (Direction == Direction.Center) {
-                        Window.SetTopMost(Window.TopMost);
-                        Window = null;
-                    }
+            var WindowOffSet = MainWindow.config.Window_Offscreen_Offset;
+            _windowRect = User32.GetWindowRect(_windowHandle);
+            var tmpThis = this;
+
+            int GetCenterY()
+            {
+                return tmpThis._screen.Center.Y - tmpThis._windowRect.Height / 2;
+            }
+
+            int GetCenterX()
+            {
+                return tmpThis._screen.Center.X - tmpThis._windowRect.Width / 2;
+            }
+
+            switch (_hideDirection)
+            {
+                case Direction.Center:
+                    _windowHidden = _windowShown = new POINT(GetCenterX(), GetCenterY());
+                    break;
+                case Direction.Up:
+                    _windowHidden = new POINT(GetCenterX(), _screen.Top - _windowRect.Height + WindowOffSet);
+                    _windowShown = new POINT(GetCenterX(), _screen.Top);
+                    break;
+                case Direction.Down:
+                    _windowHidden = new POINT(GetCenterX(), _screen.Bottom - WindowOffSet);
+                    _windowShown = new POINT(GetCenterX(), _screen.Bottom - _windowRect.Height);
+                    break;
+                case Direction.Left:
+                    _windowHidden = new POINT(_screen.Left - _windowRect.Width + WindowOffSet, GetCenterY());
+                    _windowShown = new POINT(_screen.Left, GetCenterY());
+                    break;
+                case Direction.Right:
+                    _windowHidden = new POINT(_screen.Right - WindowOffSet, GetCenterY());
+                    _windowShown = new POINT(_screen.Right - _windowRect.Width, GetCenterY());
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public void MoveNextStep()
+        {
+            if (_windowHandle != IntPtr.Zero && User32.IsWindow(_windowHandle))
+            {
+                if (WindowSizeChanged()) PrecalculateWindowPlacements();
+
+                _windowRect = User32.GetWindowRect(_windowHandle);
+                var nextPosition = _status == Status.Hiding ? _windowHidden : _windowShown;
+                if (_windowRect.ToPoint != nextPosition)
+                {
+                    var v = new Vector(_windowRect.ToPoint, nextPosition);
+                    User32.SetWindowPos(_windowHandle,
+                        _windowRect.ToPoint + v.Clamp(MainWindow.config.Window_Movement_Rate).ToPoint());
+                }
+                else if (_hideDirection == Direction.Center)
+                {
+                    MarkedForDeletion = true;
                 }
             }
-            return this;
+            else
+            {
+                MarkedForDeletion = true;
+            }
         }
 
-        public bool WillIntersect(Ray ray)
+        public bool RayIntersect(Ray ray)
         {
-            if (ray.Direction.Length() <= MainWindow.config.Middle_Button_DeadZone) {
-                return false;
-            }
-            if (Direction != (ray.Direction.X > 0 ? Direction.Left : Direction.Right) && Direction != (ray.Direction.Y > 0 ? Direction.Up : Direction.Down)) {
-                return false;
-            }
+            if (ray.Movement.Length() <= MainWindow.config.Middle_Button_DeadZone) return false;
+            if (ray.Direction != _hideDirection || _hideDirection == Direction.Center) return false;
 
-            if (Direction == Direction.Center) {
-                return false;
-            }
-
-            Ray scaledRay = (Direction) switch
+            var scaledRay = _hideDirection switch
             {
-                Direction.Up => ray.Scale((Screen.Top - ray.Position.Y) / ray.Direction.Y),
-                Direction.Down => ray.Scale((Screen.Bottom - ray.Position.Y) / ray.Direction.Y),
-                Direction.Left => ray.Scale((Screen.Left - ray.Position.X) / ray.Direction.X),
-                Direction.Right => ray.Scale((Screen.Right - ray.Position.X) / ray.Direction.X),
-                _ => throw new ArgumentOutOfRangeException(nameof(Direction)),
+                Direction.Up => ray.Scale((_screen.Top - ray.Position.Y) / ray.Movement.Y),
+                Direction.Down => ray.Scale((_screen.Bottom - ray.Position.Y) / ray.Movement.Y),
+                Direction.Left => ray.Scale((_screen.Left - ray.Position.X) / ray.Movement.X),
+                Direction.Right => ray.Scale((_screen.Right - ray.Position.X) / ray.Movement.X),
+                _ => throw new ArgumentOutOfRangeException(nameof(Direction))
             };
 
-            return Screen.Contains(scaledRay.EndPoint());
+            return _screen.Contains(scaledRay.EndPoint());
         }
 
-        public bool WillIntersect(POINT start, POINT end)
+        private bool WindowSizeChanged()
         {
-            return WillIntersect(new Ray(start, end));
+            var rect = User32.GetWindowRect(_windowHandle);
+            return rect.Width != _windowRect.Width || rect.Height != _windowRect.Height;
         }
 
-        public static List<WindowSlider> GetAllValidInstances()
+        public void SetWindowState(Status status)
         {
-            List<WindowSlider> NewList = new List<WindowSlider>();
-            WpfScreenHelper.Screen.AllScreens.ToList().ForEach((S) => {
-                foreach (Direction d in Enum.GetValues(typeof(Direction))) {
-                    WindowSlider slider = GetValidInstance(d, S);
-                    if (slider != null) {
-                        NewList.Add(slider);
-                    }
-                }
-            });
-            return NewList;
+            _status = status;
         }
 
-        public static WindowSlider GetValidInstance(Direction direction, Screen screen)
+        public bool HasWindow()
         {
-            bool ScreenAtPoint(Point pt) => WpfScreenHelper.Screen.AllScreens.All((S) => S.Bounds.Contains(pt));
-            var NewInstance = new WindowSlider(screen, direction);
+            return _windowHandle != IntPtr.Zero;
+        }
 
-            return (direction) switch
-            {
-                Direction.Center => NewInstance,
-                Direction.Up when screen.WorkingArea.Top == screen.Bounds.Top =>
-                    ScreenAtPoint(new Point(0, screen.Bounds.Top - 1)) ? null : NewInstance,
-                Direction.Down when screen.WorkingArea.Bottom == screen.Bounds.Bottom =>
-                    ScreenAtPoint(new Point(0, screen.Bounds.Bottom + 1)) ? null : NewInstance,
-                Direction.Left when screen.WorkingArea.Left == screen.Bounds.Left =>
-                    ScreenAtPoint(new Point(screen.Bounds.Left - 1, 0)) ? null : NewInstance,
-                Direction.Right when screen.WorkingArea.Right == screen.Bounds.Right =>
-                    ScreenAtPoint(new Point(screen.Bounds.Right + 1, 0)) ? null : NewInstance,
-                _ => null,
-            };
+        public bool HasWindow(IntPtr handle)
+        {
+            return _windowHandle == handle;
+        }
+
+        public void MarkForDeletion()
+        {
+            MarkedForDeletion = true;
         }
     }
 }

@@ -3,38 +3,38 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SlideSharp"
         mc:Ignorable="d"
-        Title="Slide# Settings" SizeToContent="Height" Height="Auto" Width="200" ShowInTaskbar="False" ResizeMode="NoResize" WindowStyle="None" Unloaded="Window_Unloaded">
+        Title="Slide# Settings" SizeToContent="Height" Height="Auto" Width="200" ShowInTaskbar="False"
+        ResizeMode="NoResize" WindowStyle="None" Unloaded="Window_Unloaded" WindowStartupLocation="CenterOwner">
 
-    <DockPanel Margin="10" Grid.Column="1">
+    <DockPanel Margin="10">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
             <Grid>
-                <TextBlock Text="Update Rate" HorizontalAlignment="Left"></TextBlock>
-                <TextBlock Name="response" Text="16" HorizontalAlignment="Right"></TextBlock>
+                <TextBlock Text="Update Rate" HorizontalAlignment="Left" />
+                <TextBlock Name="response" Text="16" HorizontalAlignment="Right" />
             </Grid>
-            <Slider Name="responseSlider" Minimum="8" Maximum="50"></Slider>
+            <Slider Name="responseSlider" Minimum="8" Maximum="50" />
             <Grid>
-                <TextBlock Text="Max Step Speed" HorizontalAlignment="Left"></TextBlock>
-                <TextBlock Name="stepSize" Text="4" HorizontalAlignment="Right"></TextBlock>
+                <TextBlock Text="Max Step Speed" HorizontalAlignment="Left" />
+                <TextBlock Name="stepSize" Text="4" HorizontalAlignment="Right" />
             </Grid>
-            <Slider Name="stepSizeSlider" Minimum="1" Maximum="10"></Slider>
+            <Slider Name="stepSizeSlider" Minimum="1" Maximum="10" />
             <Grid>
-                <TextBlock Text="Middle Drag Deadzone" HorizontalAlignment="Left"></TextBlock>
-                <TextBlock Name="dragDeadzone" Text="25" HorizontalAlignment="Right"></TextBlock>
+                <TextBlock Text="Middle Drag Deadzone" HorizontalAlignment="Left" />
+                <TextBlock Name="dragDeadzone" Text="25" HorizontalAlignment="Right" />
             </Grid>
-            <Slider Name="dragDeadzoneSlider" Minimum="1" Maximum="25"></Slider>
+            <Slider Name="dragDeadzoneSlider" Minimum="1" Maximum="25" />
             <Grid>
-                <TextBlock Text="Offscreen Hiding Offset" HorizontalAlignment="Left"></TextBlock>
-                <TextBlock Name="offScreenOffset" Text="30" HorizontalAlignment="Right"></TextBlock>
+                <TextBlock Text="Offscreen Hiding Offset" HorizontalAlignment="Left" />
+                <TextBlock Name="offScreenOffset" Text="30" HorizontalAlignment="Right" />
             </Grid>
-            <Slider Name="offScreenOffsetSlider" Minimum="1" Maximum="25"></Slider>
-            <Grid Margin="10" VerticalAlignment="Center"></Grid>
+            <Slider Name="offScreenOffsetSlider" Minimum="1" Maximum="25" />
+            <Grid Margin="10" VerticalAlignment="Center" />
         </StackPanel>
         <UniformGrid VerticalAlignment="Bottom" DockPanel.Dock="Bottom" Columns="3">
-            <Button Margin="2" Content="Cancel" x:Name="Cancel" Click="Cancel_Click" ></Button>
-            <Button Margin="2" Content="Defaults" x:Name="Reset" Click="Reset_Click" ></Button>
-            <Button Margin="2" Content="Save" x:Name="Save" Click="Save_Click" ></Button>
+            <Button Margin="2" Content="Cancel" x:Name="Cancel" Click="Cancel_Click" />
+            <Button Margin="2" Content="Defaults" x:Name="Reset" Click="Reset_Click" />
+            <Button Margin="2" Content="Save" x:Name="Save" Click="Save_Click" />
         </UniformGrid>
     </DockPanel>
 </Window>

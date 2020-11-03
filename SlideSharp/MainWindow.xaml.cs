@@ -1,40 +1,46 @@
-﻿using Hardcodet.Wpf.TaskbarNotification;
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using Hardcodet.Wpf.TaskbarNotification;
+using WpfScreenHelper;
 
 namespace SlideSharp
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    ///     Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly Coordinator Coordinator = new Coordinator();
         internal static Configuration config;
+        private readonly Coordinator Coordinator = new Coordinator();
         internal TaskbarIcon TBIcon;
 
         public MainWindow()
         {
             InitializeComponent();
-            this.Hide();
+            Hide();
             config = Configuration.Load();
             UpdateInterFaceConfigs();
             TBIcon = new TaskbarIcon
             {
-                Icon = SlideSharp.Properties.Resources.SSharp
+                Icon = Properties.Resources.SSharp
             };
             TBIcon.TrayMouseDoubleClick += TBIcon_TrayMouseDoubleClick;
         }
 
         private void TBIcon_TrayMouseDoubleClick(object sender, RoutedEventArgs e)
         {
-            this.Show();
+            Show();
+            Left = MouseHelper.MousePosition.X - Width / 2;
+            Top = Screen.FromPoint(new Point(Left, Top)).WorkingArea.Bottom - Height;
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            static int getValueOfTextBlock(Slider control) => (int)Math.Clamp(control.Value, control.Minimum, control.Maximum);
+            static int getValueOfTextBlock(Slider control)
+            {
+                return (int) Math.Clamp(control.Value, control.Minimum, control.Maximum);
+            }
 
             config.Middle_Button_DeadZone = getValueOfTextBlock(dragDeadzoneSlider);
             config.Window_Movement_Rate = getValueOfTextBlock(stepSizeSlider);
@@ -52,7 +58,7 @@ namespace SlideSharp
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            this.Hide();
+            Hide();
         }
 
         private void UpdateInterFaceConfigs()
