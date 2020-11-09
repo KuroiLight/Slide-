@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using Win32Api;
@@ -63,22 +62,20 @@ namespace SlideSharp
             }
 
             var screen = Screen.FromPoint(new Point(ray.EndPoint().X, ray.EndPoint().Y));
-            if (ray.Movement.Length() <= MainWindow.config.Middle_Button_DeadZone)
+            if (ray.Movement.LengthAsVector() <= Configuration.SettingsInstance.Middle_Button_DeadZone)
                 return CreateInstance(screen, Direction.Center);
 
-            foreach (var flag in GetFlags(ray.Direction))
-            {
-                var scaledRay = flag switch
+            foreach (var flag in GetFlags(ray.Direction)) {
+                POINT endPoint = flag switch
                 {
-                    Direction.Up => ray.Scale((screen.Bounds.Top - ray.Position.Y) / ray.Movement.Y),
-                    Direction.Down => ray.Scale((screen.Bounds.Bottom - ray.Position.Y) / ray.Movement.Y),
-                    Direction.Left => ray.Scale((screen.Bounds.Left - ray.Position.X) / ray.Movement.X),
-                    Direction.Right => ray.Scale((screen.Bounds.Right - ray.Position.X) / ray.Movement.X),
-                    _ => throw new ArgumentOutOfRangeException(nameof(flag))
+                    Direction.Up => ray.ScaledEndPoint((screen.Bounds.Top - ray.Position.Y) / ray.Movement.Y),
+                    Direction.Down => ray.ScaledEndPoint((screen.Bounds.Bottom - ray.Position.Y) / ray.Movement.Y),
+                    Direction.Left => ray.ScaledEndPoint((screen.Bounds.Left - ray.Position.X) / ray.Movement.X),
+                    Direction.Right => ray.ScaledEndPoint((screen.Bounds.Right - ray.Position.X) / ray.Movement.X),
                 };
 
-                if (screen.Bounds.Contains(new Point(scaledRay.EndPoint().X, scaledRay.EndPoint().Y)))
-                    return CreateInstance(screen, (Direction) flag);
+                if (screen.Bounds.Contains(endPoint.ToWindowsPoint()))
+                    return CreateInstance(screen, (Direction)flag);
             }
 
             return CreateInstance(screen, Direction.Center);
@@ -87,8 +84,7 @@ namespace SlideSharp
         public void ManageWindow(IntPtr handle)
         {
             _windowHandle = handle;
-            if (handle != IntPtr.Zero)
-            {
+            if (handle != IntPtr.Zero) {
                 User32.SetWindowPos(_windowHandle, Imports.HWND_INSERTAFTER.HWND_TOPMOST);
                 PrecalculateWindowPlacements();
             }
@@ -96,7 +92,7 @@ namespace SlideSharp
 
         private void PrecalculateWindowPlacements()
         {
-            var WindowOffSet = MainWindow.config.Window_Offscreen_Offset;
+            var WindowOffSet = Configuration.SettingsInstance.Window_Offscreen_Offset;
             _windowRect = User32.GetWindowRect(_windowHandle);
             var tmpThis = this;
 
@@ -110,8 +106,7 @@ namespace SlideSharp
                 return tmpThis._screen.Center.X - tmpThis._windowRect.Width / 2;
             }
 
-            switch (_hideDirection)
-            {
+            switch (_hideDirection) {
                 case Direction.Center:
                     _windowHidden = _windowShown = new POINT(GetCenterX(), GetCenterY());
                     break;
@@ -138,44 +133,20 @@ namespace SlideSharp
 
         public void MoveNextStep()
         {
-            if (_windowHandle != IntPtr.Zero && User32.IsWindow(_windowHandle))
-            {
+            if (_windowHandle != IntPtr.Zero && User32.IsWindow(_windowHandle)) {
                 if (WindowSizeChanged()) PrecalculateWindowPlacements();
 
                 _windowRect = User32.GetWindowRect(_windowHandle);
                 var nextPosition = _status == Status.Hiding ? _windowHidden : _windowShown;
-                if (_windowRect.ToPoint != nextPosition)
-                {
-                    var v = new Vector(_windowRect.ToPoint, nextPosition);
-                    User32.SetWindowPos(_windowHandle,
-                        _windowRect.ToPoint + v.Clamp(MainWindow.config.Window_Movement_Rate).ToPoint());
-                }
-                else if (_hideDirection == Direction.Center)
-                {
+                if (_windowRect.ToPoint != nextPosition) {
+                    var newClampedLocation = _windowRect.ToPoint + (nextPosition - _windowRect.ToPoint).Clamp(Configuration.SettingsInstance.Window_Movement_Rate * ((_screen.Width + _screen.Height) / 2));
+                    User32.SetWindowPos(_windowHandle, newClampedLocation);
+                } else if (_hideDirection == Direction.Center) {
                     MarkedForDeletion = true;
                 }
-            }
-            else
-            {
+            } else {
                 MarkedForDeletion = true;
             }
-        }
-
-        public bool RayIntersect(Ray ray)
-        {
-            if (ray.Movement.Length() <= MainWindow.config.Middle_Button_DeadZone) return false;
-            if (ray.Direction != _hideDirection || _hideDirection == Direction.Center) return false;
-
-            var scaledRay = _hideDirection switch
-            {
-                Direction.Up => ray.Scale((_screen.Top - ray.Position.Y) / ray.Movement.Y),
-                Direction.Down => ray.Scale((_screen.Bottom - ray.Position.Y) / ray.Movement.Y),
-                Direction.Left => ray.Scale((_screen.Left - ray.Position.X) / ray.Movement.X),
-                Direction.Right => ray.Scale((_screen.Right - ray.Position.X) / ray.Movement.X),
-                _ => throw new ArgumentOutOfRangeException(nameof(Direction))
-            };
-
-            return _screen.Contains(scaledRay.EndPoint());
         }
 
         private bool WindowSizeChanged()
@@ -188,12 +159,12 @@ namespace SlideSharp
         {
             _status = status;
         }
-
-        public bool HasWindow()
-        {
-            return _windowHandle != IntPtr.Zero;
-        }
-
+        /*
+                public bool HasWindow()
+                {
+                    return _windowHandle != IntPtr.Zero;
+                }
+        */
         public bool HasWindow(IntPtr handle)
         {
             return _windowHandle == handle;
