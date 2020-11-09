@@ -21,9 +21,9 @@ namespace Win32Api
             Y = (int)y;
         }
 
-        public POINT VectorTo(POINT targetPoint)
+        public POINT Clamp(int clampAmount)
         {
-            return this - targetPoint;
+            return new POINT(Math.Clamp(X, clampAmount * -1, clampAmount), Math.Clamp(Y, clampAmount * -1, clampAmount));
         }
 
         public double DistanceTo(POINT targetPoint)
@@ -31,19 +31,9 @@ namespace Win32Api
             return Math.Sqrt((X - targetPoint.X) ^ 2 + (Y - targetPoint.Y) ^ 2);
         }
 
-        public double ClampedDistanceTo(POINT targetPoint, double maxDistance)
+        public double LengthAsVector()
         {
-            return Math.Clamp(DistanceTo(targetPoint), -1 * maxDistance, maxDistance);
-        }
-
-        public POINT ClampedVectorTo(POINT targetPoint, POINT maxVector)
-        {
-            return new POINT(Math.Clamp(targetPoint.X - X, -1 * maxVector.X, maxVector.X), Math.Clamp(targetPoint.Y - Y, -1 * maxVector.Y, maxVector.Y));
-        }
-
-        public POINT ClampedVectorTo(POINT targetPoint, uint maxMove)
-        {
-            return new POINT(Math.Clamp(targetPoint.X - X, -1 * maxMove, maxMove), Math.Clamp(targetPoint.Y - Y, -1 * maxMove, maxMove));
+            return Math.Abs(Math.Sqrt(X * X + Y * Y));
         }
 
         public static POINT operator +(POINT p1, POINT p2)
@@ -61,9 +51,14 @@ namespace Win32Api
             return p1.Equals(p2);
         }
 
-        public static POINT operator /(POINT p1, int divisor)
+        public static POINT operator /(POINT p1, double divisor)
         {
             return new POINT(p1.X / divisor, p1.Y / divisor);
+        }
+
+        public static POINT operator *(POINT p1, double factor)
+        {
+            return new POINT(p1.X * factor, p1.Y * factor);
         }
 
         public static bool operator !=(POINT p1, POINT p2)
@@ -81,6 +76,10 @@ namespace Win32Api
             return X + (19 * Y);
         }
 
+        public System.Windows.Point ToWindowsPoint()
+        {
+            return new System.Windows.Point(X, Y);
+        }
         public override string ToString()
         {
             return $"*{X}:{Y}";
