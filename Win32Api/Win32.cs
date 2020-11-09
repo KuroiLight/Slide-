@@ -34,10 +34,14 @@ namespace Win32Api
             return pOINT;
         }
 
-        public static IntPtr GetRootWindowIf(POINT pt, Func<IntPtr, bool> predicate)
+        public static IntPtr GetRootWindowFromTitlebar(POINT pt)
         {
             IntPtr rootWindow = GetRootWindow(pt);
-            return predicate(rootWindow) ? rootWindow : IntPtr.Zero;
+            if (rootWindow != IntPtr.Zero && GetTitleBarInfo(rootWindow).rcTitleBar.Contains(pt)) {
+                Debug.WriteLine($"{GetTitleBarInfo(rootWindow).rcTitleBar.Contains(pt)}");
+                return rootWindow;
+            }
+            return IntPtr.Zero;
         }
 
         public static IntPtr GetRootWindow(POINT pt)
