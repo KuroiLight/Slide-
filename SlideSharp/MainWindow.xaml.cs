@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Hardcodet.Wpf.TaskbarNotification;
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using Hardcodet.Wpf.TaskbarNotification;
 using WpfScreenHelper;
 
 namespace SlideSharp
@@ -11,22 +11,24 @@ namespace SlideSharp
     /// </summary>
     public partial class MainWindow : Window
     {
-        internal static Configuration config;
-        private readonly Coordinator Coordinator = new Coordinator();
+        private readonly Coordinator Coordinator;
         internal TaskbarIcon TBIcon;
 
         public MainWindow()
         {
             InitializeComponent();
             Hide();
-            config = Configuration.Load();
-            UpdateInterFaceConfigs();
+            Configuration.SettingsInstance = Configuration.Load();
+            UpdateInterfaceConfigs();
             TBIcon = new TaskbarIcon
             {
                 Icon = Properties.Resources.SSharp
             };
             TBIcon.TrayMouseDoubleClick += TBIcon_TrayMouseDoubleClick;
+
+            Coordinator = new Coordinator();
         }
+
 
         private void TBIcon_TrayMouseDoubleClick(object sender, RoutedEventArgs e)
         {
@@ -39,21 +41,21 @@ namespace SlideSharp
         {
             static int getValueOfTextBlock(Slider control)
             {
-                return (int) Math.Clamp(control.Value, control.Minimum, control.Maximum);
+                return (int)Math.Clamp(control.Value, control.Minimum, control.Maximum);
             }
 
-            config.Middle_Button_DeadZone = getValueOfTextBlock(dragDeadzoneSlider);
-            config.Window_Movement_Rate = getValueOfTextBlock(stepSizeSlider);
-            config.Update_Interval = getValueOfTextBlock(responseSlider);
-            config.Window_Offscreen_Offset = getValueOfTextBlock(offScreenOffsetSlider);
+            Configuration.SettingsInstance.Middle_Button_DeadZone = getValueOfTextBlock(dragDeadzoneSlider);
+            Configuration.SettingsInstance.Window_Movement_Rate = getValueOfTextBlock(stepSizeSlider);
+            Configuration.SettingsInstance.Update_Interval = getValueOfTextBlock(responseSlider);
+            Configuration.SettingsInstance.Window_Offscreen_Offset = getValueOfTextBlock(offScreenOffsetSlider);
 
             Configuration.Save();
         }
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            config = Configuration.Defaults();
-            UpdateInterFaceConfigs();
+            Configuration.SettingsInstance = Configuration.Defaults();
+            UpdateInterfaceConfigs();
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -61,17 +63,18 @@ namespace SlideSharp
             Hide();
         }
 
-        private void UpdateInterFaceConfigs()
+        private void UpdateInterfaceConfigs()
         {
-            dragDeadzoneSlider.Value = config.Middle_Button_DeadZone;
-            stepSizeSlider.Value = config.Window_Movement_Rate;
-            responseSlider.Value = config.Update_Interval;
-            offScreenOffsetSlider.Value = config.Window_Offscreen_Offset;
+            dragDeadzoneSlider.Value = Configuration.SettingsInstance.Middle_Button_DeadZone;
+            stepSizeSlider.Value = Configuration.SettingsInstance.Window_Movement_Rate;
+            responseSlider.Value = Configuration.SettingsInstance.Update_Interval;
+            offScreenOffsetSlider.Value = Configuration.SettingsInstance.Window_Offscreen_Offset;
         }
 
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
             TBIcon.Visibility = Visibility.Hidden;
+            TBIcon.Dispose();
         }
     }
 }
