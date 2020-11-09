@@ -1,6 +1,6 @@
-﻿using System.IO;
+﻿using Newtonsoft.Json;
+using System.IO;
 using System.Runtime.Serialization;
-using Newtonsoft.Json;
 
 namespace SlideSharp
 {
@@ -14,14 +14,16 @@ namespace SlideSharp
 
         [DataMember] public int Window_Movement_Rate { get; set; }
 
-        public static Configuration SettingsInstance = Load();
+        public static Configuration SettingsInstance;
         public static readonly string SettingsPath = "./Settings.json";
 
         public static Configuration Defaults()
         {
             return new Configuration
             {
-                Middle_Button_DeadZone = 25, Update_Interval = 16, Window_Movement_Rate = 4,
+                Middle_Button_DeadZone = 25,
+                Update_Interval = 16,
+                Window_Movement_Rate = 4,
                 Window_Offscreen_Offset = 30
             };
         }
@@ -30,12 +32,9 @@ namespace SlideSharp
         {
             var jsonSettings = JsonConvert.SerializeObject(SettingsInstance, Formatting.Indented);
             if (jsonSettings.Length > 0)
-                try
-                {
+                try {
                     File.WriteAllText(SettingsPath, jsonSettings);
-                }
-                catch
-                {
+                } catch {
                     throw new FileNotFoundException();
                 }
             else
@@ -45,7 +44,7 @@ namespace SlideSharp
         public static Configuration Load()
         {
             if (File.Exists(SettingsPath))
-                return (Configuration) JsonConvert.DeserializeObject(File.ReadAllText(SettingsPath));
+                return (Configuration)JsonConvert.DeserializeObject(File.ReadAllText(SettingsPath));
             return Defaults();
         }
 
