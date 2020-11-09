@@ -38,7 +38,6 @@ namespace Win32Api
         {
             IntPtr rootWindow = GetRootWindow(pt);
             if (rootWindow != IntPtr.Zero && GetTitleBarInfo(rootWindow).rcTitleBar.Contains(pt)) {
-                Debug.WriteLine($"{GetTitleBarInfo(rootWindow).rcTitleBar.Contains(pt)}");
                 return rootWindow;
             }
             return IntPtr.Zero;
