@@ -2,23 +2,14 @@
 
 namespace SlideSharp
 {
-    public struct Ray
+    public class Ray
     {
         public POINT Position { get; }
-        public Vector Movement { get; }
+        public POINT Movement { get; }
         public Direction Direction { get; }
 
 
-        public Ray(POINT start, POINT end)
-        {
-            Position = start;
-            Movement = new Vector(start - end);
-            Direction = 0;
-            Direction |= Movement.X > 0 ? Direction.Left : Direction.Right;
-            Direction |= Movement.Y > 0 ? Direction.Up : Direction.Down;
-        }
-
-        public Ray(POINT position, Vector movement)
+        public Ray(POINT position, POINT movement)
         {
             Position = position;
             Movement = movement;
@@ -34,7 +25,12 @@ namespace SlideSharp
 
         public Ray Scale(double factor)
         {
-            return new Ray(Position, Movement.Multiply(factor));
+            return new Ray(Position, Movement * factor);
+        }
+
+        public POINT ScaledEndPoint(double factor)
+        {
+            return (Movement * factor) + Position;
         }
     }
 }
