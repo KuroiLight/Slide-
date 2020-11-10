@@ -92,7 +92,7 @@ namespace SlideSharp
             IntPtr RootWindowAtCursorTitlebar = GetRootWindowFromTitlebar(localRay.Position);
             if (RootWindowAtCursorTitlebar == IntPtr.Zero) return null;
 
-            return new BoxedWindow(RootWindowAtCursorTitlebar, BoxedWindowFactory.SlideFromRay(localRay));
+            return new BoxedWindow(RootWindowAtCursorTitlebar, SlideFactory.SlideFromRay(localRay));
         }
     }
 }
