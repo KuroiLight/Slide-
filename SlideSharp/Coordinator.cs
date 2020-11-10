@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Threading;
 using Win32Api;
@@ -33,11 +32,11 @@ namespace SlideSharp
         private readonly MouseHook _mouseHook;
 
         private POINT MStart;
-        private readonly List<SlidingWindow> Windows;
+        private readonly FixedList<BoxedWindow> Windows;
 
         public Coordinator()
         {
-            Windows = new List<SlidingWindow>(Screen.AllScreens.Count() * 5);
+            Windows = new FixedList<BoxedWindow>(Screen.AllScreens.Count() * 5);
 
             Dispatcher.Tick += UpdateStates;
             Dispatcher.Interval = new TimeSpan(0, 0, 0, 0, Configuration.SettingsInstance.Update_Interval);
@@ -64,34 +63,36 @@ namespace SlideSharp
         {
             Dispatcher.Stop();
 
-            Ray localRay = Ray;
-            Ray = null;
+            BoxedWindow newWindow = HasNewWindow();
+            IntPtr WindowAtCursor = GetRootWindow(GetCursorPos());
 
-            if (localRay != null) {
-                IntPtr capturedWindow;
-
-                if ((capturedWindow = GetRootWindowFromTitlebar(localRay.Position)) != IntPtr.Zero) {
-                    Windows.Find(window => window.HasWindow(capturedWindow)).MarkForDeletion();
-                    var toSlider = SlidingWindow.CreateFromRay(localRay);
-                    toSlider.ManageWindow(capturedWindow);
-                    Windows.Add(toSlider);
-                }
-            }
-
-            Windows.RemoveAll(window => window.MarkedForDeletion);
-
-            var WindowUnderCursor = GetRootWindow(GetCursorPos());
-
-            Windows.ForEach(Window => {
-                if (Window.HasWindow(WindowUnderCursor))
-                    Window.SetWindowState(Status.Showing);
-                else
-                    Window.SetWindowState(Status.Hiding);
-
-                Window.MoveNextStep();
+            Windows.RemoveAll((Window) => {
+                if (Window.Slide.Direction == Direction.Center && !Window.IsMoving()) return true;
+                if (newWindow != null && newWindow.hWnd == Window.hWnd) return true;
+                return false;
             });
 
+            Windows.ForEach((Window) => {
+                if (newWindow != null && Window.Slide == newWindow.Slide) Window.Slide = new CenterSlide(Window.Slide.Screen);
+                Window.SetStatus(Window.hWnd == WindowAtCursor ? Status.Showing : Status.Hiding);
+                Window.Move();
+            });
+
+            if (newWindow != null) Windows.Add(newWindow);
+
             Dispatcher.Start();
+        }
+
+        private BoxedWindow HasNewWindow()
+        {
+            Ray localRay = Ray;
+            Ray = null;
+            if (localRay == null) return null;
+
+            IntPtr RootWindowAtCursorTitlebar = GetRootWindowFromTitlebar(localRay.Position);
+            if (RootWindowAtCursorTitlebar == IntPtr.Zero) return null;
+
+            return new BoxedWindow(RootWindowAtCursorTitlebar, BoxedWindowFactory.SlideFromRay(localRay));
         }
     }
 }
