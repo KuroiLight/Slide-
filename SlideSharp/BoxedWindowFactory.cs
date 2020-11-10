@@ -6,7 +6,7 @@ using WpfScreenHelper;
 
 namespace SlideSharp
 {
-    public class BoxedWindowFactory
+    public class SlideFactory
     {
         private static IEnumerable<Enum> GetFlags(Enum e)
         {
