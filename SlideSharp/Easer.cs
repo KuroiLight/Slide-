@@ -18,6 +18,7 @@ namespace SlideSharp
 
         public POINT TakeStep()
         {
+            Percent++;
             return ((EndingPosition - StartingPosition) / 100) * Percent;
         }
     }
