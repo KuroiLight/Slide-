@@ -1,10 +1,11 @@
-﻿using Win32Api;
+﻿using System.Diagnostics;
+using Win32Api;
 
 namespace SlideSharp
 {
     public struct Easer
     {
-        POINT DistanceFromStartToEnd;
+        private POINT DistanceFromStartToEnd;
         public int Percent;
 
 
@@ -17,7 +18,7 @@ namespace SlideSharp
         public POINT TakeStep()
         {
             Percent++;
-            return ((DistanceFromStartToEnd) / 100) * Percent;
+            return (DistanceFromStartToEnd / 100) * Percent;
         }
     }
 }
