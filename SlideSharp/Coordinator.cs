@@ -69,6 +69,7 @@ namespace SlideSharp
             Windows.RemoveAll((Window) => {
                 if (Window.Slide.Direction == Direction.Center && !Window.IsMoving()) return true;
                 if (newWindow != null && newWindow.hWnd == Window.hWnd) return true;
+                if (!User32.IsWindow(Window.hWnd)) return true;
                 return false;
             });
 
@@ -78,7 +79,10 @@ namespace SlideSharp
                 Window.Move();
             });
 
-            if (newWindow != null) Windows.Add(newWindow);
+            if (newWindow != null) {
+                newWindow.SetStatus(Status.Hiding);
+                Windows.Add(newWindow);
+            }
 
             Dispatcher.Start();
         }
