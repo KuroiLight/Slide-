@@ -5,20 +5,27 @@ namespace SlideSharp
 {
     public struct Easer
     {
-        private POINT DistanceFromStartToEnd;
-        public int Percent;
+        private POINT StartingPoint;
+        private readonly double StepSizeX, StepSizeY;
+        public double Percent;
 
 
         public Easer(POINT start, POINT end)
         {
-            DistanceFromStartToEnd = end - start;
+            StartingPoint = start;
+            var dist = end - start;
+            StepSizeX = dist.X / 100.0;
+            StepSizeY = dist.Y / 100.0;
             Percent = 0;
         }
 
         public POINT TakeStep()
         {
             Percent++;
-            return (DistanceFromStartToEnd / 100) * Percent;
+            double X, Y;
+            X = StepSizeX * Percent;
+            Y = StepSizeY * Percent;
+            return StartingPoint + new POINT(X, Y);
         }
     }
 }
