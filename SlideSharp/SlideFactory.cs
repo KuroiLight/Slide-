@@ -6,11 +6,21 @@ using WpfScreenHelper;
 
 namespace SlideSharp
 {
-    public class SlideFactory
+    public static class SlideFactory
     {
-        private static IEnumerable<Enum> GetFlags(Enum e)
+        public static IEnumerable<Enum> GetUniqueFlags(this Enum flags)
         {
-            return Enum.GetValues(e.GetType()).Cast<Enum>().Where(e.HasFlag);
+            ulong flag = 1;
+            foreach (var value in Enum.GetValues(flags.GetType()).Cast<Enum>()) {
+                ulong bits = Convert.ToUInt64(value);
+                while (flag < bits) {
+                    flag <<= 1;
+                }
+
+                if (flag == bits && flags.HasFlag(value)) {
+                    yield return value;
+                }
+            }
         }
         public static Slide SlideFromRay(Ray ray)
         {
@@ -29,7 +39,7 @@ namespace SlideSharp
 
         private static Direction GetActualDirection(Ray ray, Screen screen)
         {
-            foreach (var flag in GetFlags(ray.Direction)) {
+            foreach (Direction flag in GetUniqueFlags(ray.Direction)) {
                 POINT endPoint = flag switch
                 {
                     Direction.Up => ray.ScaledEndPoint((screen.Bounds.Top - ray.Position.Y) / ray.Movement.Y),
@@ -40,7 +50,7 @@ namespace SlideSharp
                 };
 
                 if (screen.Bounds.Contains(endPoint.ToWindowsPoint())) {
-                    return (Direction)flag;
+                    return flag;
                 }
             }
             return Direction.Center;
