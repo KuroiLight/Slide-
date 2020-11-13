@@ -8,7 +8,7 @@ namespace SlideSharp
 
     public class BoxedWindow
     {
-        public IntPtr hWnd;
+        public readonly IntPtr hWnd;
         private Easer Easer;
         private Status Status;
         public Slide Slide;
