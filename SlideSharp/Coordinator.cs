@@ -67,7 +67,7 @@ namespace SlideSharp
             IntPtr WindowAtCursor = GetRootWindow(GetCursorPos());
 
             Windows.RemoveAll((Window) => {
-                if (Window.Slide.Direction == Direction.Center && !Window.IsMoving()) return true;
+                if (Window.Slide is CenterSlide && Window.FinishedMoving()) return true;
                 if (newWindow != null && newWindow.hWnd == Window.hWnd) return true;
                 if (!User32.IsWindow(Window.hWnd)) return true;
                 return false;
