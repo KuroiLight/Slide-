@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Linq;
-using System.Threading;
 using System.Windows.Threading;
 using Win32Api;
-using WpfScreenHelper;
 using static Win32Api.Imports;
 using static Win32Api.User32;
 

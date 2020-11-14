@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using WpfScreenHelper;
 using Win32Api;
+using WpfScreenHelper;
 using static Win32Api.User32;
 
 namespace SlideSharp
