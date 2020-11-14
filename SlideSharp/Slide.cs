@@ -45,7 +45,7 @@ namespace SlideSharp
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT((_screen.Left - WindowRect.Width) + Configuration.SettingsInstance.Window_Offscreen_Offset, _screen.Center.Y - WindowRect.Height / 2);
+            return new POINT((_screen.Left - WindowRect.Width) + Configuration.Config.HIDDEN_OFFSET, _screen.Center.Y - WindowRect.Height / 2);
         }
     }
 
@@ -59,7 +59,7 @@ namespace SlideSharp
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Right - Configuration.SettingsInstance.Window_Offscreen_Offset, _screen.Center.Y - WindowRect.Height / 2);
+            return new POINT(_screen.Right - Configuration.Config.HIDDEN_OFFSET, _screen.Center.Y - WindowRect.Height / 2);
         }
     }
 
@@ -73,7 +73,7 @@ namespace SlideSharp
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Center.X - WindowRect.Width / 2, (_screen.Top - WindowRect.Height) + Configuration.SettingsInstance.Window_Offscreen_Offset);
+            return new POINT(_screen.Center.X - WindowRect.Width / 2, (_screen.Top - WindowRect.Height) + Configuration.Config.HIDDEN_OFFSET);
         }
     }
 
@@ -87,7 +87,7 @@ namespace SlideSharp
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Center.X - WindowRect.Width / 2, _screen.Bottom - Configuration.SettingsInstance.Window_Offscreen_Offset);
+            return new POINT(_screen.Center.X - WindowRect.Width / 2, _screen.Bottom - Configuration.Config.HIDDEN_OFFSET);
         }
     }
 }

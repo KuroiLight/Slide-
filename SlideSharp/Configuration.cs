@@ -1,56 +1,91 @@
-﻿using Newtonsoft.Json;
+﻿using Polenter.Serialization;
+using System;
 using System.IO;
-using System.Runtime.Serialization;
+using System.Reflection;
+using System.Windows;
 
 namespace SlideSharp
 {
-    public struct Configuration
+    public struct Config
     {
-        [DataMember] public int Update_Interval { get; set; }
-
-        [DataMember] public int Window_Offscreen_Offset { get; set; }
-
-        [DataMember] public int Middle_Button_DeadZone { get; set; }
-
-        [DataMember] public int Window_Movement_Rate { get; set; }
-
-        public static Configuration SettingsInstance;
-        public static readonly string SettingsPath = "./Settings.json";
-
-        public static Configuration Defaults()
+        public int HIDDEN_OFFSET
         {
-            return new Configuration
+            get
             {
-                Middle_Button_DeadZone = 25,
-                Update_Interval = 16,
-                Window_Movement_Rate = 4,
-                Window_Offscreen_Offset = 30
+                return HIDDEN_OFFSET;
+            }
+            set
+            {
+                HIDDEN_OFFSET = Math.Clamp(value, 1, 1000);
+            }
+        }
+        public int MMDRAG_DEADZONE
+        {
+            get
+            {
+                return MMDRAG_DEADZONE;
+
+            }
+            set
+            {
+                MMDRAG_DEADZONE = Math.Clamp(value, 1, 1000);
+            }
+        }
+        public double WINDOW_ANIM_SPEED
+        {
+            get
+            {
+                return WINDOW_ANIM_SPEED;
+            }
+            set
+            {
+                WINDOW_ANIM_SPEED = Math.Clamp(value, 0.001, 1);
+            }
+        }
+    }
+
+    public static class Configuration
+    {
+        public static Config Config;
+        private static string filename;
+
+        static Configuration()
+        {
+            filename = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\settings.xml";
+        }
+        public static void LoadDefaults()
+        {
+            Configuration.Config = new Config()
+            {
+                HIDDEN_OFFSET = (int)(WpfScreenHelper.Screen.PrimaryScreen.Bounds.Width / 75),
+                MMDRAG_DEADZONE = (int)((WpfScreenHelper.Screen.PrimaryScreen.Bounds.Width / 100) * 15),
+                WINDOW_ANIM_SPEED = 0.025,
             };
         }
 
         public static void Save()
         {
-            var jsonSettings = JsonConvert.SerializeObject(SettingsInstance, Formatting.Indented);
-            if (jsonSettings.Length > 0)
-                try {
-                    File.WriteAllText(SettingsPath, jsonSettings);
-                } catch {
-                    throw new FileNotFoundException();
-                }
-            else
-                throw new JsonException();
+            try {
+                SharpSerializer serializer = new SharpSerializer();
+                serializer.Serialize(Config, "./settings.xml");
+            } catch {
+                MessageBox.Show("Config couldn't be saved.");
+            }
         }
 
-        public static Configuration Load()
+        public static void Load()
         {
-            if (File.Exists(SettingsPath))
-                return (Configuration)JsonConvert.DeserializeObject(File.ReadAllText(SettingsPath));
-            return Defaults();
-        }
-
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(SettingsInstance);
+            if(!File.Exists(filename)) {
+                LoadDefaults();
+            } else {
+try {
+                SharpSerializer serializer = new SharpSerializer();
+                Config = (Config)serializer.Deserialize("./settings.xml");
+            } catch {
+                    MessageBox.Show("Config couldn't be loaded.");
+            }
+            }
+            
         }
     }
 }

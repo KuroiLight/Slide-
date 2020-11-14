@@ -25,7 +25,7 @@ namespace SlideSharp
         public static Slide SlideFromRay(Ray ray)
         {
             Screen screen = Screen.FromPoint(ray.EndPoint().ToWindowsPoint());
-            if (ray.Movement.LengthAsVector() < Configuration.SettingsInstance.Middle_Button_DeadZone) return new CenterSlide(screen);
+            if (ray.Movement.LengthAsVector() < Configuration.Config.MMDRAG_DEADZONE) return new CenterSlide(screen);
 
             return (GetActualDirection(ray, screen)) switch
             {

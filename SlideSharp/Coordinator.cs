@@ -23,7 +23,7 @@ namespace SlideSharp
             Windows = new FixedList<BoxedWindow>(Screen.AllScreens.Count() * 5);
 
             Dispatcher.Tick += UpdateStates;
-            Dispatcher.Interval = new TimeSpan(0, 0, 0, 0, Configuration.SettingsInstance.Update_Interval);
+            Dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 16);
             Dispatcher.Start();
 
             _mouseHook = new MouseHook((int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam) => {

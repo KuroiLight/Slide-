@@ -18,7 +18,7 @@ namespace SlideSharp
         {
             InitializeComponent();
             Hide();
-            Configuration.SettingsInstance = Configuration.Load();
+            Configuration.Load();
             UpdateInterfaceConfigs();
             TBIcon = new TaskbarIcon
             {
@@ -44,17 +44,16 @@ namespace SlideSharp
                 return (int)Math.Clamp(control.Value, control.Minimum, control.Maximum);
             }
 
-            Configuration.SettingsInstance.Middle_Button_DeadZone = getValueOfTextBlock(dragDeadzoneSlider);
-            Configuration.SettingsInstance.Window_Movement_Rate = getValueOfTextBlock(stepSizeSlider);
-            Configuration.SettingsInstance.Update_Interval = getValueOfTextBlock(responseSlider);
-            Configuration.SettingsInstance.Window_Offscreen_Offset = getValueOfTextBlock(offScreenOffsetSlider);
+            Configuration.Config.MMDRAG_DEADZONE = getValueOfTextBlock(dragDeadzoneSlider);
+            Configuration.Config.WINDOW_ANIM_SPEED = getValueOfTextBlock(stepSizeSlider);
+            Configuration.Config.HIDDEN_OFFSET = getValueOfTextBlock(offScreenOffsetSlider);
 
             Configuration.Save();
         }
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            Configuration.SettingsInstance = Configuration.Defaults();
+            Configuration.LoadDefaults();
             UpdateInterfaceConfigs();
         }
 
@@ -65,10 +64,9 @@ namespace SlideSharp
 
         private void UpdateInterfaceConfigs()
         {
-            dragDeadzoneSlider.Value = Configuration.SettingsInstance.Middle_Button_DeadZone;
-            stepSizeSlider.Value = Configuration.SettingsInstance.Window_Movement_Rate;
-            responseSlider.Value = Configuration.SettingsInstance.Update_Interval;
-            offScreenOffsetSlider.Value = Configuration.SettingsInstance.Window_Offscreen_Offset;
+            dragDeadzoneSlider.Value = Configuration.Config.MMDRAG_DEADZONE;
+            stepSizeSlider.Value = Configuration.Config.WINDOW_ANIM_SPEED;
+            offScreenOffsetSlider.Value = Configuration.Config.HIDDEN_OFFSET;
         }
 
         private void Window_Unloaded(object sender, RoutedEventArgs e)
