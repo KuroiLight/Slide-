@@ -30,19 +30,7 @@ namespace Win32Api
 
         public bool Equals(RECT r) => r.Left == Left && r.Top == Top && r.Right == Right && r.Bottom == Bottom;
 
-        public System.Windows.Rect ToWindowsRectangle => new System.Windows.Rect(Left, Top, Width, Height);
-
-        public System.Drawing.Rectangle ToDrawingRectangle => new System.Drawing.Rectangle(Left, Top, Width, Height);
-
         public POINT ToPoint => new POINT(Left, Top);
-
-        public static RECT FromDrawingRectangle(System.Drawing.Rectangle R) => new RECT(R.Left, R.Top, R.Right, R.Bottom);
-
-        public static RECT FromWindowsRectangle(System.Windows.Rect R) => new RECT(R.Left, R.Top, R.Right, R.Bottom);
-
-        public static bool operator ==(RECT r1, RECT r2) => r1.Equals(r2);
-
-        public static bool operator !=(RECT r1, RECT r2) => !r1.Equals(r2);
 
         public override int GetHashCode()
         {
