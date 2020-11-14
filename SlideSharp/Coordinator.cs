@@ -12,18 +12,12 @@ namespace SlideSharp
     public class Coordinator
     {
         private readonly MouseHook _mouseHook;
-        #nullable enable
-        private Ray? _ray;
-        #nullable disable
+        private readonly Windows windows = new Windows();
         private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
-        private readonly object MouseDataLock = new object();
         private POINT MStart;
-        private readonly FixedList<BoxedWindow> Windows;
 
         public Coordinator()
         {
-            Windows = new FixedList<BoxedWindow>(Screen.AllScreens.Count() * 5);
-
             Dispatcher.Tick += UpdateStates;
             Dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 16);
             Dispatcher.Start();
@@ -36,7 +30,7 @@ namespace SlideSharp
             if (wParam == WM_MOUSE.WM_MBUTTONDOWN) {
                 MStart = lParam.pt;
             } else if (wParam == WM_MOUSE.WM_MBUTTONUP) {
-                Interlocked.Exchange(ref _ray, new Ray((POINT)MStart, MStart - lParam.pt));
+                windows.SetRay(new Ray((POINT)MStart, MStart - lParam.pt));
             }
 
 
@@ -45,6 +39,7 @@ namespace SlideSharp
 
         ~Coordinator()
         {
+            windows.Dispose();
             Dispatcher.Stop();
         }
 
@@ -52,54 +47,9 @@ namespace SlideSharp
         {
             Dispatcher.Stop();
 
-            UpdateBoxedWindows();
+            windows.UpdateWindows();
 
             Dispatcher.Start();
-        }
-
-        private void UpdateBoxedWindows()
-        {
-            IntPtr WindowAtCursor = GetRootWindow(GetCursorPos());
-            BoxedWindow newWindow = GetNewWindow();
-
-            if (newWindow != null) {
-                Windows.ForEachAt((W, i) => {
-                    if (newWindow.hWnd == W.hWnd) {
-                        W.SetStatus(Status.Showing);
-                        Windows.RemoveAt(i);
-                        return;
-                    }
-                    if (W.Slide == newWindow.Slide) {
-                        W.Slide = new CenterSlide(W.Slide.Screen);
-                    }
-                });
-
-                newWindow.SetStatus(Status.Hiding);
-                Windows.Add(newWindow);
-            }
-
-            Windows.ForEachAt((Window, ind) => {
-
-                if (!User32.IsWindow(Window.hWnd) || (Window.Slide is CenterSlide && Window.FinishedMoving())) {
-                    Window.SetStatus(Status.Showing);
-                    Windows.RemoveAt(ind);
-                    return;
-                }
-                Window.SetStatus(Window.hWnd == WindowAtCursor ? Status.Showing : Status.Hiding);
-                Window.Move();
-
-            });
-        }
-
-        private BoxedWindow GetNewWindow()
-        {
-            Ray localRay = Interlocked.Exchange(ref _ray, null);
-            if (localRay == null) return null;
-
-            IntPtr RootWindowAtCursorTitlebar = GetRootWindowFromTitlebar(localRay.Position);
-            if (RootWindowAtCursorTitlebar == IntPtr.Zero) return null;
-
-            return new BoxedWindow(RootWindowAtCursorTitlebar, SlideFactory.SlideFromRay(localRay));
         }
     }
 }

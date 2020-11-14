@@ -78,17 +78,17 @@ namespace SlideSharp
 
         public static void Load()
         {
-            if(!File.Exists(filename)) {
+            if (!File.Exists(filename)) {
                 LoadDefaults();
             } else {
-try {
-                SharpSerializer serializer = new SharpSerializer();
-                Config = (Config)serializer.Deserialize("./settings.xml");
-            } catch {
+                try {
+                    SharpSerializer serializer = new SharpSerializer();
+                    Config = (Config)serializer.Deserialize("./settings.xml");
+                } catch {
                     MessageBox.Show("Config couldn't be loaded.");
+                }
             }
-            }
-            
+
         }
     }
 }
