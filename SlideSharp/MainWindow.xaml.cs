@@ -1,5 +1,4 @@
-﻿using Hardcodet.Wpf.TaskbarNotification;
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 using WpfScreenHelper;
@@ -12,19 +11,13 @@ namespace SlideSharp
     public partial class MainWindow : Window
     {
         private Coordinator Coordinator;
-        internal TaskbarIcon TBIcon;
 
         public MainWindow()
         {
             InitializeComponent();
             Configuration.Load();
             UpdateFromConfigs();
-            TBIcon = new TaskbarIcon
-            {
-                Icon = Properties.Resources.SSharp
-            };
-            TBIcon.TrayMouseDoubleClick += TBIcon_TrayMouseDoubleClick;
-
+            tbTray.Icon = Properties.Resources.SSharp;
             Coordinator = new Coordinator();
         }
 
@@ -69,12 +62,6 @@ namespace SlideSharp
             offScreenOffsetSlider.Value = Configuration.Config.HIDDEN_OFFSET;
         }
 
-        private void Window_Unloaded(object sender, RoutedEventArgs e)
-        {
-            TBIcon.Visibility = Visibility.Hidden;
-            TBIcon.Dispose();
-        }
-
         private void offScreenOffsetSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             offScreenOffset.Text = ((int)offScreenOffsetSlider.Value).ToString();
@@ -95,6 +82,11 @@ namespace SlideSharp
             Configuration.Save();
             Coordinator = null;
             GC.Collect();
+        }
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
     }
 }

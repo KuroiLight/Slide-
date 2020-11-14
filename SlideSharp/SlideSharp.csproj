@@ -6,6 +6,8 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
     <StartupObject>SlideSharp.App</StartupObject>
+    <NoWin32Manifest>true</NoWin32Manifest>
+    <ApplicationIcon>SSharp.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +23,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Win32Api\Win32Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="SSharp.ico" />
   </ItemGroup>
 
   <ItemGroup>
