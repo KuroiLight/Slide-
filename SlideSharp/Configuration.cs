@@ -8,38 +8,41 @@ namespace SlideSharp
 {
     public struct Config
     {
+        private int _HIDDEN_OFFSET;
         public int HIDDEN_OFFSET
         {
             get
             {
-                return HIDDEN_OFFSET;
+                return _HIDDEN_OFFSET;
             }
             set
             {
-                HIDDEN_OFFSET = Math.Clamp(value, 1, 1000);
+                _HIDDEN_OFFSET = Math.Clamp(value, 1, 1000);
             }
         }
+        private int _MMDRAG_DEADZONE;
         public int MMDRAG_DEADZONE
         {
             get
             {
-                return MMDRAG_DEADZONE;
+                return _MMDRAG_DEADZONE;
 
             }
             set
             {
-                MMDRAG_DEADZONE = Math.Clamp(value, 1, 1000);
+                _MMDRAG_DEADZONE = Math.Clamp(value, 1, 1000);
             }
         }
+        private double _WINDOW_ANIM_SPEED;
         public double WINDOW_ANIM_SPEED
         {
             get
             {
-                return WINDOW_ANIM_SPEED;
+                return _WINDOW_ANIM_SPEED;
             }
             set
             {
-                WINDOW_ANIM_SPEED = Math.Clamp(value, 0.001, 1);
+                _WINDOW_ANIM_SPEED = Math.Clamp(value, 0.001, 1);
             }
         }
     }
