@@ -26,7 +26,7 @@ namespace SlideSharp
 
         public POINT TakeStep()
         {
-            Percent += 0.025;
+            Percent += Configuration.Config.WINDOW_ANIM_SPEED;
             var easedValue = QuarticEase.Ease(Percent) * MaxPercent;
             return StartingPoint + new POINT(StepSizeX * easedValue, StepSizeY * easedValue);
         }
