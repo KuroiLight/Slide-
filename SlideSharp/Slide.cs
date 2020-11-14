@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Win32Api;
+﻿using Win32Api;
 using WpfScreenHelper;
 
 namespace SlideSharp
@@ -27,12 +26,12 @@ namespace SlideSharp
 
         public override POINT ShownPosition(RECT WindowRect)
         {
-            return _screen.Center - WindowRect.Center;
+            return new POINT(_screen.Center.X - WindowRect.Width / 2, _screen.Center.Y - WindowRect.Height / 2);
         }
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return _screen.Center - WindowRect.Center;
+            return new POINT(_screen.Center.X - WindowRect.Width / 2, _screen.Center.Y - WindowRect.Height / 2);
         }
     }
 
