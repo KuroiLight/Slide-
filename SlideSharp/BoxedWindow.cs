@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using Win32Api;
 
 namespace SlideSharp
@@ -26,7 +25,7 @@ namespace SlideSharp
             if (status != Status) {
                 Status = status;
                 var windowRect = User32.GetWindowRect(hWnd);
-                Easer = new Easer(windowRect.ToPoint, Status != Status.Showing ?  Slide.HiddenPosition(windowRect) : Slide.ShownPosition(windowRect));
+                Easer = new Easer(windowRect.ToPoint, Status != Status.Showing ? Slide.HiddenPosition(windowRect) : Slide.ShownPosition(windowRect));
             }
         }
 
@@ -38,7 +37,7 @@ namespace SlideSharp
 
         public bool FinishedMoving()
         {
-            return Easer.Percent == 100;
+            return !Easer.CanMove();
         }
     }
 }
