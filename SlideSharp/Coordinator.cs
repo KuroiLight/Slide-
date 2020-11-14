@@ -12,7 +12,9 @@ namespace SlideSharp
     public class Coordinator
     {
         private readonly MouseHook _mouseHook;
+        #nullable enable
         private Ray? _ray;
+        #nullable disable
         private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
         private readonly object MouseDataLock = new object();
         private POINT MStart;
@@ -26,16 +28,19 @@ namespace SlideSharp
             Dispatcher.Interval = new TimeSpan(0, 0, 0, 0, 16);
             Dispatcher.Start();
 
-            _mouseHook = new MouseHook((int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam) => {
-                if (wParam == WM_MOUSE.WM_MBUTTONDOWN) {
-                    MStart = lParam.pt;
-                } else if (wParam == WM_MOUSE.WM_MBUTTONUP) {
-                    Interlocked.Exchange(ref _ray, new Ray((POINT)MStart, MStart - lParam.pt));
-                }
+            _mouseHook = new MouseHook(MouseHookProc);
+        }
+
+        private IntPtr MouseHookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam)
+        {
+            if (wParam == WM_MOUSE.WM_MBUTTONDOWN) {
+                MStart = lParam.pt;
+            } else if (wParam == WM_MOUSE.WM_MBUTTONUP) {
+                Interlocked.Exchange(ref _ray, new Ray((POINT)MStart, MStart - lParam.pt));
+            }
 
 
-                return CallNextHookEx(IntPtr.Zero, code, wParam, lParam);
-            });
+            return CallNextHookEx(IntPtr.Zero, code, wParam, lParam);
         }
 
         ~Coordinator()
