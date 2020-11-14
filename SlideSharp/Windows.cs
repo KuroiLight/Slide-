@@ -62,8 +62,9 @@ namespace SlideSharp
                         AllWindows.RemoveAt(i);
                         return;
                     }
-                    if (W.Slide == newWindow.Slide) {
+                    if (W.Slide.Equals(newWindow.Slide)) {
                         W.Slide = new CenterSlide(W.Slide);
+                        W.SetStatus(Status.Undefined);
                     }
                 });
 
