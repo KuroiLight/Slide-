@@ -65,6 +65,7 @@ namespace SlideSharp
             if (newWindow != null) {
                 Windows.ForEachAt((W, i) => {
                     if (newWindow.hWnd == W.hWnd) {
+                        W.SetStatus(Status.Showing);
                         Windows.RemoveAt(i);
                         return;
                     }
@@ -80,6 +81,7 @@ namespace SlideSharp
             Windows.ForEachAt((Window, ind) => {
 
                 if (!User32.IsWindow(Window.hWnd) || (Window.Slide is CenterSlide && Window.FinishedMoving())) {
+                    Window.SetStatus(Status.Showing);
                     Windows.RemoveAt(ind);
                     return;
                 }
