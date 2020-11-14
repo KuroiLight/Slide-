@@ -23,11 +23,6 @@ namespace SlideSharp
             return new POINT(Position.X + Movement.X, Position.Y + Movement.Y);
         }
 
-        public Ray Scale(double factor)
-        {
-            return new Ray(Position, Movement * factor);
-        }
-
         public POINT ScaledEndPoint(double factor)
         {
             return (Movement * factor) + Position;
