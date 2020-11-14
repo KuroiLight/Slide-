@@ -1,4 +1,6 @@
-﻿using Win32Api;
+﻿using System;
+using System.Collections.Generic;
+using Win32Api;
 using WpfScreenHelper;
 
 namespace SlideSharp
@@ -22,6 +24,18 @@ namespace SlideSharp
         public abstract POINT ShownPosition(RECT WindowRect);
 
         public abstract POINT HiddenPosition(RECT WindowRect);
+
+        public override bool Equals(object obj)
+        {
+            return obj is Slide slide &&
+                   EqualityComparer<Screen>.Default.Equals(Screen, slide.Screen) &&
+                   _screen.Equals(slide._screen);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Screen, _screen);
+        }
     }
 
     public sealed class CenterSlide : Slide
@@ -39,6 +53,19 @@ namespace SlideSharp
         {
             return new POINT(_screen.Center.X - WindowRect.Width / 2, _screen.Center.Y - WindowRect.Height / 2);
         }
+
+        public override bool Equals(object obj)
+        {
+            return obj is CenterSlide slide &&
+                   base.Equals(obj) &&
+                   EqualityComparer<Screen>.Default.Equals(Screen, slide.Screen) &&
+                   _screen.Equals(slide._screen);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), Screen, _screen);
+        }
     }
 
     public sealed class LeftSlide : Slide
@@ -54,6 +81,19 @@ namespace SlideSharp
         public override POINT HiddenPosition(RECT WindowRect)
         {
             return new POINT((_screen.Left - WindowRect.Width) + Configuration.Config.HIDDEN_OFFSET, _screen.Center.Y - WindowRect.Height / 2);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is LeftSlide slide &&
+                   base.Equals(obj) &&
+                   EqualityComparer<Screen>.Default.Equals(Screen, slide.Screen) &&
+                   _screen.Equals(slide._screen);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), Screen, _screen);
         }
     }
 
@@ -71,6 +111,19 @@ namespace SlideSharp
         {
             return new POINT(_screen.Right - Configuration.Config.HIDDEN_OFFSET, _screen.Center.Y - WindowRect.Height / 2);
         }
+
+        public override bool Equals(object obj)
+        {
+            return obj is RightSlide slide &&
+                   base.Equals(obj) &&
+                   EqualityComparer<Screen>.Default.Equals(Screen, slide.Screen) &&
+                   _screen.Equals(slide._screen);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), Screen, _screen);
+        }
     }
 
     public sealed class TopSlide : Slide
@@ -87,6 +140,19 @@ namespace SlideSharp
         {
             return new POINT(_screen.Center.X - WindowRect.Width / 2, (_screen.Top - WindowRect.Height) + Configuration.Config.HIDDEN_OFFSET);
         }
+
+        public override bool Equals(object obj)
+        {
+            return obj is TopSlide slide &&
+                   base.Equals(obj) &&
+                   EqualityComparer<Screen>.Default.Equals(Screen, slide.Screen) &&
+                   _screen.Equals(slide._screen);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), Screen, _screen);
+        }
     }
 
     public sealed class BottomSlide : Slide
@@ -102,6 +168,19 @@ namespace SlideSharp
         public override POINT HiddenPosition(RECT WindowRect)
         {
             return new POINT(_screen.Center.X - WindowRect.Width / 2, _screen.Bottom - Configuration.Config.HIDDEN_OFFSET);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is BottomSlide slide &&
+                   base.Equals(obj) &&
+                   EqualityComparer<Screen>.Default.Equals(Screen, slide.Screen) &&
+                   _screen.Equals(slide._screen);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), Screen, _screen);
         }
     }
 }
