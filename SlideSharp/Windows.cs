@@ -10,7 +10,7 @@ namespace SlideSharp
     public class Windows
     {
         private readonly FixedList<BoxedWindow> AllWindows;
-        private Ray? _ray;
+        private Ray _ray;
         public Windows()
         {
             AllWindows = new FixedList<BoxedWindow>(Screen.AllScreens.Count() * 5);
