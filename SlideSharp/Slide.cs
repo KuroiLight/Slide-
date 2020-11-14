@@ -20,7 +20,7 @@ namespace SlideSharp
         public abstract POINT HiddenPosition(RECT WindowRect);
     }
 
-    public class CenterSlide : Slide
+    public sealed class CenterSlide : Slide
     {
         public CenterSlide(Screen screen) : base(screen) { }
 
@@ -35,7 +35,7 @@ namespace SlideSharp
         }
     }
 
-    public class LeftSlide : Slide
+    public sealed class LeftSlide : Slide
     {
         public LeftSlide(Screen screen) : base(screen) { }
         public override POINT ShownPosition(RECT WindowRect)
@@ -49,7 +49,7 @@ namespace SlideSharp
         }
     }
 
-    public class RightSlide : Slide
+    public sealed class RightSlide : Slide
     {
         public RightSlide(Screen screen) : base(screen) { }
         public override POINT ShownPosition(RECT WindowRect)
@@ -63,7 +63,7 @@ namespace SlideSharp
         }
     }
 
-    public class TopSlide : Slide
+    public sealed class TopSlide : Slide
     {
         public TopSlide(Screen screen) : base(screen) { }
         public override POINT ShownPosition(RECT WindowRect)
@@ -77,7 +77,7 @@ namespace SlideSharp
         }
     }
 
-    public class BottomSlide : Slide
+    public sealed class BottomSlide : Slide
     {
         public BottomSlide(Screen screen) : base(screen) { }
         public override POINT ShownPosition(RECT WindowRect)
