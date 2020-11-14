@@ -15,6 +15,7 @@
     <RepositoryUrl>https://github.com/KuroiLight/SlideSharp</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Copyright>MIT</Copyright>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
