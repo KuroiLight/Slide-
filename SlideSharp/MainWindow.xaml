@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Slide# Settings" SizeToContent="Height" Height="Auto" Width="200" ShowInTaskbar="False"
-        ResizeMode="NoResize" WindowStyle="None" Unloaded="Window_Unloaded" WindowStartupLocation="CenterOwner" Visibility="Hidden">
+        ResizeMode="NoResize" WindowStyle="None" Unloaded="Window_Unloaded" WindowStartupLocation="CenterOwner" Visibility="Hidden" Closing="Window_Closing">
 
     <DockPanel Margin="10">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical">

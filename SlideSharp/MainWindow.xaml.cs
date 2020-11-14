@@ -11,7 +11,7 @@ namespace SlideSharp
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly Coordinator Coordinator;
+        private Coordinator Coordinator;
         internal TaskbarIcon TBIcon;
 
         public MainWindow()
@@ -88,6 +88,13 @@ namespace SlideSharp
         private void stepSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             stepSize.Text = stepSizeSlider.Value.ToString("0.000");
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Configuration.Save();
+            Coordinator = null;
+            GC.Collect();
         }
     }
 }
