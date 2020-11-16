@@ -81,7 +81,6 @@ namespace SlideSharp
         {
             Configuration.Save();
             Coordinator = null;
-            GC.Collect();
         }
 
         private void MenuItem_Click(object sender, RoutedEventArgs e)
