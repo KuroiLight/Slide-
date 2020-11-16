@@ -6,14 +6,12 @@
 I'm building this project as a way to re-learn C# after a long hiatus from programming in general.
 In a nutshell it will allow you to slide windows offscreen with quick access to them via cursor hover (gifs to come).
 
-<p align="center">
-  <img src="https://github.com/KuroiLight/SlideSharp/blob/resources/VhqKyqQnBY.gif" width="400">
-</p>
-
 ### Aims to be:
 * #### Fast
 * #### Asynchronous
 * #### Support Multi-Monitor setups
 * #### Configurable via Settings Window
 
-###### Functionality has been completely implemented, except the settings interface. There are still some bugs present mostly related to timing issues.
+<p align="center">
+  <img src="https://github.com/KuroiLight/SlideSharp/blob/master/slidesharp_gif.gif" width="400">
+</p>
