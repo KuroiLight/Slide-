@@ -35,9 +35,11 @@ namespace SlideSharp
                 return (int)Math.Clamp(control.Value, control.Minimum, control.Maximum);
             }
 
-            Configuration.Config.MMDRAG_DEADZONE = getValueOfTextBlock(dragDeadzoneSlider);
-            Configuration.Config.WINDOW_ANIM_SPEED = Math.Clamp(stepSizeSlider.Value, stepSizeSlider.Minimum, stepSizeSlider.Maximum);
-            Configuration.Config.HIDDEN_OFFSET = getValueOfTextBlock(offScreenOffsetSlider);
+            Config C = new Config();
+            C.MMDRAG_DEADZONE = getValueOfTextBlock(dragDeadzoneSlider);
+            C.WINDOW_ANIM_SPEED = Math.Clamp(stepSizeSlider.Value, stepSizeSlider.Minimum, stepSizeSlider.Maximum);
+            C.HIDDEN_OFFSET = getValueOfTextBlock(offScreenOffsetSlider);
+            Configuration.Config = C;
 
             Configuration.Save();
         }
