@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Windows;
 using Win32Api;
 using WpfScreenHelper;
 using static Win32Api.User32;
@@ -101,7 +102,12 @@ namespace SlideSharp
 
         public bool Equals(Windows other)
         {
-            throw new NotImplementedException();
+            return AllWindows == other.AllWindows && _ray == other._ray;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Window window && Equals(window);
         }
     }
 }
