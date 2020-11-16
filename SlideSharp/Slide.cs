@@ -10,12 +10,12 @@ namespace SlideSharp
         protected readonly RECT _screen;
         public Screen Screen { get; }
 
-        public Slide(Screen screen)
+        protected Slide(Screen screen)
         {
             Screen = screen;
             _screen = new RECT(screen.WorkingArea.Left, screen.WorkingArea.Top, screen.WorkingArea.Right, screen.WorkingArea.Bottom);
         }
-        public Slide(Slide slide)
+        protected Slide(Slide slide)
         {
             Screen = slide.Screen;
             _screen = new RECT(Screen.WorkingArea.Left, Screen.WorkingArea.Top, Screen.WorkingArea.Right, Screen.WorkingArea.Bottom);
