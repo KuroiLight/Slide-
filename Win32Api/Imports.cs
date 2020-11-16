@@ -15,7 +15,7 @@ namespace Win32Api
 
         public const int WS_EX_TOPMOST = 0x0008;
 
-        public enum HWND_INSERTAFTER : int
+        public enum HWND_INSERTAFTER
         {
             HWND_NOTOPMOST = -2,
             HWND_TOPMOST = -1,
