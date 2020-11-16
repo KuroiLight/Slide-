@@ -50,12 +50,8 @@ namespace SlideSharp
     public static class Configuration
     {
         public static Config Config;
-        private static string filename;
+        private static string filename = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\settings.xml";
 
-        static Configuration()
-        {
-            filename = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\settings.xml";
-        }
         public static void LoadDefaults()
         {
             Configuration.Config = new Config()
