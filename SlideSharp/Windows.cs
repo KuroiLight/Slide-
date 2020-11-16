@@ -8,10 +8,11 @@ using static Win32Api.User32;
 
 namespace SlideSharp
 {
-    public class Windows
+    public sealed class Windows : IDisposable
     {
         private readonly Queue<BoxedWindow> AllWindows;
         private Ray _ray;
+        private bool disposed;
         public Windows()
         {
             AllWindows = new Queue<BoxedWindow>(Screen.AllScreens.Count() * 5);
@@ -19,16 +20,29 @@ namespace SlideSharp
 
         public void Dispose()
         {
-            while (AllWindows.Count > 0) {
-                var window = AllWindows.Dequeue();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-                window.Slide = new CenterSlide(window.Slide);
-                window.SetStatus(Status.Showing);
-                while (!window.FinishedMoving()) {
-                    window.Move();
+        private void Dispose(bool disposing)
+        {
+            if (!this.disposed) {
+                
+                if (disposing) {
+                    while (AllWindows.Count > 0) {
+                        var window = AllWindows.Dequeue();
+
+                        window.Slide = new CenterSlide(window.Slide);
+                        window.SetStatus(Status.Showing);
+                        while (!window.FinishedMoving()) {
+                            window.Move();
+                        }
+                    }
                 }
+                disposed = true;
             }
         }
+
         public void SetRay(Ray ray)
         {
             Interlocked.Exchange(ref _ray, ray);
@@ -83,6 +97,11 @@ namespace SlideSharp
             if (RootWindowAtCursorTitlebar == IntPtr.Zero) return null;
 
             return new BoxedWindow(RootWindowAtCursorTitlebar, SlideFactory.SlideFromRay(ray));
+        }
+
+        public bool Equals(Windows other)
+        {
+            throw new NotImplementedException();
         }
     }
 }
