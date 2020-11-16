@@ -10,7 +10,9 @@ namespace SlideSharp
         public readonly IntPtr hWnd;
         private Easer Easer;
         private Status Status;
-        public Slide Slide;
+        private Slide slide;
+
+        public Slide Slide { get => slide; set => slide = value; }
 
         public BoxedWindow(IntPtr hwnd, Slide slide)
         {
