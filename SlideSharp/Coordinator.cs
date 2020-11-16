@@ -27,7 +27,7 @@ namespace SlideSharp
             if (wParam == WM_MOUSE.WM_MBUTTONDOWN) {
                 MStart = lParam.pt;
             } else if (wParam == WM_MOUSE.WM_MBUTTONUP) {
-                windows.SetRay(new Ray((POINT)MStart, MStart - lParam.pt));
+                windows.SetRay(new Ray(MStart, MStart - lParam.pt));
             }
 
 
