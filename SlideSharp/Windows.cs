@@ -9,7 +9,7 @@ using static Win32Api.User32;
 
 namespace SlideSharp
 {
-    public sealed class Windows : IDisposable
+    public sealed class Windows : IDisposable, IEquatable<Windows>
     {
         private readonly Queue<BoxedWindow> AllWindows;
         private Ray _ray;
@@ -28,7 +28,6 @@ namespace SlideSharp
         private void Dispose(bool disposing)
         {
             if (!this.disposed) {
-                
                 if (disposing) {
                     while (AllWindows.Count > 0) {
                         var window = AllWindows.Dequeue();
@@ -60,8 +59,6 @@ namespace SlideSharp
                 var window = AllWindows.Dequeue();
 
                 if (newWindow != null) {
-
-
                     if (newWindow.hWnd == window.hWnd) {
                         window.SetStatus(Status.Undefined);
                         continue;
@@ -108,6 +105,11 @@ namespace SlideSharp
         public override bool Equals(object obj)
         {
             return obj is Window window && Equals(window);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(AllWindows, _ray);
         }
     }
 }
