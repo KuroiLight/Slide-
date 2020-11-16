@@ -62,14 +62,7 @@ namespace Win32Api
             }
 
             RECT Rect; //do not inline
-            var returnValue = Imports.GetWindowRect(hWnd, out Rect);
-
-            if (!returnValue) {
-                //this usually fails during a race condition, e.g window is closed right before GetWindowRect is called
-                //instead of throwing here, we should just write the exception to debug
-                Debug.WriteLine(new Win32Exception(Marshal.GetLastWin32Error()).Message);
-                //throw new Win32Exception(Marshal.GetLastWin32Error());
-            }
+            Imports.GetWindowRect(hWnd, out Rect);
 
             return Rect;
         }
@@ -92,14 +85,7 @@ namespace Win32Api
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
-            var returnValue = Imports.SetWindowPos(hWnd, IntPtr.Zero, pt.X, pt.Y, 0, 0, Imports.SetWindowsPos.SWP_NOACTIVATE | Imports.SetWindowsPos.SWP_NOZORDER | Imports.SetWindowsPos.SWP_NOSIZE | Imports.SetWindowsPos.SWP_FRAMECHANGED);
-
-            if (!returnValue) {
-                //this usually fails during a race condition, e.g window is closed right before SetWindowPos is called
-                //instead of throwing here, we should just write the exception to debug
-                Debug.WriteLine(new Win32Exception(Marshal.GetLastWin32Error()).Message);
-                //throw new Win32Exception(Marshal.GetLastWin32Error());
-            }
+            Imports.SetWindowPos(hWnd, IntPtr.Zero, pt.X, pt.Y, 0, 0, Imports.SetWindowsPos.SWP_NOACTIVATE | Imports.SetWindowsPos.SWP_NOZORDER | Imports.SetWindowsPos.SWP_NOSIZE | Imports.SetWindowsPos.SWP_FRAMECHANGED);
         }
 
         public static void SetWindowPos(IntPtr hWnd, HWND_INSERTAFTER hWndInsertAfter)
