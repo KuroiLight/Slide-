@@ -49,7 +49,7 @@ namespace SlideSharp
 
     public static class Configuration
     {
-        public static Config Config;
+        public static Config Config { get; set; }
         private static string filename = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\settings.xml";
 
         public static void LoadDefaults()
