@@ -25,7 +25,7 @@ namespace Win32Api
 
         public delegate IntPtr HookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam);
 
-        public enum GetAncestorFlags
+        public enum Ancestor
         {
             /// <summary>
             /// Retrieves the parent window. This does not include the owner, as it does with the GetParent function.
@@ -44,7 +44,7 @@ namespace Win32Api
         }
 
         [Flags]
-        public enum SetWindowPosFlags : uint
+        public enum SetWindowsPos : uint
         {
             SWP_NONE = 0x0000,
             SWP_NOSIZE = 0x0001,
@@ -81,7 +81,7 @@ namespace Win32Api
         internal static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, WM_MOUSE wParam, [In] MSLLHOOKSTRUCT lParam);
 
         [DllImport("user32.dll", ExactSpelling = true)]
-        internal static extern IntPtr GetAncestor(IntPtr hwnd, GetAncestorFlags flags);
+        internal static extern IntPtr GetAncestor(IntPtr hwnd, Ancestor flags);
 
         [DllImport("user32.dll", SetLastError = true, ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -104,7 +104,7 @@ namespace Win32Api
 
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
+        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowsPos uFlags);
 
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern IntPtr SetWindowsHookEx(int hookType, HookProc lpfn, IntPtr hMod, uint dwThreadId);

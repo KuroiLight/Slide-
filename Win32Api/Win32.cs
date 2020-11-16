@@ -46,7 +46,7 @@ namespace Win32Api
         public static IntPtr GetRootWindow(POINT pt)
         {
             IntPtr WFPhWnd = Imports.WindowFromPoint(pt);
-            return Imports.GetAncestor(WFPhWnd, GetAncestorFlags.GetRoot);
+            return Imports.GetAncestor(WFPhWnd, Ancestor.GetRoot);
         }
 
         public static int GetWindowLong(IntPtr hWnd, int nIndex)
@@ -92,7 +92,7 @@ namespace Win32Api
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
-            var returnValue = Imports.SetWindowPos(hWnd, IntPtr.Zero, pt.X, pt.Y, 0, 0, Imports.SetWindowPosFlags.SWP_NOACTIVATE | Imports.SetWindowPosFlags.SWP_NOZORDER | Imports.SetWindowPosFlags.SWP_NOSIZE | Imports.SetWindowPosFlags.SWP_FRAMECHANGED);
+            var returnValue = Imports.SetWindowPos(hWnd, IntPtr.Zero, pt.X, pt.Y, 0, 0, Imports.SetWindowsPos.SWP_NOACTIVATE | Imports.SetWindowsPos.SWP_NOZORDER | Imports.SetWindowsPos.SWP_NOSIZE | Imports.SetWindowsPos.SWP_FRAMECHANGED);
 
             if (!returnValue) {
                 //this usually fails during a race condition, e.g window is closed right before SetWindowPos is called
@@ -108,7 +108,7 @@ namespace Win32Api
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
-            var returnValue = Imports.SetWindowPos(hWnd, (IntPtr)hWndInsertAfter, 0, 0, 0, 0, Imports.SetWindowPosFlags.SWP_NOACTIVATE | Imports.SetWindowPosFlags.SWP_NOMOVE | Imports.SetWindowPosFlags.SWP_NOSIZE | Imports.SetWindowPosFlags.SWP_FRAMECHANGED);
+            var returnValue = Imports.SetWindowPos(hWnd, (IntPtr)hWndInsertAfter, 0, 0, 0, 0, Imports.SetWindowsPos.SWP_NOACTIVATE | Imports.SetWindowsPos.SWP_NOMOVE | Imports.SetWindowsPos.SWP_NOSIZE | Imports.SetWindowsPos.SWP_FRAMECHANGED);
 
             if (!returnValue) {
                 //this usually fails during a race condition, e.g window is closed right before SetWindowPos is called
