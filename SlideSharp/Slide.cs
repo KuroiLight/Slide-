@@ -7,8 +7,8 @@ namespace SlideSharp
 {
     public abstract class Slide
     {
-        protected RECT _screen;
-        public Screen Screen { get; set; }
+        protected readonly RECT _screen;
+        public Screen Screen { get; }
 
         public Slide(Screen screen)
         {
