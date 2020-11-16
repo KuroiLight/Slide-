@@ -7,8 +7,8 @@ namespace SlideSharp
 {
     public abstract class Slide
     {
-        public Screen Screen;
         protected RECT _screen;
+        public Screen Screen { get; set; }
 
         public Slide(Screen screen)
         {
@@ -64,7 +64,7 @@ namespace SlideSharp
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(base.GetHashCode(), Screen, _screen);
+            return HashCode.Combine(base.GetHashCode(), "Center");
         }
     }
 
@@ -93,7 +93,7 @@ namespace SlideSharp
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(base.GetHashCode(), Screen, _screen);
+            return HashCode.Combine(base.GetHashCode(), "Left");
         }
     }
 
@@ -122,7 +122,7 @@ namespace SlideSharp
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(base.GetHashCode(), Screen, _screen);
+            return HashCode.Combine(base.GetHashCode(), "Right");
         }
     }
 
@@ -151,7 +151,7 @@ namespace SlideSharp
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(base.GetHashCode(), Screen, _screen);
+            return HashCode.Combine(base.GetHashCode(), "Top");
         }
     }
 
@@ -180,7 +180,7 @@ namespace SlideSharp
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(base.GetHashCode(), Screen, _screen);
+            return HashCode.Combine(base.GetHashCode(), "Bottom");
         }
     }
 }
