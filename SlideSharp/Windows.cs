@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Win32Api;
@@ -9,23 +10,24 @@ namespace SlideSharp
 {
     public class Windows
     {
-        private readonly FixedList<BoxedWindow> AllWindows;
+        private readonly Queue<BoxedWindow> AllWindows;
         private Ray _ray;
         public Windows()
         {
-            AllWindows = new FixedList<BoxedWindow>(Screen.AllScreens.Count() * 5);
+            AllWindows = new Queue<BoxedWindow>(Screen.AllScreens.Count() * 5);
         }
 
         public void Dispose()
         {
-            AllWindows.ForEach(W => {
-                W.Slide = new CenterSlide(W.Slide);
-                W.SetStatus(Status.Showing);
-                while (!W.FinishedMoving()) {
-                    W.Move();
+            while (AllWindows.Count > 0) {
+                var window = AllWindows.Dequeue();
+
+                window.Slide = new CenterSlide(window.Slide);
+                window.SetStatus(Status.Showing);
+                while (!window.FinishedMoving()) {
+                    window.Move();
                 }
-            });
-            AllWindows.Clear();
+            }
         }
         public void SetRay(Ray ray)
         {
@@ -34,42 +36,40 @@ namespace SlideSharp
 
         public void UpdateWindows()
         {
-            HandleNewWindow();
+            BoxedWindow newWindow = WindowFromRay();
 
             IntPtr WindowAtCursor = GetRootWindow(GetCursorPos());
 
-            AllWindows.ForEachAt((Window, ind) => {
+            int numOfItems = AllWindows.Count;
+            for (int i = 0; i < numOfItems; i++) {
+                var window = AllWindows.Dequeue();
 
-                if (!User32.IsWindow(Window.hWnd) || (Window.Slide is CenterSlide && Window.FinishedMoving())) {
-                    Window.SetStatus(Status.Showing);
-                    AllWindows.RemoveAt(ind);
-                    return;
+                if (newWindow != null) {
+
+
+                    if (newWindow.hWnd == window.hWnd) {
+                        window.SetStatus(Status.Undefined);
+                        continue;
+                    }
+                    if (newWindow.Slide.Equals(window.Slide)) {
+                        window.Slide = new CenterSlide(window.Slide);
+                        window.SetStatus(Status.Undefined);
+                    }
                 }
-                Window.SetStatus(Window.hWnd == WindowAtCursor ? Status.Showing : Status.Hiding);
-                Window.Move();
 
-            });
-        }
+                if (!User32.IsWindow(window.hWnd) || (window.Slide is CenterSlide && window.FinishedMoving())) {
+                    continue;
+                }
 
-        private void HandleNewWindow()
-        {
-            BoxedWindow newWindow = WindowFromRay();
+                window.SetStatus(window.hWnd == WindowAtCursor ? Status.Showing : Status.Hiding);
+                window.Move();
+
+                AllWindows.Enqueue(window);
+            }
 
             if (newWindow != null) {
-                AllWindows.ForEachAt((W, i) => {
-                    if (newWindow.hWnd == W.hWnd) {
-                        W.SetStatus(Status.Showing);
-                        AllWindows.RemoveAt(i);
-                        return;
-                    }
-                    if (W.Slide.Equals(newWindow.Slide)) {
-                        W.Slide = new CenterSlide(W.Slide);
-                        W.SetStatus(Status.Undefined);
-                    }
-                });
-
                 newWindow.SetStatus(Status.Hiding);
-                AllWindows.Add(newWindow);
+                AllWindows.Enqueue(newWindow);
             }
         }
 
