@@ -12,7 +12,7 @@ namespace SlideSharp
     public sealed class Windows : IDisposable, IEquatable<Windows>
     {
         private readonly Queue<BoxedWindow> AllWindows;
-        private Ray _ray;
+        private Ray? _ray;
         private bool disposed;
         public Windows()
         {
@@ -50,7 +50,7 @@ namespace SlideSharp
 
         public void UpdateWindows()
         {
-            BoxedWindow newWindow = WindowFromRay();
+            BoxedWindow? newWindow = WindowFromRay();
 
             IntPtr WindowAtCursor = GetRootWindow(GetCursorPos());
 
@@ -85,9 +85,9 @@ namespace SlideSharp
             }
         }
 
-        private BoxedWindow WindowFromRay()
+        private BoxedWindow? WindowFromRay()
         {
-            Ray ray = _ray;
+            Ray? ray = _ray;
             if (ray == null) return null;
             _ray = null;
 
@@ -97,19 +97,19 @@ namespace SlideSharp
             return new BoxedWindow(RootWindowAtCursorTitlebar, SlideFactory.SlideFromRay(ray));
         }
 
-        public bool Equals(Windows other)
+        public bool Equals(Windows? other)
         {
-            return AllWindows == other.AllWindows && _ray == other._ray;
+            return other != null && AllWindows == other.AllWindows && _ray == other._ray;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is Window window && Equals(window);
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(AllWindows, _ray);
+            return HashCode.Combine(this);
         }
     }
 }
