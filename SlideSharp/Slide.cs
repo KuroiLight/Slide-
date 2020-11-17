@@ -25,7 +25,7 @@ namespace SlideSharp
 
         public abstract POINT HiddenPosition(RECT WindowRect);
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is Slide slide &&
                    EqualityComparer<Screen>.Default.Equals(Screen, slide.Screen) &&
@@ -46,15 +46,15 @@ namespace SlideSharp
 
         public override POINT ShownPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Center.X - WindowRect.Width / 2, _screen.Center.Y - WindowRect.Height / 2);
+            return new POINT(_screen.Center.X - (WindowRect.Width / 2), _screen.Center.Y - (WindowRect.Height / 2));
         }
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Center.X - WindowRect.Width / 2, _screen.Center.Y - WindowRect.Height / 2);
+            return new POINT(_screen.Center.X - (WindowRect.Width / 2), _screen.Center.Y - (WindowRect.Height / 2));
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is CenterSlide slide &&
                    base.Equals(obj) &&
@@ -75,15 +75,15 @@ namespace SlideSharp
         public LeftSlide(Slide slide) : base(slide) { }
         public override POINT ShownPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Left, _screen.Center.Y - WindowRect.Height / 2);
+            return new POINT(_screen.Left, _screen.Center.Y - (WindowRect.Height / 2));
         }
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT((_screen.Left - WindowRect.Width) + Configuration.Config.HIDDEN_OFFSET, _screen.Center.Y - WindowRect.Height / 2);
+            return new POINT((_screen.Left - WindowRect.Width) + Configuration.Config.HIDDEN_OFFSET, _screen.Center.Y - (WindowRect.Height / 2));
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is LeftSlide slide &&
                    base.Equals(obj) &&
@@ -104,15 +104,15 @@ namespace SlideSharp
         public RightSlide(Slide slide) : base(slide) { }
         public override POINT ShownPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Right - WindowRect.Width, _screen.Center.Y - WindowRect.Height / 2);
+            return new POINT(_screen.Right - WindowRect.Width, _screen.Center.Y - (WindowRect.Height / 2));
         }
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Right - Configuration.Config.HIDDEN_OFFSET, _screen.Center.Y - WindowRect.Height / 2);
+            return new POINT(_screen.Right - Configuration.Config.HIDDEN_OFFSET, _screen.Center.Y - (WindowRect.Height / 2));
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is RightSlide slide &&
                    base.Equals(obj) &&
@@ -133,15 +133,15 @@ namespace SlideSharp
         public TopSlide(Slide slide) : base(slide) { }
         public override POINT ShownPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Center.X - WindowRect.Width / 2, _screen.Top);
+            return new POINT(_screen.Center.X - (WindowRect.Width / 2), _screen.Top);
         }
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Center.X - WindowRect.Width / 2, (_screen.Top - WindowRect.Height) + Configuration.Config.HIDDEN_OFFSET);
+            return new POINT(_screen.Center.X - (WindowRect.Width / 2), (_screen.Top - WindowRect.Height) + Configuration.Config.HIDDEN_OFFSET);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is TopSlide slide &&
                    base.Equals(obj) &&
@@ -162,15 +162,15 @@ namespace SlideSharp
         public BottomSlide(Slide slide) : base(slide) { }
         public override POINT ShownPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Center.X - WindowRect.Width / 2, _screen.Bottom - WindowRect.Height);
+            return new POINT(_screen.Center.X - (WindowRect.Width / 2), _screen.Bottom - WindowRect.Height);
         }
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Center.X - WindowRect.Width / 2, _screen.Bottom - Configuration.Config.HIDDEN_OFFSET);
+            return new POINT(_screen.Center.X - (WindowRect.Width / 2), _screen.Bottom - Configuration.Config.HIDDEN_OFFSET);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is BottomSlide slide &&
                    base.Equals(obj) &&
