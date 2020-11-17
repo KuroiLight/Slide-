@@ -29,11 +29,26 @@ namespace SlideSharp
 
             return (GetActualDirection(ray, screen)) switch
             {
-                Direction.Up => new TopSlide(screen),
-                Direction.Down => new BottomSlide(screen),
-                Direction.Left => new LeftSlide(screen),
-                Direction.Right => new RightSlide(screen),
-                _ => new CenterSlide(screen),
+                Direction.Up when IsValidSlideDirection(Direction.Up, screen) => new TopSlide(screen),
+                Direction.Down when IsValidSlideDirection(Direction.Down, screen) => new BottomSlide(screen),
+                Direction.Left when IsValidSlideDirection(Direction.Left, screen) => new LeftSlide(screen),
+                Direction.Right when IsValidSlideDirection(Direction.Right, screen) => new RightSlide(screen),
+                _ => new CenterSlide(screen)
+            };
+        }
+
+        private static bool IsValidSlideDirection(Direction dir, Screen screen)
+        {
+            static System.Windows.Point PointOffset(System.Windows.Point pt, int x, int y) => new System.Windows.Point(pt.X + x, pt.Y + y);
+
+            return (dir) switch
+            {
+                Direction.Center => false,
+                Direction.Up => Screen.FromPoint(PointOffset(screen.WorkingArea.TopLeft, 0, -1)) == null,
+                Direction.Down => Screen.FromPoint(PointOffset(screen.WorkingArea.BottomLeft, 0, 1)) == null,
+                Direction.Left => Screen.FromPoint(PointOffset(screen.WorkingArea.TopLeft, -1, 0)) == null,
+                Direction.Right => Screen.FromPoint(PointOffset(screen.WorkingArea.BottomLeft, 1, 0)) == null,
+                _ => false
             };
         }
 
