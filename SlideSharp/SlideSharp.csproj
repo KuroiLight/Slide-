@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>9.0</LangVersion>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
     <StartupObject>SlideSharp.App</StartupObject>
@@ -16,6 +16,9 @@
     <RepositoryType>git</RepositoryType>
     <Copyright>MIT</Copyright>
     <Version>1.0.1</Version>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
