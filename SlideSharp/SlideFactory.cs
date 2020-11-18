@@ -8,7 +8,7 @@ namespace SlideSharp
 {
     public static class SlideFactory
     {
-        public static IEnumerable<Enum> GetUniqueFlags(this Enum flags)
+        private static IEnumerable<Enum> GetUniqueFlags(this Enum flags)
         {
             ulong flag = 1;
             foreach (var value in Enum.GetValues(flags.GetType()).Cast<Enum>()) {
@@ -22,6 +22,7 @@ namespace SlideSharp
                 }
             }
         }
+
         public static Slide SlideFromRay(Ray ray)
         {
             Screen screen = Screen.FromPoint(ray.EndPoint().ToWindowsPoint());
