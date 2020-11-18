@@ -41,15 +41,20 @@ namespace SlideSharp
         {
             static System.Windows.Point PointOffset(System.Windows.Point pt, int x, int y) => new System.Windows.Point(pt.X + x, pt.Y + y);
 
-            return (dir) switch
+            System.Windows.Point outsidePt = (dir) switch
             {
-                Direction.Center => false,
-                Direction.Up => Screen.FromPoint(PointOffset(screen.WorkingArea.TopLeft, 0, -1)) == null,
-                Direction.Down => Screen.FromPoint(PointOffset(screen.WorkingArea.BottomLeft, 0, 1)) == null,
-                Direction.Left => Screen.FromPoint(PointOffset(screen.WorkingArea.TopLeft, -1, 0)) == null,
-                Direction.Right => Screen.FromPoint(PointOffset(screen.WorkingArea.BottomLeft, 1, 0)) == null,
-                _ => false
+                Direction.Up => PointOffset(screen.WorkingArea.TopLeft, 0, -1),
+                Direction.Down => PointOffset(screen.WorkingArea.BottomLeft, 0, 1),
+                Direction.Left => PointOffset(screen.WorkingArea.TopLeft, -1, 0),
+                Direction.Right => PointOffset(screen.WorkingArea.BottomRight, 1, 0),
+                _ => default,
             };
+
+
+            foreach (var scr in Screen.AllScreens) {
+                if (scr.WorkingArea.Contains(outsidePt)) return false;
+            }
+            return true;
         }
 
         private static Direction GetActualDirection(Ray ray, Screen screen)
