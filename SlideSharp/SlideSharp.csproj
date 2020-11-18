@@ -15,7 +15,7 @@
     <RepositoryUrl>https://github.com/KuroiLight/SlideSharp</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Copyright>MIT</Copyright>
-    <Version>1.0.1</Version>
+    <Version>1.0.3</Version>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
     <Nullable>enable</Nullable>
