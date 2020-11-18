@@ -12,8 +12,8 @@ namespace SlideSharp
     public sealed class Windows : IDisposable, IEquatable<Windows>
     {
         private readonly Queue<BoxedWindow> AllWindows;
-        private Ray? _ray;
-        private bool disposed;
+        private BoxedWindow? _newBoxedWindow;
+        private bool _disposed;
         public Windows()
         {
             AllWindows = new Queue<BoxedWindow>(Screen.AllScreens.Count() * 5);
@@ -27,7 +27,7 @@ namespace SlideSharp
 
         private void Dispose(bool disposing)
         {
-            if (!this.disposed) {
+            if (!this._disposed) {
                 if (disposing) {
                     while (AllWindows.Count > 0) {
                         var window = AllWindows.Dequeue();
@@ -39,67 +39,62 @@ namespace SlideSharp
                         }
                     }
                 }
-                disposed = true;
+                _disposed = true;
             }
         }
 
-        public void SetRay(Ray ray)
+        public void SetNewWindow(BoxedWindow window)
         {
-            Interlocked.Exchange(ref _ray, ray);
+            Interlocked.Exchange(ref _newBoxedWindow, window);
         }
 
         public void UpdateWindows()
         {
-            BoxedWindow? newWindow = WindowFromRay();
+            static void LoopQueue<T>(Queue<T> q, Func<T, bool> method)
+            {
+                var total = q.Count;
+                for (int i = 0; i < total; i++) {
+                    var item = q.Dequeue();
+                    if (method(item)) {
+                        q.Enqueue(item);
+                    }
+                }
+            };
+
+            BoxedWindow? localBoxedWindow = _newBoxedWindow;
+            _newBoxedWindow = null;
 
             IntPtr WindowAtCursor = GetRootWindow(GetCursorPos());
 
-            int numOfItems = AllWindows.Count;
-            for (int i = 0; i < numOfItems; i++) {
-                var window = AllWindows.Dequeue();
-
-                if (newWindow != null) {
-                    if (newWindow.hWnd == window.hWnd) {
-                        window.SetStatus(Status.Undefined);
-                        continue;
-                    }
-                    if (newWindow.Slide.Equals(window.Slide)) {
-                        window.Slide = new CenterSlide(window.Slide);
-                        window.SetStatus(Status.Undefined);
-                    }
+            LoopQueue<BoxedWindow>(AllWindows, (w) => {
+                if (localBoxedWindow?.hWnd == w.hWnd) {
+                    w.SetStatus(Status.Undefined);
+                    return false;
+                }
+                if (!User32.IsWindow(w.hWnd) || (w.Slide is CenterSlide && w.FinishedMoving())) {
+                    return false;
                 }
 
-                if (!User32.IsWindow(window.hWnd) || (window.Slide is CenterSlide && window.FinishedMoving())) {
-                    continue;
+                if (localBoxedWindow?.Slide.Equals(w.Slide) == true) {
+                    w.Slide = new CenterSlide(w.Slide);
+                    w.SetStatus(Status.Undefined);
                 }
 
-                window.SetStatus(window.hWnd == WindowAtCursor ? Status.Showing : Status.Hiding);
-                window.Move();
+                w.SetStatus(w.hWnd == WindowAtCursor ? Status.Showing : Status.Hiding);
+                w.Move();
 
-                AllWindows.Enqueue(window);
+                return true;
+            });
+
+            if (localBoxedWindow != null) {
+                localBoxedWindow!.SetStatus(Status.Hiding);
+                AllWindows.Enqueue(localBoxedWindow!);
             }
-
-            if (newWindow != null) {
-                newWindow.SetStatus(Status.Hiding);
-                AllWindows.Enqueue(newWindow);
-            }
-        }
-
-        private BoxedWindow? WindowFromRay()
-        {
-            Ray? ray = _ray;
-            if (ray == null) return null;
-            _ray = null;
-
-            IntPtr RootWindowAtCursorTitlebar = GetRootWindowFromTitlebar(ray.Position);
-            if (RootWindowAtCursorTitlebar == IntPtr.Zero) return null;
-
-            return new BoxedWindow(RootWindowAtCursorTitlebar, SlideFactory.SlideFromRay(ray));
         }
 
         public bool Equals(Windows? other)
         {
-            return other != null && AllWindows == other.AllWindows && _ray == other._ray;
+            return other != null && AllWindows == other.AllWindows;
         }
 
         public override bool Equals(object? obj)

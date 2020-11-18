@@ -11,7 +11,7 @@ namespace SlideSharp
         private readonly MouseHook _mouseHook;
         private readonly Windows windows = new Windows();
         private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
-        private POINT MStart;
+        private POINT MStart; private IntPtr MStartWindow;
 
         public Coordinator()
         {
@@ -25,9 +25,13 @@ namespace SlideSharp
         private IntPtr MouseHookProc(int code, WM_MOUSE wParam, MSLLHOOKSTRUCT lParam)
         {
             if (wParam == WM_MOUSE.WM_MBUTTONDOWN) {
+                MStartWindow = User32.GetRootWindowFromTitlebar(lParam.pt);
                 MStart = lParam.pt;
             } else if (wParam == WM_MOUSE.WM_MBUTTONUP) {
-                windows.SetRay(new Ray(MStart, MStart - lParam.pt));
+                var r = new Ray(MStart, MStart - lParam.pt);
+                var s = SlideFactory.SlideFromRay(r);
+                var bw = new BoxedWindow(MStartWindow, s);
+                windows.SetNewWindow(bw);
             }
 
 
