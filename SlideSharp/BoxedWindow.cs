@@ -3,8 +3,6 @@ using Win32Api;
 
 namespace SlideSharp
 {
-
-
     public class BoxedWindow
     {
         public readonly IntPtr hWnd;

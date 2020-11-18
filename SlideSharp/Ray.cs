@@ -8,7 +8,6 @@ namespace SlideSharp
         public POINT Movement { get; }
         public Direction Direction { get; }
 
-
         public Ray(POINT position, POINT movement)
         {
             Position = position;

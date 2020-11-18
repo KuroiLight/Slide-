@@ -10,7 +10,6 @@ namespace SlideSharp
         private POINT StartingPoint;
         private readonly double StepSizeX, StepSizeY;
 
-
         public Easer(POINT start, POINT end)
         {
             StartingPoint = start;
