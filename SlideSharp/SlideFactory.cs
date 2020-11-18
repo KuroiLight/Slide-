@@ -11,8 +11,9 @@ namespace SlideSharp
         private static IEnumerable<Enum> GetUniqueFlags(this Enum flags)
         {
             ulong flag = 1;
-            foreach (var value in Enum.GetValues(flags.GetType()).Cast<Enum>()) {
-                ulong bits = Convert.ToUInt64(value);
+            foreach (var (value, bits) in from value in Enum.GetValues(flags.GetType()).Cast<Enum>()
+                                          let bits = Convert.ToUInt64(value)
+                                          select (value, bits)) {
                 while (flag < bits) {
                     flag <<= 1;
                 }
@@ -60,7 +61,7 @@ namespace SlideSharp
 
         private static Direction GetActualDirection(Ray ray, Screen screen)
         {
-            foreach (Direction flag in GetUniqueFlags(ray.Direction)) {
+            foreach (Direction flag in GetUniqueFlags(ray.Direction).OfType<Direction>()) {
                 POINT endPoint = flag switch
                 {
                     Direction.Up => ray.ScaledEndPoint((screen.Bounds.Top - ray.Position.Y) / ray.Movement.Y),

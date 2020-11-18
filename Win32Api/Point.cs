@@ -41,11 +41,6 @@ namespace Win32Api
             return new POINT(p1.X * factor, p1.Y * factor);
         }
 
-        public bool Equals(POINT p)
-        {
-            return p.X == X && p.Y == Y;
-        }
-
         public override int GetHashCode()
         {
             return X + (19 * Y);
@@ -57,9 +52,13 @@ namespace Win32Api
         }
         public override string ToString()
         {
-            return $"*{X}:{Y}";
+            return X.ToString() + ":" + Y.ToString();
         }
 
+        public bool Equals(POINT p)
+        {
+            return p.X == X && p.Y == Y;
+        }
         public override bool Equals(object obj)
         {
             if (obj is POINT pOINT) {

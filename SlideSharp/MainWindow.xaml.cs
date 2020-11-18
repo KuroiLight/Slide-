@@ -82,7 +82,6 @@ namespace SlideSharp
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             Configuration.Save();
-            Coordinator = null;
         }
 
         private void MenuItem_Click(object sender, RoutedEventArgs e)

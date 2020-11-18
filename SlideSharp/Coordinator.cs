@@ -44,7 +44,7 @@ namespace SlideSharp
             Dispatcher.Stop();
         }
 
-        private void UpdateStates(object sender, EventArgs e)
+        private void UpdateStates(object? sender, EventArgs e)
         {
             Dispatcher.Stop();
 
