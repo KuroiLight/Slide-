@@ -30,7 +30,7 @@ namespace Win32Api
 
         public bool Equals(RECT r) => r.Left == Left && r.Top == Top && r.Right == Right && r.Bottom == Bottom;
 
-        public POINT ToPoint => new POINT(Left, Top);
+        public POINT XY => new POINT(Left, Top);
 
         public override int GetHashCode()
         {

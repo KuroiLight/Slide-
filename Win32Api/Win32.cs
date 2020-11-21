@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-
 using static Win32Api.Imports;
 
 namespace Win32Api

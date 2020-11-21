@@ -1,4 +1,0 @@
-﻿[*.cs]
-
-# S2346: Flags enumerations zero-value members should be named "None"
-dotnet_diagnostic.S2346.severity = silent

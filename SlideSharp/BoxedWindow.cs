@@ -24,8 +24,8 @@ namespace SlideSharp
             if (status != Status) {
                 Status = status;
                 var windowRect = User32.GetWindowRect(hWnd);
-                User32.SetWindowPos(hWnd, Status == Status.Showing ? Imports.HWND_INSERTAFTER.HWND_NOTOPMOST : Imports.HWND_INSERTAFTER.HWND_TOPMOST);
-                Easer = new Easer(windowRect.ToPoint, Status != Status.Showing ? Slide.HiddenPosition(windowRect) : Slide.ShownPosition(windowRect));
+                User32.SetWindowPos(hWnd, Status != Status.Hiding ? Imports.HWND_INSERTAFTER.HWND_TOPMOST : Imports.HWND_INSERTAFTER.HWND_NOTOPMOST);
+                Easer = new Easer(windowRect.XY, Status != Status.Showing ? Slide.HiddenPosition(windowRect) : Slide.ShownPosition(windowRect));
             }
         }
 

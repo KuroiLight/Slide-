@@ -1,13 +1,15 @@
-﻿using Polenter.Serialization;
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Windows;
 
 namespace SlideSharp
 {
     public struct Config
     {
+        [JsonInclude]
         private int _HIDDEN_OFFSET;
         public int HIDDEN_OFFSET
         {
@@ -20,6 +22,7 @@ namespace SlideSharp
                 _HIDDEN_OFFSET = Math.Clamp(value, 1, 1000);
             }
         }
+        [JsonInclude]
         private int _MMDRAG_DEADZONE;
         public int MMDRAG_DEADZONE
         {
@@ -33,6 +36,7 @@ namespace SlideSharp
                 _MMDRAG_DEADZONE = Math.Clamp(value, 1, 1000);
             }
         }
+        [JsonInclude]
         private double _WINDOW_ANIM_SPEED;
         public double WINDOW_ANIM_SPEED
         {
@@ -65,8 +69,8 @@ namespace SlideSharp
         public static void Save()
         {
             try {
-                SharpSerializer serializer = new SharpSerializer();
-                serializer.Serialize(Config, "./settings.xml");
+                var serialized = JsonSerializer.Serialize((object)Config, Config.GetType(), new JsonSerializerOptions(JsonSerializerDefaults.General) { IncludeFields = true });
+                File.WriteAllText(filename, serialized);
             } catch {
                 MessageBox.Show("Config couldn't be saved.");
             }
@@ -78,8 +82,9 @@ namespace SlideSharp
                 LoadDefaults();
             } else {
                 try {
-                    SharpSerializer serializer = new SharpSerializer();
-                    Config = (Config)serializer.Deserialize("./settings.xml");
+                    var serialized = File.ReadAllText(filename);
+                    var unserialized = (Config)JsonSerializer.Deserialize(serialized, Config.GetType(), new JsonSerializerOptions(JsonSerializerDefaults.General) { IncludeFields = true });
+                    Config = unserialized;
                 } catch {
                     MessageBox.Show("Config couldn't be loaded.");
                 }

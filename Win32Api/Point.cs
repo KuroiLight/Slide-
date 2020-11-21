@@ -19,6 +19,7 @@ namespace Win32Api
         {
             X = (int)x;
             Y = (int)y;
+
         }
 
         public double LengthAsVector()
