@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows;
 using Win32Api;
-using WpfScreenHelper;
+using Screen_Drop_In;
 using static Win32Api.User32;
 
 namespace SlideSharp
@@ -16,7 +16,7 @@ namespace SlideSharp
         private bool _disposed;
         public Windows()
         {
-            AllWindows = new Queue<BoxedWindow>(Screen.AllScreens.Count() * 5);
+            AllWindows = new Queue<BoxedWindow>(Screen.AllScreens.Length * 5);
         }
 
         public void Dispose()
@@ -59,7 +59,7 @@ namespace SlideSharp
                         q.Enqueue(item);
                     }
                 }
-            };
+            }
 
             BoxedWindow? localBoxedWindow = _newBoxedWindow;
             _newBoxedWindow = null;

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Win32Api;
-using WpfScreenHelper;
+using Screen_Drop_In;
+using ExtensionMethods;
+using System.Windows.Documents;
 
 namespace SlideSharp
 {
@@ -26,7 +28,8 @@ namespace SlideSharp
 
         public static Slide SlideFromRay(Ray ray)
         {
-            Screen screen = Screen.FromPoint(ray.EndPoint().ToWindowsPoint());
+            Screen? screen = Screen.FromPoint(ray.EndPoint().ToDrawingPoint());
+            if (screen is null) return new CenterSlide(Screen.PrimaryScreen);
             if (ray.Movement.LengthAsVector() < Configuration.Config.MMDRAG_DEADZONE) return new CenterSlide(screen);
 
             return (GetActualDirection(ray, screen)) switch
@@ -41,17 +44,16 @@ namespace SlideSharp
 
         private static bool IsValidSlideDirection(Direction dir, Screen screen)
         {
-            static System.Windows.Point PointOffset(System.Windows.Point pt, int x, int y) => new System.Windows.Point(pt.X + x, pt.Y + y);
+            static System.Drawing.Point PointOffset(System.Drawing.Point pt, int x, int y) => new(pt.X + x, pt.Y + y);
 
-            System.Windows.Point outsidePt = (dir) switch
+            System.Drawing.Point outsidePt = (dir) switch
             {
-                Direction.Up => PointOffset(screen.WorkingArea.TopLeft, 0, -1),
-                Direction.Down => PointOffset(screen.WorkingArea.BottomLeft, 0, 1),
-                Direction.Left => PointOffset(screen.WorkingArea.TopLeft, -1, 0),
-                Direction.Right => PointOffset(screen.WorkingArea.BottomRight, 1, 0),
+                Direction.Up => PointOffset(screen.WorkingArea.TopLeft(), 0, -1),
+                Direction.Down => PointOffset(screen.WorkingArea.BottomLeft(), 0, 1),
+                Direction.Left => PointOffset(screen.WorkingArea.TopLeft(), -1, 0),
+                Direction.Right => PointOffset(screen.WorkingArea.BottomRight(), 1, 0),
                 _ => default,
             };
-
 
             foreach (var scr in Screen.AllScreens) {
                 if (scr.WorkingArea.Contains(outsidePt)) return false;
@@ -62,16 +64,16 @@ namespace SlideSharp
         private static Direction GetActualDirection(Ray ray, Screen screen)
         {
             foreach (Direction flag in GetUniqueFlags(ray.Direction).OfType<Direction>()) {
-                POINT endPoint = flag switch
+                POINT? endPoint = flag switch
                 {
                     Direction.Up => ray.ScaledEndPoint((screen.Bounds.Top - ray.Position.Y) / ray.Movement.Y),
                     Direction.Down => ray.ScaledEndPoint((screen.Bounds.Bottom - ray.Position.Y) / ray.Movement.Y),
                     Direction.Left => ray.ScaledEndPoint((screen.Bounds.Left - ray.Position.X) / ray.Movement.X),
                     Direction.Right => ray.ScaledEndPoint((screen.Bounds.Right - ray.Position.X) / ray.Movement.X),
-                    _ => throw new InvalidOperationException(),
-                };
+                    _ => null
+            };
 
-                if (screen.Bounds.Contains(endPoint.ToWindowsPoint())) {
+                if (endPoint.HasValue && screen.Bounds.Contains(endPoint.Value.ToDrawingPoint())) {
                     return flag;
                 }
             }
