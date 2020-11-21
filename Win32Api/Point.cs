@@ -19,12 +19,11 @@ namespace Win32Api
         {
             X = (int)x;
             Y = (int)y;
-
         }
 
         public double LengthAsVector()
         {
-            return Math.Abs(Math.Sqrt(X * X + Y * Y));
+            return Math.Abs(Math.Sqrt((X * X) + (Y * Y)));
         }
 
         public static POINT operator +(POINT p1, POINT p2)
@@ -47,6 +46,11 @@ namespace Win32Api
             return X + (19 * Y);
         }
 
+        public System.Drawing.Point ToDrawingPoint()
+        {
+            return new System.Drawing.Point(X, Y);
+        }
+
         public System.Windows.Point ToWindowsPoint()
         {
             return new System.Windows.Point(X, Y);
@@ -60,13 +64,23 @@ namespace Win32Api
         {
             return p.X == X && p.Y == Y;
         }
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (obj is POINT pOINT) {
+            if (obj is not null && obj is POINT pOINT) {
                 return Equals(pOINT);
             } else {
                 return false;
             }
+        }
+
+        public static bool operator ==(POINT left, POINT right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(POINT left, POINT right)
+        {
+            return !(left == right);
         }
     }
 }
