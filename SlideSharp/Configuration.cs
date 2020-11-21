@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
+using Screen_Drop_In;
 
 namespace SlideSharp
 {
@@ -29,7 +30,6 @@ namespace SlideSharp
             get
             {
                 return _MMDRAG_DEADZONE;
-
             }
             set
             {
@@ -54,14 +54,14 @@ namespace SlideSharp
     public static class Configuration
     {
         public static Config Config { get; set; }
-        private static string filename = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\settings.xml";
+        private static readonly string filename = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\settings.xml";
 
         public static void LoadDefaults()
         {
             Configuration.Config = new Config()
             {
-                HIDDEN_OFFSET = (int)(WpfScreenHelper.Screen.PrimaryScreen.Bounds.Width / 75),
-                MMDRAG_DEADZONE = (int)((WpfScreenHelper.Screen.PrimaryScreen.Bounds.Width / 100) * 15),
+                HIDDEN_OFFSET = (int)(Screen.PrimaryScreen.Bounds.Width / 75),
+                MMDRAG_DEADZONE = (int)((Screen.PrimaryScreen.Bounds.Width / 100) * 15),
                 WINDOW_ANIM_SPEED = 0.025,
             };
         }
@@ -83,13 +83,16 @@ namespace SlideSharp
             } else {
                 try {
                     var serialized = File.ReadAllText(filename);
-                    var unserialized = (Config)JsonSerializer.Deserialize(serialized, Config.GetType(), new JsonSerializerOptions(JsonSerializerDefaults.General) { IncludeFields = true });
-                    Config = unserialized;
+                    Config? unserialized = (Config?)JsonSerializer.Deserialize(serialized, Config.GetType(), new JsonSerializerOptions(JsonSerializerDefaults.General) { IncludeFields = true });
+                    if (unserialized is not null) {
+                        Config = ((Config)unserialized)!;
+                    } else {
+                        LoadDefaults();
+                    }
                 } catch {
                     MessageBox.Show("Config couldn't be loaded.");
                 }
             }
-
         }
     }
 }
