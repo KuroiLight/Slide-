@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using WpfScreenHelper;
+using Screen_Drop_In;
 
 namespace SlideSharp
 {
@@ -10,7 +10,7 @@ namespace SlideSharp
     /// </summary>
     public partial class MainWindow : Window
     {
-        private Coordinator Coordinator;
+        private readonly Coordinator Coordinator;
 
         public MainWindow()
         {
@@ -24,8 +24,14 @@ namespace SlideSharp
         private void TBIcon_TrayMouseDoubleClick(object sender, RoutedEventArgs e)
         {
             Show();
-            Left = MouseHelper.MousePosition.X - Width / 2;
-            Top = Screen.FromPoint(new Point(Left, Top)).WorkingArea.Bottom - Height;
+            var pt = Win32Api.User32.GetCursorPos();
+            Left = pt.X - (Width / 2);
+            Screen? scr = Screen.FromPoint(new System.Drawing.Point((int)Left, (int)Top));
+            if(scr is null) {
+                this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            } else {
+                Top = scr!.WorkingArea.Bottom - Height;
+            }
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
@@ -35,7 +41,7 @@ namespace SlideSharp
                 return (int)Math.Clamp(control.Value, control.Minimum, control.Maximum);
             }
 
-            Config C = new Config();
+            Config C = new();
             C.MMDRAG_DEADZONE = getValueOfTextBlock(dragDeadzoneSlider);
             C.WINDOW_ANIM_SPEED = Math.Clamp(stepSizeSlider.Value, stepSizeSlider.Minimum, stepSizeSlider.Maximum);
             C.HIDDEN_OFFSET = getValueOfTextBlock(offScreenOffsetSlider);
@@ -58,23 +64,23 @@ namespace SlideSharp
 
         private void UpdateFromConfigs()
         {
-            dragDeadzoneSlider.Maximum = (int)((WpfScreenHelper.Screen.PrimaryScreen.Bounds.Width / 100) * 50);
+            dragDeadzoneSlider.Maximum = (int)((Screen.PrimaryScreen.Bounds.Width / 100) * 50);
             dragDeadzoneSlider.Value = Configuration.Config.MMDRAG_DEADZONE;
             stepSizeSlider.Value = Configuration.Config.WINDOW_ANIM_SPEED;
             offScreenOffsetSlider.Value = Configuration.Config.HIDDEN_OFFSET;
         }
 
-        private void offScreenOffsetSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void OffScreenOffsetSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             offScreenOffset.Text = ((int)offScreenOffsetSlider.Value).ToString();
         }
 
-        private void dragDeadzoneSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void DragDeadzoneSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             dragDeadzone.Text = ((int)dragDeadzoneSlider.Value).ToString();
         }
 
-        private void stepSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void StepSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             stepSize.Text = stepSizeSlider.Value.ToString("0.000");
         }
