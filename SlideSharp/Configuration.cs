@@ -61,7 +61,7 @@ namespace SlideSharp
             Configuration.Config = new Config()
             {
                 HIDDEN_OFFSET = (int)(Screen.PrimaryScreen.Bounds.Width / 75),
-                MMDRAG_DEADZONE = (int)((Screen.PrimaryScreen.Bounds.Width / 100) * 15),
+                MMDRAG_DEADZONE = (int)((Screen.PrimaryScreen.Bounds.Width / 100) * 5),
                 WINDOW_ANIM_SPEED = 0.025,
             };
         }
