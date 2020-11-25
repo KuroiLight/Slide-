@@ -83,7 +83,7 @@ namespace Win32Api
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
-            Imports.SetWindowPos(hWnd, IntPtr.Zero, pt.X, pt.Y, 0, 0, Imports.SetWindowsPos.SWP_NOACTIVATE | Imports.SetWindowsPos.SWP_NOZORDER | Imports.SetWindowsPos.SWP_NOSIZE | Imports.SetWindowsPos.SWP_FRAMECHANGED);
+            Imports.SetWindowPos(hWnd, IntPtr.Zero, pt.X, pt.Y, 0, 0, Imports.SetWindowsPos.SWP_NOACTIVATE | Imports.SetWindowsPos.SWP_NOZORDER | Imports.SetWindowsPos.SWP_NOSIZE);
         }
 
         public static void SetWindowPos(IntPtr hWnd, HWND_INSERTAFTER hWndInsertAfter)
@@ -92,7 +92,7 @@ namespace Win32Api
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
-            Imports.SetWindowPos(hWnd, (IntPtr)hWndInsertAfter, 0, 0, 0, 0, Imports.SetWindowsPos.SWP_NOACTIVATE | Imports.SetWindowsPos.SWP_NOMOVE | Imports.SetWindowsPos.SWP_NOSIZE | Imports.SetWindowsPos.SWP_FRAMECHANGED);
+            Imports.SetWindowPos(hWnd, (IntPtr)hWndInsertAfter, 0, 0, 0, 0, Imports.SetWindowsPos.SWP_NOACTIVATE | Imports.SetWindowsPos.SWP_NOMOVE | Imports.SetWindowsPos.SWP_NOSIZE);
         }
 
         public static IntPtr SetWindowsHookEx(HookProc lpfn)
