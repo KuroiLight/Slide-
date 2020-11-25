@@ -10,20 +10,17 @@ namespace SlideSharp
 {
     public static class SlideFactory
     {
-        private static IEnumerable<Enum> GetUniqueFlags(this Enum flags)
+        private static Direction[] GetDirections(Direction flag)
         {
-            ulong flag = 1;
-            foreach (var (value, bits) in from value in Enum.GetValues(flags.GetType()).Cast<Enum>()
-                                          let bits = Convert.ToUInt64(value)
-                                          select (value, bits)) {
-                while (flag < bits) {
-                    flag <<= 1;
-                }
+            var AllValues = Enum.GetNames(typeof(Direction));
+            List<Direction> ds = new List<Direction>();
 
-                if (flag == bits && flags.HasFlag(value)) {
-                    yield return value;
-                }
+            foreach (var item in AllValues) {
+                var parsed = Enum.Parse<Direction>(item);
+                if (flag.HasFlag(parsed)) ds.Add(parsed);
             }
+
+            return ds.ToArray();
         }
 
         public static Slide SlideFromRay(Ray ray)
@@ -48,10 +45,10 @@ namespace SlideSharp
 
             System.Drawing.Point outsidePt = (dir) switch
             {
-                Direction.Up => PointOffset(screen.WorkingArea.TopLeft(), 0, -1),
-                Direction.Down => PointOffset(screen.WorkingArea.BottomLeft(), 0, 1),
-                Direction.Left => PointOffset(screen.WorkingArea.TopLeft(), -1, 0),
-                Direction.Right => PointOffset(screen.WorkingArea.BottomRight(), 1, 0),
+                Direction.Up => PointOffset(screen.WorkingArea.TopLeft(), screen.Bounds.Width / 2, -100),
+                Direction.Down => PointOffset(screen.WorkingArea.BottomLeft(), screen.Bounds.Width / 2, 100),
+                Direction.Left => PointOffset(screen.WorkingArea.TopLeft(), -100, screen.Bounds.Height / 2),
+                Direction.Right => PointOffset(screen.WorkingArea.BottomRight(), 100, screen.Bounds.Height / 2),
                 _ => default,
             };
 
@@ -63,7 +60,7 @@ namespace SlideSharp
 
         private static Direction GetActualDirection(Ray ray, Screen screen)
         {
-            foreach (Direction flag in GetUniqueFlags(ray.Direction).OfType<Direction>()) {
+            foreach (Direction flag in GetDirections(ray.Direction)) {
                 POINT? endPoint = flag switch
                 {
                     Direction.Up => ray.ScaledEndPoint((screen.Bounds.Top - ray.Position.Y) / ray.Movement.Y),
