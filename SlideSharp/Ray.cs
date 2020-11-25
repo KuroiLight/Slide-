@@ -13,8 +13,8 @@ namespace SlideSharp
             Position = position;
             Movement = movement;
             Direction = 0;
-            Direction |= Movement.X > 0 ? Direction.Left : Direction.Right;
-            Direction |= Movement.Y > 0 ? Direction.Up : Direction.Down;
+            Direction |= Movement.X < 0 ? Direction.Left : Direction.Right;
+            Direction |= Movement.Y < 0 ? Direction.Up : Direction.Down;
         }
 
         public POINT EndPoint()

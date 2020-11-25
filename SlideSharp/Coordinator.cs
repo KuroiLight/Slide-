@@ -28,7 +28,7 @@ namespace SlideSharp
                 MStartWindow = User32.GetRootWindowFromTitlebar(lParam.pt);
                 MStart = lParam.pt;
             } else if (wParam == WM_MOUSE.WM_MBUTTONUP && MStartWindow != IntPtr.Zero) {
-                var r = new Ray(MStart, MStart - lParam.pt);
+                var r = new Ray(MStart, lParam.pt - MStart);
                 var s = SlideFactory.SlideFromRay(r);
                 var bw = new BoxedWindow(MStartWindow, s);
                 windows.SetNewWindow(bw);
