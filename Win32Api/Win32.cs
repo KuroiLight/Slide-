@@ -9,7 +9,7 @@ namespace Win32Api
     {
         public static TITLEBARINFO GetTitleBarInfo(IntPtr hWnd)
         {
-            TITLEBARINFO TBI = new TITLEBARINFO();
+            TITLEBARINFO TBI = new();
             TBI.cbSize = (uint)Marshal.SizeOf(TBI);
 
             bool returnValue = Imports.GetTitleBarInfo(hWnd, ref TBI);
