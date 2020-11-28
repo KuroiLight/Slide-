@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Win32Api;
+﻿using ExtensionMethods;
 using Screen_Drop_In;
-using ExtensionMethods;
-using System.Windows.Documents;
+using System;
+using System.Collections.Generic;
+using Win32Api;
 
 namespace SlideSharp
 {
@@ -13,11 +11,11 @@ namespace SlideSharp
         private static Direction[] GetDirections(Direction flag)
         {
             var AllValues = Enum.GetNames(typeof(Direction));
-            List<Direction> ds = new List<Direction>();
+            List<Direction> ds = new();
 
             foreach (var item in AllValues) {
                 var parsed = Enum.Parse<Direction>(item);
-                if (flag.HasFlag(parsed)) ds.Add(parsed);
+                if ((flag & parsed) != 0) ds.Add(parsed);
             }
 
             return ds.ToArray();
@@ -27,7 +25,7 @@ namespace SlideSharp
         {
             Screen? screen = Screen.FromPoint(ray.EndPoint().ToDrawingPoint());
             if (screen is null) return new CenterSlide(Screen.PrimaryScreen);
-            if (ray.Movement.LengthAsVector() < Configuration.Config.MMDRAG_DEADZONE) return new CenterSlide(screen);
+            if (ray.Movement.LengthAsVector() < Config.GetInstance.MouseDragDeadzone) return new CenterSlide(screen);
 
             return (GetActualDirection(ray, screen)) switch
             {
@@ -68,7 +66,7 @@ namespace SlideSharp
                     Direction.Left => ray.ScaledEndPoint((screen.Bounds.Left - ray.Position.X) / ray.Movement.X),
                     Direction.Right => ray.ScaledEndPoint((screen.Bounds.Right - ray.Position.X) / ray.Movement.X),
                     _ => null
-            };
+                };
 
                 if (endPoint.HasValue && screen.Bounds.Contains(endPoint.Value.ToDrawingPoint())) {
                     return flag;
