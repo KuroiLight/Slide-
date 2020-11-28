@@ -9,8 +9,8 @@ namespace SlideSharp
     public class Coordinator
     {
         private readonly MouseHook _mouseHook;
-        private readonly Windows windows = new Windows();
-        private readonly DispatcherTimer Dispatcher = new DispatcherTimer();
+        private readonly Windows windows = new();
+        private readonly DispatcherTimer Dispatcher = new();
         private POINT MStart; private IntPtr MStartWindow;
 
         public Coordinator()
@@ -33,7 +33,6 @@ namespace SlideSharp
                 var bw = new BoxedWindow(MStartWindow, s);
                 windows.SetNewWindow(bw);
             }
-
 
             return CallNextHookEx(IntPtr.Zero, code, wParam, lParam);
         }
