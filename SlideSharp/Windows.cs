@@ -1,10 +1,9 @@
-﻿using System;
+﻿using Screen_Drop_In;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Windows;
 using Win32Api;
-using Screen_Drop_In;
 using static Win32Api.User32;
 
 namespace SlideSharp
