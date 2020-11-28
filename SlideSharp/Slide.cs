@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Screen_Drop_In;
+using System;
 using System.Collections.Generic;
 using Win32Api;
-using Screen_Drop_In;
 
 namespace SlideSharp
 {
@@ -80,7 +80,7 @@ namespace SlideSharp
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT((_screen.Left - WindowRect.Width) + Configuration.Config.HIDDEN_OFFSET, _screen.Center.Y - (WindowRect.Height / 2));
+            return new POINT((_screen.Left - WindowRect.Width) + Config.GetInstance.WindowHiddenOffset, _screen.Center.Y - (WindowRect.Height / 2));
         }
 
         public override bool Equals(object? obj)
@@ -109,7 +109,7 @@ namespace SlideSharp
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Right - Configuration.Config.HIDDEN_OFFSET, _screen.Center.Y - (WindowRect.Height / 2));
+            return new POINT(_screen.Right - Config.GetInstance.WindowHiddenOffset, _screen.Center.Y - (WindowRect.Height / 2));
         }
 
         public override bool Equals(object? obj)
@@ -138,7 +138,7 @@ namespace SlideSharp
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Center.X - (WindowRect.Width / 2), (_screen.Top - WindowRect.Height) + Configuration.Config.HIDDEN_OFFSET);
+            return new POINT(_screen.Center.X - (WindowRect.Width / 2), (_screen.Top - WindowRect.Height) + Config.GetInstance.WindowHiddenOffset);
         }
 
         public override bool Equals(object? obj)
@@ -167,7 +167,7 @@ namespace SlideSharp
 
         public override POINT HiddenPosition(RECT WindowRect)
         {
-            return new POINT(_screen.Center.X - (WindowRect.Width / 2), _screen.Bottom - Configuration.Config.HIDDEN_OFFSET);
+            return new POINT(_screen.Center.X - (WindowRect.Width / 2), _screen.Bottom - Config.GetInstance.WindowHiddenOffset);
         }
 
         public override bool Equals(object? obj)
