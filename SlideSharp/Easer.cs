@@ -21,7 +21,7 @@ namespace SlideSharp
 
         public POINT TakeStep()
         {
-            Percent += Configuration.Config.WINDOW_ANIM_SPEED;
+            Percent += Config.GetInstance.WindowMovementSpeed;
             var easedValue = Out(Percent) * MaxPercent;
             return StartingPoint + new POINT(StepSizeX * easedValue, StepSizeY * easedValue);
         }
