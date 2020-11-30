@@ -15,6 +15,7 @@ namespace SlideSharp
             Screen = screen;
             _screen = new RECT(screen.WorkingArea.Left, screen.WorkingArea.Top, screen.WorkingArea.Right, screen.WorkingArea.Bottom);
         }
+
         protected Slide(Slide slide)
         {
             Screen = slide.Screen;
@@ -40,9 +41,13 @@ namespace SlideSharp
 
     public sealed class CenterSlide : Slide
     {
-        public CenterSlide(Screen screen) : base(screen) { }
+        public CenterSlide(Screen screen) : base(screen)
+        {
+        }
 
-        public CenterSlide(Slide slide) : base(slide) { }
+        public CenterSlide(Slide slide) : base(slide)
+        {
+        }
 
         public override POINT ShownPosition(RECT WindowRect)
         {
@@ -70,9 +75,14 @@ namespace SlideSharp
 
     public sealed class LeftSlide : Slide
     {
-        public LeftSlide(Screen screen) : base(screen) { }
+        public LeftSlide(Screen screen) : base(screen)
+        {
+        }
 
-        public LeftSlide(Slide slide) : base(slide) { }
+        public LeftSlide(Slide slide) : base(slide)
+        {
+        }
+
         public override POINT ShownPosition(RECT WindowRect)
         {
             return new POINT(_screen.Left, _screen.Center.Y - (WindowRect.Height / 2));
@@ -99,9 +109,14 @@ namespace SlideSharp
 
     public sealed class RightSlide : Slide
     {
-        public RightSlide(Screen screen) : base(screen) { }
+        public RightSlide(Screen screen) : base(screen)
+        {
+        }
 
-        public RightSlide(Slide slide) : base(slide) { }
+        public RightSlide(Slide slide) : base(slide)
+        {
+        }
+
         public override POINT ShownPosition(RECT WindowRect)
         {
             return new POINT(_screen.Right - WindowRect.Width, _screen.Center.Y - (WindowRect.Height / 2));
@@ -128,9 +143,14 @@ namespace SlideSharp
 
     public sealed class TopSlide : Slide
     {
-        public TopSlide(Screen screen) : base(screen) { }
+        public TopSlide(Screen screen) : base(screen)
+        {
+        }
 
-        public TopSlide(Slide slide) : base(slide) { }
+        public TopSlide(Slide slide) : base(slide)
+        {
+        }
+
         public override POINT ShownPosition(RECT WindowRect)
         {
             return new POINT(_screen.Center.X - (WindowRect.Width / 2), _screen.Top);
@@ -157,9 +177,14 @@ namespace SlideSharp
 
     public sealed class BottomSlide : Slide
     {
-        public BottomSlide(Screen screen) : base(screen) { }
+        public BottomSlide(Screen screen) : base(screen)
+        {
+        }
 
-        public BottomSlide(Slide slide) : base(slide) { }
+        public BottomSlide(Slide slide) : base(slide)
+        {
+        }
+
         public override POINT ShownPosition(RECT WindowRect)
         {
             return new POINT(_screen.Center.X - (WindowRect.Width / 2), _screen.Bottom - WindowRect.Height);

@@ -55,6 +55,7 @@ namespace Win32Api
         {
             return new System.Windows.Point(X, Y);
         }
+
         public override string ToString()
         {
             return X.ToString() + ":" + Y.ToString();
@@ -64,11 +65,15 @@ namespace Win32Api
         {
             return p.X == X && p.Y == Y;
         }
+
         public override bool Equals(object? obj)
         {
-            if (obj is not null && obj is POINT pOINT) {
+            if (obj is not null && obj is POINT pOINT)
+            {
                 return Equals(pOINT);
-            } else {
+            }
+            else
+            {
                 return false;
             }
         }

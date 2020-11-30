@@ -13,7 +13,8 @@ namespace SlideSharp
             var AllValues = Enum.GetNames(typeof(Direction));
             List<Direction> ds = new();
 
-            foreach (var item in AllValues) {
+            foreach (var item in AllValues)
+            {
                 var parsed = Enum.Parse<Direction>(item);
                 if ((flag & parsed) != 0) ds.Add(parsed);
             }
@@ -50,7 +51,8 @@ namespace SlideSharp
                 _ => default,
             };
 
-            foreach (var scr in Screen.AllScreens) {
+            foreach (var scr in Screen.AllScreens)
+            {
                 if (scr.WorkingArea.Contains(outsidePt)) return false;
             }
             return true;
@@ -58,7 +60,8 @@ namespace SlideSharp
 
         private static Direction GetActualDirection(Ray ray, Screen screen)
         {
-            foreach (Direction flag in GetDirections(ray.Direction)) {
+            foreach (Direction flag in GetDirections(ray.Direction))
+            {
                 POINT? endPoint = flag switch
                 {
                     Direction.Up => ray.ScaledEndPoint((screen.Bounds.Top - ray.Position.Y) / ray.Movement.Y),
@@ -68,7 +71,8 @@ namespace SlideSharp
                     _ => null
                 };
 
-                if (endPoint.HasValue && screen.Bounds.Contains(endPoint.Value.ToDrawingPoint())) {
+                if (endPoint.HasValue && screen.Bounds.Contains(endPoint.Value.ToDrawingPoint()))
+                {
                     return flag;
                 }
             }

@@ -30,6 +30,7 @@ namespace SlideSharp
         {
             return Math.Round(Percent * MaxPercent) < MaxPercent;
         }
+
         public static double Out(double k)
         {
             return k == 1.0 ? 1.0 : 1.0 - Math.Pow(2.0, -10.0 * k);

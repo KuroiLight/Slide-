@@ -16,7 +16,8 @@ namespace SlideSharp
         {
             _mouseHookProcHandle = hookProc;
             _hookHandle = User32.SetWindowsHookEx(_mouseHookProcHandle);
-            if (_hookHandle == IntPtr.Zero) {
+            if (_hookHandle == IntPtr.Zero)
+            {
                 MessageBox.Show($"{new Win32Exception(Marshal.GetLastWin32Error()).Message}\nwith no MouseHook application must now close.");
                 Application.Current.Shutdown();
             }

@@ -14,7 +14,8 @@ namespace Win32Api
 
             bool returnValue = Imports.GetTitleBarInfo(hWnd, ref TBI);
 
-            if (!returnValue) {
+            if (!returnValue)
+            {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 
@@ -35,7 +36,8 @@ namespace Win32Api
         public static IntPtr GetRootWindowFromTitlebar(POINT pt)
         {
             IntPtr rootWindow = GetRootWindow(pt);
-            if (rootWindow != IntPtr.Zero && GetTitleBarInfo(rootWindow).rcTitleBar.Contains(pt)) {
+            if (rootWindow != IntPtr.Zero && GetTitleBarInfo(rootWindow).rcTitleBar.Contains(pt))
+            {
                 return rootWindow;
             }
             return IntPtr.Zero;
@@ -55,7 +57,8 @@ namespace Win32Api
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0018:Inline variable declaration", Justification = "Incase of failure we dont know if Rect will be initialized by GetWindowRect")]
         public static RECT GetWindowRect(IntPtr hWnd)
         {
-            if (hWnd == IntPtr.Zero) {
+            if (hWnd == IntPtr.Zero)
+            {
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
@@ -79,7 +82,8 @@ namespace Win32Api
         /// <param name="pt">absolute position to be set</param>
         public static void SetWindowPos(IntPtr hWnd, POINT pt)
         {
-            if (hWnd == IntPtr.Zero) {
+            if (hWnd == IntPtr.Zero)
+            {
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
@@ -88,7 +92,8 @@ namespace Win32Api
 
         public static void SetWindowPos(IntPtr hWnd, HWND_INSERTAFTER hWndInsertAfter)
         {
-            if (hWnd == IntPtr.Zero) {
+            if (hWnd == IntPtr.Zero)
+            {
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
@@ -97,14 +102,16 @@ namespace Win32Api
 
         public static IntPtr SetWindowsHookEx(HookProc lpfn)
         {
-            if (lpfn == null) {
+            if (lpfn == null)
+            {
                 throw new ArgumentNullException(nameof(lpfn));
             }
 
             const int WH_MOUSE_LL = 14;
             IntPtr returnValue = Imports.SetWindowsHookEx(WH_MOUSE_LL, lpfn, IntPtr.Zero, 0);
 
-            if (returnValue == IntPtr.Zero) {
+            if (returnValue == IntPtr.Zero)
+            {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 
@@ -113,13 +120,15 @@ namespace Win32Api
 
         public static bool UnhookWindowsHookEx(IntPtr hhk)
         {
-            if (hhk == IntPtr.Zero) {
+            if (hhk == IntPtr.Zero)
+            {
                 throw new ArgumentNullException(nameof(hhk));
             }
 
             var returnValue = Imports.UnhookWindowsHookEx(hhk);
 
-            if (!returnValue) {
+            if (!returnValue)
+            {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 

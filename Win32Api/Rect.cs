@@ -44,9 +44,12 @@ namespace Win32Api
 
         public override bool Equals(object obj)
         {
-            if (obj is RECT rECT) {
+            if (obj is RECT rECT)
+            {
                 return Equals(rECT);
-            } else {
+            }
+            else
+            {
                 return false;
             }
         }

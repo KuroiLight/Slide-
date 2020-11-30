@@ -21,9 +21,8 @@
                     <MenuItem Header="Close" Click="MenuItem_Click" />
                 </ContextMenu>
           </tb:TaskbarIcon.ContextMenu>
-
         </tb:TaskbarIcon>
-    
+
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
             <Grid>
                 <TextBlock Text="Window Animation Speed" HorizontalAlignment="Left" />
@@ -48,5 +47,4 @@
             <Button Margin="2" Content="Save" x:Name="Save" Click="Save_Click" />
         </UniformGrid>
     </DockPanel>
-
 </Window>

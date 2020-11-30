@@ -25,9 +25,12 @@ namespace SlideSharp
             var pt = Win32Api.User32.GetCursorPos();
             Left = pt.X - (Width / 2);
             Screen? scr = Screen.FromPoint(new System.Drawing.Point((int)Left, (int)Top));
-            if (scr is null) {
+            if (scr is null)
+            {
                 this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            } else {
+            }
+            else
+            {
                 Top = scr!.WorkingArea.Bottom - Height;
             }
         }

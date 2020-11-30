@@ -21,7 +21,8 @@ namespace SlideSharp
 
         public void SetStatus(Status status)
         {
-            if (status != Status) {
+            if (status != Status)
+            {
                 Status = status;
                 var windowRect = User32.GetWindowRect(hWnd);
                 User32.SetWindowPos(hWnd, Status != Status.Hiding ? Imports.HWND_INSERTAFTER.HWND_TOPMOST : Imports.HWND_INSERTAFTER.HWND_NOTOPMOST);
