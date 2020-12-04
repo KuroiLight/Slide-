@@ -1,7 +1,4 @@
-﻿using ExtensionMethods;
-using Screen_Drop_In;
-using System;
-using System.Collections.Generic;
+﻿using Screen_Drop_In;
 using System.Drawing;
 using Win32Api;
 
@@ -17,7 +14,7 @@ namespace SlideSharp
             var diff = end - start;
             if (diff.LengthAsVector() < Config.GetInstance.MouseDragDeadzone) return new CenterSlide(screen);
 
-            static System.Drawing.Point scaleVector(POINT _start, POINT _vector, double _factor) 
+            static System.Drawing.Point scaleVector(POINT _start, POINT _vector, double _factor)
             {
                 var temp = (_vector * _factor) + _start;
                 return new Point(temp.X, temp.Y);
