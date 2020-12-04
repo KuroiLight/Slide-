@@ -7,10 +7,11 @@ using static Win32Api.Imports;
 
 namespace SlideSharp
 {
-    public class MouseHook
+    public class MouseHook : IDisposable
     {
-        private readonly HookProc _mouseHookProcHandle;
-        private readonly IntPtr _hookHandle;
+        private HookProc? _mouseHookProcHandle;
+        private IntPtr _hookHandle;
+        private bool disposedValue;
 
         public MouseHook(HookProc hookProc)
         {
@@ -23,9 +24,24 @@ namespace SlideSharp
             }
         }
 
-        ~MouseHook()
+        protected virtual void Dispose(bool disposing)
         {
-            User32.UnhookWindowsHookEx(_hookHandle);
+            if (!disposedValue)
+            {
+                User32.UnhookWindowsHookEx(_hookHandle);
+                if (disposing)
+                {
+                    _mouseHookProcHandle = null;
+                    _hookHandle = IntPtr.Zero;
+                }
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }
