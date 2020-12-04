@@ -3,9 +3,9 @@
 namespace Win32Api
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct RECT : System.IEquatable<RECT>
+    public readonly struct RECT : System.IEquatable<RECT>
     {
-        public int Left, Top, Right, Bottom;
+        public readonly int Left, Top, Right, Bottom;
 
         public RECT(int left, int top, int right, int bottom)
         {
@@ -40,7 +40,7 @@ namespace Win32Api
             return $"[*{Left}:{Top}, *{Right}:{Bottom}]";
         }
 
-        public bool Equals(RECT r) => r.Left == Left && r.Top == Top && r.Right == Right && r.Bottom == Bottom;
+        public bool Equals(RECT other) => other.Left == Left && other.Top == Top && other.Right == Right && other.Bottom == Bottom;
 
         public override bool Equals(object? obj)
         {

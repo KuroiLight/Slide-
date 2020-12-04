@@ -4,10 +4,10 @@ using System.Runtime.InteropServices;
 namespace Win32Api
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct POINT
+    public readonly struct POINT : IEquatable<POINT>
     {
-        public int X;
-        public int Y;
+        public readonly int X;
+        public readonly int Y;
 
         public POINT(int x, int y)
         {
@@ -58,12 +58,12 @@ namespace Win32Api
 
         public override string ToString()
         {
-            return X.ToString() + ":" + Y.ToString();
+            return String.Concat("{0}:{1}", X, Y);
         }
 
-        public bool Equals(POINT p)
+        public bool Equals(POINT other)
         {
-            return p.X == X && p.Y == Y;
+            return other.X == X && other.Y == Y;
         }
 
         public override bool Equals(object? obj)
