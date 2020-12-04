@@ -49,25 +49,12 @@ namespace SlideSharp
 
         public void UpdateWindows()
         {
-            static void LoopQueue<T>(Queue<T> q, Func<T, bool> method)
-            {
-                var total = q.Count;
-                for (int i = 0; i < total; i++)
-                {
-                    var item = q.Dequeue();
-                    if (method(item))
-                    {
-                        q.Enqueue(item);
-                    }
-                }
-            }
-
             BoxedWindow? localBoxedWindow = _newBoxedWindow;
             _newBoxedWindow = null;
 
             IntPtr WindowAtCursor = GetRootWindow(GetCursorPos());
 
-            LoopQueue<BoxedWindow>(AllWindows, (w) =>
+            AllWindows.ReQueue((w) =>
             {
                 if (localBoxedWindow?.hWnd == w.hWnd)
                 {
