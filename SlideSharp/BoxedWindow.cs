@@ -33,12 +33,12 @@ namespace SlideSharp
         public void Move()
         {
             if (FinishedMoving()) return;
-            User32.SetWindowPos(hWnd, Easer.TakeStep());
+            User32.SetWindowPos(hWnd, Easer.Step());
         }
 
         public bool FinishedMoving()
         {
-            return !Easer.CanMove();
+            return Easer.AtEnd;
         }
     }
 }
