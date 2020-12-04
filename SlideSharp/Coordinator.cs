@@ -32,14 +32,17 @@ namespace SlideSharp
             else if (wParam == WM_MOUSE.WM_MBUTTONUP && MStartWindow != IntPtr.Zero)
             {
                 var s = SlideFactory.SlideFromMouseMovement(MStart, lParam.pt);
-                var bw = new BoxedWindow(MStartWindow, s);
-                windows.SetNewWindow(bw);
+                if(s is not null)
+                {
+                    var bw = new BoxedWindow(MStartWindow, s);
+                    windows.SetNewWindow(bw);
+                }
             }
 
             return CallNextHookEx(IntPtr.Zero, code, wParam, lParam);
         }
 
-        ~Coordinator()
+        public void Stop()
         {
             windows.Dispose();
             Dispatcher.Stop();
