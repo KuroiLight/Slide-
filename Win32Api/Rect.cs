@@ -28,8 +28,6 @@ namespace Win32Api
 
         public bool Contains(POINT pt) => Left <= pt.X && Right >= pt.X && Top <= pt.Y && Bottom >= pt.Y;
 
-        public bool Equals(RECT r) => r.Left == Left && r.Top == Top && r.Right == Right && r.Bottom == Bottom;
-
         public POINT XY => new POINT(Left, Top);
 
         public override int GetHashCode()
@@ -42,7 +40,9 @@ namespace Win32Api
             return $"[*{Left}:{Top}, *{Right}:{Bottom}]";
         }
 
-        public override bool Equals(object obj)
+        public bool Equals(RECT r) => r.Left == Left && r.Top == Top && r.Right == Right && r.Bottom == Bottom;
+
+        public override bool Equals(object? obj)
         {
             if (obj is RECT rECT)
             {
