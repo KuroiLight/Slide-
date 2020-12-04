@@ -31,8 +31,7 @@ namespace SlideSharp
             }
             else if (wParam == WM_MOUSE.WM_MBUTTONUP && MStartWindow != IntPtr.Zero)
             {
-                var r = new Ray(MStart, lParam.pt - MStart);
-                var s = SlideFactory.SlideFromRay(r);
+                var s = SlideFactory.SlideFromMouseMovement(MStart, lParam.pt);
                 var bw = new BoxedWindow(MStartWindow, s);
                 windows.SetNewWindow(bw);
             }
