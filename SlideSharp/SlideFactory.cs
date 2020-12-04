@@ -50,9 +50,9 @@ namespace SlideSharp
 
             System.Drawing.Point? outsidePt = (dir) switch
             {
-                Direction.Up => PointOffset(screen.WorkingArea.TopLeft(), screen.Bounds.Width / 2, -100),
+                Direction.Up => PointOffset(screen.WorkingArea.Location, screen.Bounds.Width / 2, -100),
                 Direction.Down => PointOffset(screen.WorkingArea.BottomLeft(), screen.Bounds.Width / 2, 100),
-                Direction.Left => PointOffset(screen.WorkingArea.TopLeft(), -100, screen.Bounds.Height / 2),
+                Direction.Left => PointOffset(screen.WorkingArea.Location, -100, screen.Bounds.Height / 2),
                 Direction.Right => PointOffset(screen.WorkingArea.TopRight(), 100, screen.Bounds.Height / 2),
                 _ => null,
             };
