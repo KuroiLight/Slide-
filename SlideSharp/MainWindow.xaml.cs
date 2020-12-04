@@ -1,4 +1,5 @@
 ﻿using Screen_Drop_In;
+using System.Globalization;
 using System.Windows;
 
 namespace SlideSharp
@@ -66,21 +67,22 @@ namespace SlideSharp
 
         private void OffScreenOffsetSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            offScreenOffset.Text = ((int)offScreenOffsetSlider.Value).ToString();
+            offScreenOffset.Text = ((int)offScreenOffsetSlider.Value).ToString(new NumberFormatInfo());
         }
 
         private void DragDeadzoneSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            dragDeadzone.Text = ((int)dragDeadzoneSlider.Value).ToString();
+            dragDeadzone.Text = ((int)dragDeadzoneSlider.Value).ToString(new NumberFormatInfo());
         }
 
         private void StepSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            stepSize.Text = stepSizeSlider.Value.ToString("0.000");
+            stepSize.Text = stepSizeSlider.Value.ToString("0.000", new NumberFormatInfo());
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            Coordinator.Stop();
             Config.SaveToDisk();
         }
 
