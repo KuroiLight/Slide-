@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using Win32Api;
 
 namespace SlideSharp
 {
+    [StructLayout(LayoutKind.Auto)]
     public struct Easer
     {
         private double _percent;
