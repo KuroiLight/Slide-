@@ -54,7 +54,6 @@ namespace Win32Api
             return Imports.GetWindowLong(hWnd, nIndex);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0018:Inline variable declaration", Justification = "Incase of failure we dont know if Rect will be initialized by GetWindowRect")]
         public static RECT GetWindowRect(IntPtr hWnd)
         {
             if (hWnd == IntPtr.Zero)
@@ -62,8 +61,7 @@ namespace Win32Api
                 throw new ArgumentNullException(nameof(hWnd));
             }
 
-            RECT Rect; //do not inline
-            Imports.GetWindowRect(hWnd, out Rect);
+            Imports.GetWindowRect(hWnd, out RECT Rect);
 
             return Rect;
         }
