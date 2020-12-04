@@ -58,7 +58,7 @@ namespace SlideSharp
 
         private void UpdateFromConfigs()
         {
-            dragDeadzoneSlider.Maximum = (int)((Screen.PrimaryScreen.Bounds.Width / 100) * 50);
+            dragDeadzoneSlider.Maximum = (Screen.PrimaryScreen.Bounds.Width / 100) * 50;
             dragDeadzoneSlider.Value = config.MouseDragDeadzone;
             stepSizeSlider.Value = config.WindowMovementSpeed;
             offScreenOffsetSlider.Value = config.WindowHiddenOffset;
