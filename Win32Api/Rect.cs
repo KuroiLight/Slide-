@@ -37,7 +37,7 @@ namespace Win32Api
 
         public override string ToString()
         {
-            return $"[*{Left}:{Top}, *{Right}:{Bottom}]";
+            return string.Concat("[{0}:{1}, {2}:{3}]", Left, Top, Right, Bottom);
         }
 
         public bool Equals(RECT other) => other.Left == Left && other.Top == Top && other.Right == Right && other.Bottom == Bottom;
@@ -48,10 +48,18 @@ namespace Win32Api
             {
                 return Equals(rECT);
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
+        }
+
+        public static bool operator ==(RECT left, RECT right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(RECT left, RECT right)
+        {
+            return !(left == right);
         }
     }
 }

@@ -32,7 +32,7 @@ namespace SlideSharp
             else if (wParam == WM_MOUSE.WM_MBUTTONUP && MStartWindow != IntPtr.Zero)
             {
                 var s = SlideFactory.SlideFromMouseMovement(MStart, lParam.pt);
-                if(s is not null)
+                if (s is not null)
                 {
                     var bw = new BoxedWindow(MStartWindow, s);
                     windows.SetNewWindow(bw);

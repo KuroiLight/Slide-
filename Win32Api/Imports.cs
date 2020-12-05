@@ -40,7 +40,7 @@ namespace Win32Api
             /// <summary>
             /// Retrieves the owned root window by walking the chain of parent and owner windows returned by GetParent.
             /// </summary>
-            GetRootOwner = 3
+            GetRootOwner = 3,
         }
 
         [Flags]
@@ -61,7 +61,7 @@ namespace Win32Api
             SWP_NOREPOSITION = SWP_NOOWNERZORDER,
             SWP_NOSENDCHANGING = 0x0400,
             SWP_DEFERERASE = 0x2000,
-            SWP_ASYNCWINDOWPOS = 0x4000
+            SWP_ASYNCWINDOWPOS = 0x4000,
         }
 
         public enum WM_MOUSE : uint
@@ -74,7 +74,7 @@ namespace Win32Api
             WM_MBUTTONDOWN = 0x0207,
             WM_MBUTTONUP = 0x0208,
             WM_MOUSEWHEEL = 0x020A,
-            WM_MOUSEHWHEEL = 0x020E
+            WM_MOUSEHWHEEL = 0x020E,
         }
 
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]

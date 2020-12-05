@@ -72,10 +72,8 @@ namespace Win32Api
             {
                 return Equals(pOINT);
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         public static bool operator ==(POINT left, POINT right)

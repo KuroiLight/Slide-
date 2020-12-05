@@ -33,7 +33,7 @@ namespace SlideSharp
             for (int i = lengthOfQueue - 1; i >= 0; i--)
             {
                 T item = q.Dequeue();
-                if(method(item))
+                if (method(item))
                 {
                     q.Enqueue(item);
                 }
