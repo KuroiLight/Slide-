@@ -33,7 +33,7 @@ namespace SlideSharp
         private static readonly string _filename = "./settings.ini";
 
         [IgnoreMember]
-        private static Config _instance;
+        private static Config _instance = new Config();
 
         [IgnoreMember]
         public static Config GetInstance
@@ -42,11 +42,6 @@ namespace SlideSharp
             {
                 return _instance ??= new Config();
             }
-        }
-
-        static Config()
-        {
-            _instance = new Config();
         }
 
         public Config()
