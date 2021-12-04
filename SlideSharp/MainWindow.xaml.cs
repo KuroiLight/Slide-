@@ -1,7 +1,7 @@
 ﻿using Screen_Drop_In;
 using System.Globalization;
 using System.Windows;
-
+//version 2
 namespace SlideSharp
 {
     /// <summary>
